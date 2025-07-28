@@ -8,44 +8,53 @@
             <div class="col-lg-8 col-md-10">
 
                 <!-- Profile Header -->
-                <div class="text-center mb-4">
-                    <h2 class="fw-bold">{{ profile.user.username }}</h2>
+<div class="text-center mb-4">
+    <h2 class="fw-bold">{{ profile.user.username }}</h2>
 
-                    {% if profile.profile_image %}
-                        <img src="{{ profile.profile_image.url }}"
-                             class="rounded-circle shadow"
-                             style="width: 120px; height: 120px; object-fit: cover;"
-                             alt="{{ profile.user.username }}'s Profile Picture">
-                    {% else %}
-                        <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center mx-auto shadow"
-                             style="width: 120px; height: 120px; font-size: 2rem;">
-                            {{ profile.user.username|first|upper }}
-                        </div>
-                    {% endif %}
+    {% if profile.profile_image %}
+        <img src="{{ profile.profile_image.url }}"
+             class="rounded-circle shadow"
+             style="width: 120px; height: 120px; object-fit: cover;"
+             alt="{{ profile.user.username }}'s Profile Picture">
+    {% else %}
+        <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center mx-auto shadow"
+             style="width: 120px; height: 120px; font-size: 2rem;">
+            {{ profile.user.username|first|upper }}
+        </div>
+    {% endif %}
 
-                    <!-- Follow/Unfollow form -->
-                    <form method="POST" class="mt-3">
-                        {% csrf_token %}
-                        {% if profile in user.profile.follows.all %}
-                            <button class="btn btn-outline-danger" name="follow" value="unfollow" type="submit">
-                                Unfollow @{{ profile.user.username|lower }}
-                            </button>
-                        {% else %}
-                            <button class="btn btn-outline-success" name="follow" value="follow" type="submit">
-                                Follow @{{ profile.user.username|lower }}
-                            </button>
-                        {% endif %}
-                    </form>
-                </div>
+    <!-- Follow/Unfollow form (only for other users) -->
+    {% if profile.user != user %}
+        <form method="POST" class="mt-3">
+            {% csrf_token %}
+            {% if profile in user.profile.follows.all %}
+                <button class="btn btn-outline-danger" name="follow" value="unfollow" type="submit">
+                    Unfollow @{{ profile.user.username|lower }}
+                </button>
+            {% else %}
+                <button class="btn btn-outline-success" name="follow" value="follow" type="submit">
+                    Follow @{{ profile.user.username|lower }}
+                </button>
+            {% endif %}
+        </form>
+    {% else %}
+        <div class="mt-3" style="height: 38px;"></div>  <!-- placeholder for spacing -->
+    {% endif %}
+</div>
+
+
 
                 <!-- Bio -->
-                <div class="text-center mb-4">
-                    {% if profile.bio %}
-                        <p class="text-muted">{{ profile.bio }}</p>
-                    {% else %}
-                        <p class="text-muted fst-italic">This user hasn't written a bio yet.</p>
-                    {% endif %}
-                </div>
+<div class="text-center mb-4">
+    {% if profile.bio %}
+        <p class="text-muted">{{ profile.bio }}</p>
+    {% else %}
+        {% if profile.user != user %}
+            <p class="text-muted fst-italic">This user hasn't written a bio yet.</p>
+        {% endif %}
+    {% endif %}
+</div>
+
 
                 <!-- Following -->
 <div class="card border-0 shadow-sm">
@@ -69,6 +78,32 @@
         {% endif %}
     </div>
 </div>
+
+<!-- Post History -->
+<div class="card border-0 shadow-sm mt-4">
+    <div class="card-header bg-white border-bottom fw-semibold">
+        Post History
+    </div>
+    <div class="card-body">
+        {% if posts %}
+            {% for post in posts %}
+                <div class="border-bottom mb-3 pb-2">
+                    <small class="text-muted d-block mb-1">{{ post.created_at|date:"M d, Y H:i" }}</small>
+                    <p class="mb-0" style="white-space: pre-wrap;">{{ post.body }}</p>
+                </div>
+            {% endfor %}
+        {% else %}
+            <p class="text-muted mb-0">
+                {% if profile.user == user %}
+                    You haven’t posted anything yet.
+                {% else %}
+                    This user hasn’t posted anything yet.
+                {% endif %}
+            </p>
+        {% endif %}
+    </div>
+</div>
+
 
 
                 <!-- Followers -->

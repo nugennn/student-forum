@@ -1,5 +1,44 @@
 {% extends 'base.html' %}
-{% block content %}
 
-<h1> hello </h1>
+{% block content %}
+<div class="container mt-5" style="max-width: 800px;">
+
+  {% if user.is_authenticated %}
+    <div class="card shadow-sm mb-4">
+      <div class="card-body">
+        <h4 class="card-title mb-3">Create a New Post</h4>
+        <form method="POST">
+          {% csrf_token %}
+          {{ form.body }}
+          <button type="submit" class="btn btn-primary mt-3">Post</button>
+        </form>
+      </div>
+    </div>
+  {% else %}
+    <div class="alert alert-warning text-center mb-4">
+      Please <a href="{% url 'login' %}">log in</a> to create a post.
+    </div>
+  {% endif %}
+
+  <h4 class="mb-3">Recent Posts</h4>
+
+  {% if posts %}
+    {% for post in posts %}
+      <div class="card mb-3 shadow-sm">
+        <div class="card-body">
+          <div class="d-flex justify-content-between mb-2">
+            <span class="fw-bold">{{ post.user.username }}</span>
+            <small class="text-muted">{{ post.created_at|date:"M d, Y H:i" }}</small>
+          </div>
+          <p class="card-text" style="white-space: pre-wrap;">{{ post.body }}</p>
+        </div>
+      </div>
+    {% endfor %}
+  {% else %}
+    <div class="alert alert-info text-center">
+      No posts yet.
+    </div>
+  {% endif %}
+
+</div>
 {% endblock %}
