@@ -52,6 +52,12 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'stdforum.urls'
 
+STATIC_URL = '/static/'
+STATICFILES_DIRS = [
+    BASE_DIR / "forum" / "static",  # Since your static folder is in `forum/static`
+]
+
+
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',

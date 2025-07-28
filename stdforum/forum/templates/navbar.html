@@ -54,7 +54,8 @@
     <a href="#"><i class="bi bi-question-circle"></i> Questions</a>
     <a href="#"><i class="bi bi-tags-fill"></i> Tags</a>
     <a href="#"><i class="bi bi-chat-dots-fill"></i> Discussions</a>
-    <a href="#"><i class="bi bi-person-fill"></i> Account</a>
+    <a href="{% url 'profile' request.user.id %}"><i class="bi bi-person-fill"></i> Account</a>
+
   </div>
 
 </body>

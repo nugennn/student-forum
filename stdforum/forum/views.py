@@ -1,16 +1,33 @@
 # your_app/views.py
-from django.shortcuts import render
-from .models import Profile
+from django.shortcuts import render, redirect
+from .models import Profile, Post
+from django.contrib import messages
 
 def home(request):
     return render(request, 'home.html', {})
 
 
 def profile_list(request):
-    if request.user.is_authenticated:
-        profiles = Profile.objects.exclude(user=request.user)
-    else:
-        # Handle anonymous user (e.g., show a message, or return all profiles)
-        profiles = Profile.objects.all()
+	if request.user.is_authenticated:
+		profiles = Profile.objects.exclude(user=request.user)
+		return render(request, 'profile_list.html', {"profiles":profiles})
+	else:
+		messages.success(request, ("You Must Be Logged In To View This Page..."))
+		return redirect('home')
 
-    return render(request, 'profile_list.html', {"profiles": profiles})
+def profile(request, pk):
+    if request.user.is_authenticated:
+        profile = Profile.objects.get(user_id=pk)
+        return render(request, 'profile.html', {"profile": profile})
+    else:
+          messages.success(request, ("You Must Be Logged In To View This Page..."))
+          return redirect('home')
+          
+
+        
+            
+		
+
+
+
+	

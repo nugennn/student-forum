@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container py-5">
+    {% if profile %}
+        <div class="row justify-content-center">
+            <div class="col-lg-8 col-md-10">
+
+                <!-- Profile Header -->
+                <div class="text-center mb-4">
+                    <h2 class="fw-bold">{{ profile.user.username }}</h2>
+
+                    {% if profile.profile_image %}
+                        <img src="{{ profile.profile_image.url }}"
+                             class="rounded-circle shadow"
+                             style="width: 120px; height: 120px; object-fit: cover;"
+                             alt="{{ profile.user.username }}'s Profile Picture">
+                    {% else %}
+                        <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center mx-auto shadow"
+                             style="width: 120px; height: 120px; font-size: 2rem;">
+                            {{ profile.user.username|first|upper }}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Bio -->
+                <div class="text-center mb-4">
+                    {% if profile.bio %}
+                        <p class="text-muted">{{ profile.bio }}</p>
+                    {% else %}
+                        <p class="text-muted fst-italic">This user hasn't written a bio yet.</p>
+                    {% endif %}
+                </div>
+
+                <!-- Follows -->
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white border-bottom fw-semibold">
+                        Following
+                    </div>
+                    <div class="card-body">
+                        {% if profile.follows.all %}
+                            <div class="list-group list-group-flush">
+                                {% for following in profile.follows.all %}
+                                    <a href="{% url 'profile' following.user.id %}"
+                                       class="list-group-item list-group-item-action text-decoration-none">
+                                        @{{ following.user.username }}
+                                    </a>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <p class="text-muted mb-0">Not following anyone yet.</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    {% else %}
+        <div class="alert alert-warning text-center" role="alert">
+            Profile not found or doesn't exist.
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
