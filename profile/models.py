@@ -89,6 +89,7 @@ class Profile(models.Model):
 
     logout_on_all_devices = models.BooleanField(default=False)
     send_email_notifications = models.BooleanField(default=False)
+    password_change_required = models.BooleanField(default=True)  # Force password change on first login
 
     voting_flags = models.IntegerField(default=0)
     helpful_close_votes = models.IntegerField(default=0)

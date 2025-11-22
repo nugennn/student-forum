@@ -675,7 +675,7 @@
     <div class="flex--item">
         <div class="d-flex ai-center fw-wrap gs8 wmx4">
             <div class="flex--item mb12 fs-headline2 lh-xs">
-                {{profileData.user}}
+                {% if profileData.full_name %}{{profileData.full_name}}{% else %}{{profileData.user.username}}{% endif %}
             </div>
             <div class="flex--item">
                 <div class="d-flex ai-center fw-nowrap gs4">

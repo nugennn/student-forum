@@ -13,6 +13,8 @@ urlpatterns = [
 	
 	path("login_request", views.login_request, name="login_request"),
 	
+	path('force_password_change/', views.force_password_change, name='force_password_change'),
+	
 	# path('login/', views.LoginView.as_view(), name='logins'),
 ]
 

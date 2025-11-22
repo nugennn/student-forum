@@ -144,9 +144,9 @@ comment in the postgresql configuration
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'forum',        # your DB name from pgAdmin
-        'USER': 'projectuser',      # your PostgreSQL user
-        'PASSWORD': 'workingonproject',     # your PostgreSQL password
+        'NAME': 'postgres',        # your DB name from pgAdmin
+        'USER': 'postgres',      # your PostgreSQL user
+        'PASSWORD': '1234',     # your PostgreSQL password
         'HOST': 'localhost',
         'PORT': '5432',
     }
