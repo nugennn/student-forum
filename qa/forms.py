@@ -27,7 +27,7 @@ class QuestionForm(forms.ModelForm):
 
 	class Meta:
 		model = Question
-		fields = ['title','body','tags']
+		fields = ['title','body','tags','community']
 
 class AnswerForm(forms.ModelForm):
 

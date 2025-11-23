@@ -50,6 +50,11 @@ JOB_TYPE_CHOICES = [
 
 ]
 
+USER_TYPE_CHOICES = [
+    ('Student', 'Student'),
+    ('Teacher', 'Teacher'),
+]
+
 
 
 class Profile(models.Model):
@@ -90,6 +95,8 @@ class Profile(models.Model):
     logout_on_all_devices = models.BooleanField(default=False)
     send_email_notifications = models.BooleanField(default=False)
     password_change_required = models.BooleanField(default=True)  # Force password change on first login
+    user_type = models.CharField(max_length=20, choices=USER_TYPE_CHOICES, default='Student')
+    is_verified = models.BooleanField(default=False)  # Auto-verified for teachers
 
     voting_flags = models.IntegerField(default=0)
     helpful_close_votes = models.IntegerField(default=0)

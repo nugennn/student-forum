@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from .models import Question, Answer, Bounty, Reputation, ProtectQuestion
+from .models import Question, Answer, Bounty, Reputation, ProtectQuestion, PostShare, PostLike
 from .forms import QuestionForm, AnswerForm, UpdateQuestion
 from django.http import JsonResponse, HttpResponse
 from django.db.models import Count, Q, Sum, F
@@ -21,6 +21,7 @@ from tagbadge.models import TagBadge
 from simple_history.utils import update_change_reason
 from itertools import chain
 from .models import BannedUser, BookmarkQuestion
+from django.contrib.auth.decorators import login_required
 import threading
 import time
 from time import sleep
@@ -329,86 +330,83 @@ def save_comment(request, question_id):
     and award user if eligible
     """
     if request.method == 'POST':
-        if request.user.profile.comment_everywhere_Priv:
-            comment = request.POST['comment']
-            que = Question.objects.get(pk=question_id)
-            question_URL = request.build_absolute_uri(que.get_absolute_url())
-            commented_by = request.user
-            getComments = CommentQ.objects.filter(
-                commented_by=request.user).count()
-            if getComments >= 10:
-                # createTag = Tag.objects.get_or_create(name="Commentator")
-                TagBadge.objects.get_or_create(
-                    awarded_to_user=commented_by,
-                    badge_type="SILVER",
-                    tag_name="Commentator",
-                    bade_position="BADGE")
-                PrivRepNotification.objects.get_or_create(
-                    for_user=commented_by,
-                    url=question_URL,
-                    type_of_PrivNotify="BADGE_EARNED",
-                    for_if="Commentator",
-                    description="Leave 10 comments"
-                )
+        # Allow all authenticated users to comment (removed reputation check)
+        comment = request.POST['comment']
+        que = Question.objects.get(pk=question_id)
+        question_URL = request.build_absolute_uri(que.get_absolute_url())
+        commented_by = request.user
+        getComments = CommentQ.objects.filter(
+            commented_by=request.user).count()
+        if getComments >= 10:
+            # createTag = Tag.objects.get_or_create(name="Commentator")
+            TagBadge.objects.get_or_create(
+                awarded_to_user=commented_by,
+                badge_type="SILVER",
+                tag_name="Commentator",
+                bade_position="BADGE")
+            PrivRepNotification.objects.get_or_create(
+                for_user=commented_by,
+                url=question_URL,
+                type_of_PrivNotify="BADGE_EARNED",
+                for_if="Commentator",
+                description="Leave 10 comments"
+            )
 
-            if comment != "":
-                createdComment = CommentQ.objects.create(
-                    question_comment=que, comment=comment, commented_by=commented_by)
-                if request.user != que.post_owner:
-                    Notification.objects.create(
-                        noti_receiver=que.post_owner,
-                        type_of_noti="question_comment",
+        if comment != "":
+            createdComment = CommentQ.objects.create(
+                question_comment=que, comment=comment, commented_by=commented_by)
+            if request.user != que.post_owner:
+                Notification.objects.create(
+                    noti_receiver=que.post_owner,
+                    type_of_noti="question_comment",
+                    url=question_URL,
+                    question_noti=que)
+
+            # It is getting comment's body then it is finding "@" in the comment-
+            # body and splitting all the other spaces, commas, brackets, etc.
+            # Then after it successfully got the name after @ like @xyz,
+            # then it will look if user with that username is exists or not
+            # and if exists then it will notify the user and if not it will
+            # print error of User.DoesNotExist.
+
+            getCommentBody = createdComment.comment
+
+            # Reference link of .find - https://docs.python.org/3/library/stdtypes.html#str.find
+            # Refrence link of split() -
+            # https://python-reference.readthedocs.io/en/latest/docs/str/split.html#example-1
+            user = getCommentBody[getCommentBody.find("@") + 1:].split()[0]
+
+            # Refrence link of re.split -
+            # https://docs.python.org/3/library/re.html#re.split
+            splitIt = re.split(",(?=(?:[^']*\'[^']*\')*[^']*$)", user)
+            newWord = listTOString(splitIt)
+
+            # Reference link of ObjectDoesNotExist -
+            # https://docs.djangoproject.com/en/4.0/ref/exceptions/#objectdoesnotexist
+            if "@" in getCommentBody:
+                try:
+                    User.objects.get(username=newWord)
+                    getUserIdByUsername = User.objects.get(
+                        username=newWord)
+                    question_URL = request.build_absolute_uri(
+                        que.get_absolute_url())
+                    send_BLANK_notification = Notification.objects.create(
+                        noti_receiver=getUserIdByUsername,
+                        type_of_noti="BLANK_NOTIFICATION",
                         url=question_URL,
                         question_noti=que)
+                    print(getUserIdByUsername)
 
-                # It is getting comment's body then it is finding "@" in the comment-
-                # body and splitting all the other spaces, commas, brackets, etc.
-                # Then after it successfully got the name after @ like @xyz,
-                # then it will look if user with that username is exists or not
-                # and if exists then it will notify the user and if not it will
-                # print error of User.DoesNotExist.
+                except User.DoesNotExist:
+                    print(
+                        "No User Found with mentioned username " +
+                        newWord +
+                        " in comment " +
+                        createdComment.comment)
 
-                getCommentBody = createdComment.comment
-
-                # Reference link of .find - https://docs.python.org/3/library/stdtypes.html#str.find
-                # Refrence link of split() -
-                # https://python-reference.readthedocs.io/en/latest/docs/str/split.html#example-1
-                user = getCommentBody[getCommentBody.find("@") + 1:].split()[0]
-
-                # Refrence link of re.split -
-                # https://docs.python.org/3/library/re.html#re.split
-                splitIt = re.split(",(?=(?:[^']*\'[^']*\')*[^']*$)", user)
-                newWord = listTOString(splitIt)
-
-                # Reference link of ObjectDoesNotExist -
-                # https://docs.djangoproject.com/en/4.0/ref/exceptions/#objectdoesnotexist
-                if "@" in getCommentBody:
-                    try:
-                        User.objects.get(username=newWord)
-                        getUserIdByUsername = User.objects.get(
-                            username=newWord)
-                        question_URL = request.build_absolute_uri(
-                            que.get_absolute_url())
-                        send_BLANK_notification = Notification.objects.create(
-                            noti_receiver=getUserIdByUsername,
-                            type_of_noti="BLANK_NOTIFICATION",
-                            url=question_URL,
-                            question_noti=que)
-                        print(getUserIdByUsername)
-
-                    except User.DoesNotExist:
-                        print(
-                            "No User Found with mentioned username " +
-                            newWord +
-                            " in comment " +
-                            createdComment.comment)
-
-                return JsonResponse({'bool': True})
-            else:
-                return JsonResponse({'bool': False})
+            return JsonResponse({'bool': True})
         else:
-            return JsonResponse(
-                {'action': "Need atleast 50 Reputation to Comment"})
+            return JsonResponse({'bool': False})
 
 
 def load_question_upvotes_downvotes(request, question_id):
@@ -2289,47 +2287,44 @@ def flagComment(request, commentq_id):
 
 def save_comment_answer(request, answer_id):
     if request.method == 'POST':
-        if request.user.profile.comment_everywhere_Priv:
-            comment = request.POST['comment']
-            answeringID = request.POST['request']
-            print(answeringID)
-            ans = Answer.objects.get(pk=answeringID)
-            question_URL = request.build_absolute_uri(
-                ans.questionans.get_absolute_url())
-            if comment != "":
-                create = CommentQ.objects.create(answer_comment=ans,
-                                                 comment=comment,
-                                                 commented_by=request.user
-                                                 )
-                if request.user != ans.answer_owner:
-                    Notification.objects.create(
-                        noti_receiver=ans.answer_owner,
-                        type_of_noti="comment_answer",
-                        url=question_URL,
-                        answer_noti=ans)
+        # Allow all authenticated users to comment (removed reputation check)
+        comment = request.POST['comment']
+        answeringID = request.POST['request']
+        print(answeringID)
+        ans = Answer.objects.get(pk=answeringID)
+        question_URL = request.build_absolute_uri(
+            ans.questionans.get_absolute_url())
+        if comment != "":
+            create = CommentQ.objects.create(answer_comment=ans,
+                                             comment=comment,
+                                             commented_by=request.user
+                                             )
+            if request.user != ans.answer_owner:
+                Notification.objects.create(
+                    noti_receiver=ans.answer_owner,
+                    type_of_noti="comment_answer",
+                    url=question_URL,
+                    answer_noti=ans)
 
-                getComments = CommentQ.objects.filter(
-                    commented_by=request.user).count()
-                if getComments >= 10:
-                    TagBadge.objects.get_or_create(
-                        awarded_to_user=create.commented_by,
-                        badge_type="SILVER",
-                        tag_name="Commentator",
-                        bade_position="BADGE")
-                    PrivRepNotification.objects.get_or_create(
-                        for_user=request.user,
-                        url=question_URL,
-                        type_of_PrivNotify="BADGE_EARNED",
-                        for_if="Commentator",
-                        description="Leave 10 comments"
-                    )
+            getComments = CommentQ.objects.filter(
+                commented_by=request.user).count()
+            if getComments >= 10:
+                TagBadge.objects.get_or_create(
+                    awarded_to_user=create.commented_by,
+                    badge_type="SILVER",
+                    tag_name="Commentator",
+                    bade_position="BADGE")
+                PrivRepNotification.objects.get_or_create(
+                    for_user=request.user,
+                    url=question_URL,
+                    type_of_PrivNotify="BADGE_EARNED",
+                    for_if="Commentator",
+                    description="Leave 10 comments"
+                )
 
-                return JsonResponse({'bool': True})
-            else:
-                return JsonResponse({'bool': False})
+            return JsonResponse({'bool': True})
         else:
-            return JsonResponse(
-                {'action': "Need atleast 50 Reputation to Comment"})
+            return JsonResponse({'bool': False})
 
 
 def FlagCommentAjax(request, commentq_id):
@@ -2383,6 +2378,14 @@ def new_question(request):
     last_posted_q = Question.objects.filter(post_owner=request.user).last()
     is_olderThan_nintyMinutes = timezone.now() - timedelta(minutes=90)
     
+    # Get user's joined communities
+    from community.models import Community
+    user_communities = Community.objects.filter(
+        members__user=request.user,
+        members__is_active=True,
+        is_active=True
+    ).distinct()
+    
     if request.method == 'POST':
         form = QuestionForm(request.POST, request.FILES)
         if form.is_valid():
@@ -2417,7 +2420,10 @@ def new_question(request):
     else:
         form = QuestionForm()
 
-    context = {'form': form}
+    context = {
+        'form': form,
+        'user_communities': user_communities,
+    }
     return render(request, 'qa/new_question.html', context)
 
 
@@ -3124,59 +3130,59 @@ def question_upvote_downvote(request, question_id):
             if request.user == post.post_owner:
                 return JsonResponse({'action': 'cannotLikeOwnPost'})
             else:
-                if request.user.profile.voteUpPriv:
-                    post.q_reputation += 10
-                    post.save()
-                    created = QUpvote(
-                        upvote_by_q=request.user,
-                        upvote_question_of=post)
-                    # notify = Notification(noti_receiver=post.post_owner,noti_sender=request.user,url=user_url,type_of_noti="vote_up_question")
-                    # notify.save()
-                    created.save()
-                    Reputation.objects.get_or_create(
-                        awarded_to=post.post_owner,
-                        question_O=post,
-                        question_rep_C=10,
-                        reputation_on_what='MY_QUESTION_UPVOTE_REP_P')
+                # Allow all authenticated users to upvote (removed reputation check)
+                post.q_reputation += 10
+                post.save()
+                created = QUpvote(
+                    upvote_by_q=request.user,
+                    upvote_question_of=post)
+                # notify = Notification(noti_receiver=post.post_owner,noti_sender=request.user,url=user_url,type_of_noti="vote_up_question")
+                # notify.save()
+                created.save()
+                Reputation.objects.get_or_create(
+                    awarded_to=post.post_owner,
+                    question_O=post,
+                    question_rep_C=10,
+                    reputation_on_what='MY_QUESTION_UPVOTE_REP_P')
+                PrivRepNotification.objects.get_or_create(
+                    for_user=post.post_owner,
+                    type_of_PrivNotify="MY_QUESTION_UPVOTE_REP_P",
+                    url=question_URL,
+                    for_if="",
+                    description="",
+                    question_priv_noti=post,
+                )
+                getReputationEarnedInLast_24Hours = Reputation.objects.filter(
+                    awarded_to=post.post_owner).aggregate(
+                    Sum('answer_rep_C'), Sum('question_rep_C'))
+                # if getReputationEarnedInLast_24Hours
+                d1 = getReputationEarnedInLast_24Hours['question_rep_C__sum']
+                total_question_rep = getReputationEarnedInLast_24Hours[
+                    'question_rep_C__sum'] if d1 else 0
+                s2 = getReputationEarnedInLast_24Hours['answer_rep_C__sum']
+                total_answer_rep = getReputationEarnedInLast_24Hours[
+                    'answer_rep_C__sum'] if s2 else 0
+
+                finalReputation = total_question_rep + total_answer_rep
+
+                # if finalReputation >= 10:
+                #     print("Awarded the Create Wiki Posts")
+                #     post.post_owner.profile.create_wiki_posts = True
+                #     post.post_owner.profile.save()
+
+                if created == QUpvote.objects.filter(
+                        upvote_by_q=request.user).first():
+                    TagBadge.objects.get_or_create(
+                        awarded_to_user=request.user,
+                        badge_type="BRONZE",
+                        tag_name="Supporter",
+                        bade_position="BADGE",
+                        questionIf_TagOf_Q=post)
                     PrivRepNotification.objects.get_or_create(
-                        for_user=post.post_owner,
-                        type_of_PrivNotify="MY_QUESTION_UPVOTE_REP_P",
+                        for_user=request.user,
+                        type_of_PrivNotify="BADGE_EARNED",
                         url=question_URL,
-                        for_if="",
-                        description="",
-                        question_priv_noti=post,
-                    )
-                    getReputationEarnedInLast_24Hours = Reputation.objects.filter(
-                        awarded_to=post.post_owner).aggregate(
-                        Sum('answer_rep_C'), Sum('question_rep_C'))
-                    # if getReputationEarnedInLast_24Hours
-                    d1 = getReputationEarnedInLast_24Hours['question_rep_C__sum']
-                    total_question_rep = getReputationEarnedInLast_24Hours[
-                        'question_rep_C__sum'] if d1 else 0
-                    s2 = getReputationEarnedInLast_24Hours['answer_rep_C__sum']
-                    total_answer_rep = getReputationEarnedInLast_24Hours[
-                        'answer_rep_C__sum'] if s2 else 0
-
-                    finalReputation = total_question_rep + total_answer_rep
-
-                    # if finalReputation >= 10:
-                    #     print("Awarded the Create Wiki Posts")
-                    #     post.post_owner.profile.create_wiki_posts = True
-                    #     post.post_owner.profile.save()
-
-                    if created == QUpvote.objects.filter(
-                            upvote_by_q=request.user).first():
-                        TagBadge.objects.get_or_create(
-                            awarded_to_user=request.user,
-                            badge_type="BRONZE",
-                            tag_name="Supporter",
-                            bade_position="BADGE",
-                            questionIf_TagOf_Q=post)
-                        PrivRepNotification.objects.get_or_create(
-                            for_user=request.user,
-                            type_of_PrivNotify="BADGE_EARNED",
-                            url=question_URL,
-                            for_if="Supporter",
+                        for_if="Supporter",
                             description="First up vote"
                         )
 
@@ -5060,5 +5066,149 @@ def search_questions(request):
             Q(id__in=question_matches.values_list('id', flat=True))
         )
     return render(request, "qa/search_results.html", {"query": query, "results": results})
+
+
+# Post Sharing Views
+@login_required
+def share_post(request):
+    """Handle post sharing, reposting, and quoting"""
+    if request.method == 'POST':
+        post_id = request.POST.get('post_id')
+        post_type = request.POST.get('post_type')  # 'question' or 'answer'
+        share_type = request.POST.get('share_type')  # 'share', 'repost', or 'quote'
+        quote_text = request.POST.get('quote_text', '')
+        
+        try:
+            if post_type == 'question':
+                post = Question.objects.get(pk=post_id)
+                share = PostShare.objects.create(
+                    shared_by=request.user,
+                    question=post,
+                    share_type=share_type,
+                    quote_text=quote_text if share_type == 'quote' else None
+                )
+            elif post_type == 'answer':
+                post = Answer.objects.get(pk=post_id)
+                share = PostShare.objects.create(
+                    shared_by=request.user,
+                    answer=post,
+                    share_type=share_type,
+                    quote_text=quote_text if share_type == 'quote' else None
+                )
+            else:
+                return JsonResponse({'error': 'Invalid post type'}, status=400)
+            
+            # Create notification for post owner
+            if share_type == 'share':
+                notification_type = 'post_shared'
+                message = f'{request.user.username} shared your {post_type}'
+            elif share_type == 'repost':
+                notification_type = 'post_reposted'
+                message = f'{request.user.username} reposted your {post_type}'
+            else:  # quote
+                notification_type = 'post_quoted'
+                message = f'{request.user.username} quoted your {post_type}'
+            
+            post_owner = post.post_owner if post_type == 'question' else post.answer_owner
+            if request.user != post_owner:
+                Notification.objects.create(
+                    noti_receiver=post_owner,
+                    type_of_noti=notification_type,
+                    url=post.get_absolute_url() if post_type == 'question' else post.questionans.get_absolute_url(),
+                    question_noti=post if post_type == 'question' else post.questionans,
+                    answer_noti=post if post_type == 'answer' else None
+                )
+            
+            return JsonResponse({
+                'success': True,
+                'message': f'{share_type.capitalize()}d successfully!',
+                'share_id': share.id
+            })
+        
+        except Question.DoesNotExist:
+            return JsonResponse({'error': 'Question not found'}, status=404)
+        except Answer.DoesNotExist:
+            return JsonResponse({'error': 'Answer not found'}, status=404)
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)
+    
+    return JsonResponse({'error': 'Invalid request method'}, status=400)
+
+
+@login_required
+def get_shares(request, post_id, post_type):
+    """Get all shares for a post"""
+    try:
+        if post_type == 'question':
+            shares = PostShare.objects.filter(question_id=post_id).select_related('shared_by')
+        elif post_type == 'answer':
+            shares = PostShare.objects.filter(answer_id=post_id).select_related('shared_by')
+        else:
+            return JsonResponse({'error': 'Invalid post type'}, status=400)
+        
+        shares_data = []
+        for share in shares:
+            shares_data.append({
+                'id': share.id,
+                'shared_by': share.shared_by.username,
+                'share_type': share.share_type,
+                'quote_text': share.quote_text,
+                'created_at': share.created_at.isoformat()
+            })
+        
+        return JsonResponse({
+            'success': True,
+            'shares': shares_data,
+            'count': len(shares_data)
+        })
+    
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+@login_required
+def like_post(request):
+    """Like/unlike a post"""
+    if request.method == 'POST':
+        post_id = request.POST.get('post_id')
+        post_type = request.POST.get('post_type')
+        
+        try:
+            if post_type == 'question':
+                post = Question.objects.get(pk=post_id)
+                like, created = PostLike.objects.get_or_create(
+                    user=request.user,
+                    question=post
+                )
+            elif post_type == 'answer':
+                post = Answer.objects.get(pk=post_id)
+                like, created = PostLike.objects.get_or_create(
+                    user=request.user,
+                    answer=post
+                )
+            else:
+                return JsonResponse({'error': 'Invalid post type'}, status=400)
+            
+            if not created:
+                # Unlike if already liked
+                like.delete()
+                return JsonResponse({
+                    'success': True,
+                    'action': 'unliked',
+                    'liked': False
+                })
+            
+            return JsonResponse({
+                'success': True,
+                'action': 'liked',
+                'liked': True
+            })
+        
+        except (Question.DoesNotExist, Answer.DoesNotExist):
+            return JsonResponse({'error': 'Post not found'}, status=404)
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)
+    
+    return JsonResponse({'error': 'Invalid request method'}, status=400)
 
 

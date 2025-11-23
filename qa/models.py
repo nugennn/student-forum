@@ -36,6 +36,7 @@ class Question(models.Model):
     active_date = models.DateTimeField(auto_now=True)
     viewers = models.ManyToManyField(User, related_name='viewed_posts', blank=True)
     q_reputation = models.IntegerField(default=0)
+    community = models.ForeignKey('community.Community', on_delete=models.SET_NULL, null=True, blank=True, related_name='questions')
     q_edited_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='q_edited_by', default='', null=True, blank=True)
     q_edited_time = models.DateTimeField(auto_now_add=True)  
     is_bountied = models.BooleanField(default=False)
@@ -369,3 +370,43 @@ class BannedUser(models.Model):
 
     def __str__(self):
         return f"{self.user} - {self.banned_reasons} - {self.ban_till}"
+
+
+# Post Sharing Models
+class PostShare(models.Model):
+    """Model for sharing posts with followers"""
+    SHARE_TYPE_CHOICES = [
+        ('share', 'Share'),
+        ('repost', 'Repost'),
+        ('quote', 'Quote'),
+    ]
+    
+    shared_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='post_shares')
+    question = models.ForeignKey(Question, on_delete=models.CASCADE, null=True, blank=True, related_name='shares')
+    answer = models.ForeignKey(Answer, on_delete=models.CASCADE, null=True, blank=True, related_name='shares')
+    share_type = models.CharField(max_length=20, choices=SHARE_TYPE_CHOICES, default='share')
+    quote_text = models.TextField(blank=True, null=True)  # For quote shares
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        post_type = 'Question' if self.question else 'Answer'
+        return f"{self.shared_by.username} {self.share_type}d a {post_type}"
+
+
+class PostLike(models.Model):
+    """Model for tracking post likes/favorites"""
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='post_likes')
+    question = models.ForeignKey(Question, on_delete=models.CASCADE, null=True, blank=True, related_name='likes')
+    answer = models.ForeignKey(Answer, on_delete=models.CASCADE, null=True, blank=True, related_name='likes')
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        unique_together = ('user', 'question', 'answer')
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        post_type = 'Question' if self.question else 'Answer'
+        return f"{self.user.username} liked a {post_type}"

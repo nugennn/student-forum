@@ -48,22 +48,70 @@ def is_ajax(request):
     return request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest'
 
 def Ajax_searchTag(request):
-    q = request.GET.get('w')
-    results = Tag.objects.filter(name__icontains=q).distinct()
+    from tagbadge.tag_descriptions import get_tag_metadata
+    from django.db.models import Count
+    
+    q = request.GET.get('w', '')
+    
+    # Get tags with question counts
+    results = Tag.objects.filter(name__icontains=q).annotate(
+        question_count=Count('taggit_taggeditem_items', 
+                           filter=Q(taggit_taggeditem_items__content_type__model='question'))
+    ).distinct()
+    
     serialized_results = []
     for result in results:
+        # Skip tags with 0 questions
+        if result.question_count == 0:
+            continue
+            
+        metadata = get_tag_metadata(result.name)
         serialized_results.append({
             'id': result.id,
             'tag_name': result.name,
-            # 'results':result,
-            })
+            'description': metadata['description'],
+            'icon': metadata['icon'],
+            'color': metadata['color'],
+            'question_count': result.question_count,
+        })
 
     return JsonResponse({'results': serialized_results})
 
 def tagsPage(request):
-    All_tags = Question.tags.most_common()
-
-    context = {'All_tags':All_tags,}
+    from tagbadge.tag_descriptions import get_tag_metadata
+    from django.db.models import Count
+    
+    # Get sorting parameter
+    tab = request.GET.get('tab', 'popular')
+    
+    # Get all tags with question counts
+    tags_queryset = Tag.objects.annotate(
+        question_count=Count('taggit_taggeditem_items',
+                           filter=Q(taggit_taggeditem_items__content_type__model='question'))
+    ).filter(question_count__gt=0)  # Only show tags with questions
+    
+    # Apply sorting
+    if tab == 'name':
+        tags_queryset = tags_queryset.order_by('name')
+    elif tab == 'new':
+        tags_queryset = tags_queryset.order_by('-id')  # Newest first
+    else:  # popular (default)
+        tags_queryset = tags_queryset.order_by('-question_count')
+    
+    # Add metadata to each tag
+    tags_with_metadata = []
+    for tag in tags_queryset:
+        metadata = get_tag_metadata(tag.name)
+        tag.description = metadata['description']
+        tag.icon = metadata['icon']
+        tag.color = metadata['color']
+        tag.question_count = tag.question_count
+        tags_with_metadata.append(tag)
+    
+    context = {
+        'All_tags': tags_with_metadata,
+        'tab': tab,
+    }
     return render(request, 'profile/tagsPage.html', context)
 
 def usersPage(request):

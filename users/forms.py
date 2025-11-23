@@ -5,9 +5,9 @@ from django.forms import ModelForm
 from django.core.exceptions import ValidationError
 
 def validate_khec_email(email):
-    """Validate that email ends with khec.edu.np"""
-    if not email.endswith('@khec.edu.np'):
-        raise ValidationError('Email must end with @khec.edu.np')
+    """Validate that email ends with khec.edu.np or khwopa.edu.np"""
+    if not (email.endswith('@khec.edu.np') or email.endswith('@khwopa.edu.np')):
+        raise ValidationError('Email must end with @khec.edu.np (Student) or @khwopa.edu.np (Teacher)')
 
 class SignUpForm(UserCreationForm):
     """Admin-only form for creating new student accounts"""
@@ -44,8 +44,8 @@ class EmailAuthenticationForm(AuthenticationForm):
     def clean_username(self):
         """Validate email format"""
         email = self.cleaned_data.get('username')
-        if email and not email.endswith('@khec.edu.np'):
-            raise ValidationError('Please use your institutional email address (@khec.edu.np)')
+        if email and not (email.endswith('@khec.edu.np') or email.endswith('@khwopa.edu.np')):
+            raise ValidationError('Please use your institutional email address (@khec.edu.np or @khwopa.edu.np)')
         return email
 
 class ForcePasswordChangeForm(SetPasswordForm):

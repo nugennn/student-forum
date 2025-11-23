@@ -1,0 +1,195 @@
+{% extends 'profile/base.html' %}
+{% load static %}
+
+{% block css %}
+<style>
+    .page-header {
+        margin-bottom: 24px;
+        padding: 0 16px;
+    }
+
+    .page-title {
+        font-size: 24px;
+        font-weight: 600;
+        color: #0c0d0e;
+        margin: 0 0 8px;
+    }
+
+    .breadcrumb {
+        font-size: 13px;
+        color: #6a737d;
+    }
+
+    .breadcrumb a {
+        color: #0066cc;
+        text-decoration: none;
+    }
+
+    .breadcrumb a:hover {
+        text-decoration: underline;
+    }
+
+    .members-container {
+        background: white;
+        border: 1px solid #e1e4e8;
+        border-radius: 8px;
+        overflow: hidden;
+        padding: 0 16px;
+    }
+
+    .members-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .member-row {
+        display: flex;
+        align-items: center;
+        padding: 16px 0;
+        border-bottom: 1px solid #e1e4e8;
+        gap: 12px;
+    }
+
+    .member-row:last-child {
+        border-bottom: none;
+    }
+
+    .member-avatar {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        font-weight: 600;
+        color: white;
+        flex-shrink: 0;
+    }
+
+    .member-info {
+        flex: 1;
+    }
+
+    .member-name {
+        font-size: 14px;
+        font-weight: 600;
+        color: #0066cc;
+        text-decoration: none;
+        display: block;
+        margin-bottom: 4px;
+    }
+
+    .member-name:hover {
+        text-decoration: underline;
+    }
+
+    .member-meta {
+        font-size: 12px;
+        color: #6a737d;
+    }
+
+    .member-role {
+        display: inline-block;
+        background: #f6f8fa;
+        color: #0066cc;
+        padding: 4px 8px;
+        border-radius: 3px;
+        font-size: 11px;
+        font-weight: 600;
+        margin-left: 8px;
+    }
+
+    .pagination {
+        display: flex;
+        justify-content: center;
+        gap: 8px;
+        margin-top: 24px;
+        padding: 16px 0;
+    }
+
+    .pagination a, .pagination span {
+        padding: 8px 12px;
+        border: 1px solid #d1d5da;
+        border-radius: 4px;
+        text-decoration: none;
+        color: #0066cc;
+    }
+
+    .pagination .current {
+        background: #0066cc;
+        color: white;
+        border-color: #0066cc;
+    }
+
+    .no-members {
+        text-align: center;
+        padding: 40px 16px;
+        color: #6a737d;
+    }
+</style>
+{% endblock css %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">{{ community.name }} - Members</h1>
+    <div class="breadcrumb">
+        <a href="{% url 'community:community_list' %}">Communities</a> /
+        <a href="{% url 'community:community_detail' community.slug %}">{{ community.name }}</a> /
+        Members
+    </div>
+</div>
+
+{% if members %}
+    <div class="members-container">
+        <ul class="members-list">
+            {% for member in members %}
+                <li class="member-row">
+                    <div class="member-avatar">
+                        {{ member.user.username|first|upper }}
+                    </div>
+                    <div class="member-info">
+                        <a href="{% url 'profile:userProfile' member.user.id member.user.username %}" class="member-name">
+                            {{ member.user.username }}
+                        </a>
+                        <div class="member-meta">
+                            Joined {{ member.joined_at|date:"M d, Y" }}
+                            {% if member.role != 'member' %}
+                                <span class="member-role">{{ member.role|title }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    {% if page_obj.has_other_pages %}
+        <div class="pagination">
+            {% if page_obj.has_previous %}
+                <a href="?page=1">First</a>
+                <a href="?page={{ page_obj.previous_page_number }}">Previous</a>
+            {% endif %}
+
+            {% for num in page_obj.paginator.page_range %}
+                {% if page_obj.number == num %}
+                    <span class="current">{{ num }}</span>
+                {% else %}
+                    <a href="?page={{ num }}">{{ num }}</a>
+                {% endif %}
+            {% endfor %}
+
+            {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}">Next</a>
+                <a href="?page={{ page_obj.paginator.num_pages }}">Last</a>
+            {% endif %}
+        </div>
+    {% endif %}
+{% else %}
+    <div class="no-members">
+        <p>No members in this community yet.</p>
+    </div>
+{% endif %}
+{% endblock content %}

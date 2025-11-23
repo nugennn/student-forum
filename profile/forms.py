@@ -3,6 +3,20 @@ from .models import Profile,Position
 from martor.fields import MartorFormField
 
 class EditProfileForm(forms.ModelForm):
+	
+	def __init__(self, *args, **kwargs):
+		super().__init__(*args, **kwargs)
+		# Auto-populate title field based on user email domain
+		if self.instance and self.instance.user:
+			email = self.instance.user.email
+			if email.endswith('@khwopa.edu.np'):
+				self.fields['title'].initial = '@khwopa.edu.np'
+				self.fields['title'].widget.attrs['readonly'] = True
+				self.fields['title'].help_text = 'Automatically set for Teachers'
+			elif email.endswith('@khec.edu.np'):
+				self.fields['title'].initial = '@khec.edu.np'
+				self.fields['title'].widget.attrs['readonly'] = True
+				self.fields['title'].help_text = 'Automatically set for Students'
 
 	class Meta:
 		model = Profile

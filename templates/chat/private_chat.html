@@ -1,0 +1,256 @@
+{% extends 'profile/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row h-100">
+        <div class="col-md-8 mx-auto">
+            <div class="card shadow-sm" style="height: 85vh; display: flex; flex-direction: column;">
+                <!-- Chat Header -->
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center">
+                        <img src="{{ other_user.profile.profile_photo.url }}" alt="{{ other_user.username }}" 
+                             class="rounded-circle me-3" width="40" height="40"
+                             onerror="this.src='https://via.placeholder.com/40'">
+                        <div>
+                            <h6 class="mb-0">{{ other_user.get_full_name|default:other_user.username }}</h6>
+                            <small class="text-light">@{{ other_user.username }}</small>
+                        </div>
+                    </div>
+                    <a href="{% url 'profile:user_profile' other_user.id %}" class="btn btn-sm btn-light">
+                        <i class="fas fa-user"></i> View Profile
+                    </a>
+                </div>
+
+                <!-- Messages Container -->
+                <div class="card-body flex-grow-1 overflow-y-auto" id="messagesContainer" style="background-color: #f8f9fa;">
+                    {% for message in messages %}
+                        <div class="mb-3 {% if message.sender == request.user %}text-end{% endif %}">
+                            <div class="d-inline-block">
+                                {% if message.message_type == 'text' %}
+                                    <div class="alert {% if message.sender == request.user %}alert-primary{% else %}alert-light{% %} mb-1" 
+                                         style="max-width: 500px; word-wrap: break-word;">
+                                        {{ message.content }}
+                                    </div>
+                                {% elif message.message_type == 'image' %}
+                                    <div class="mb-1">
+                                        <img src="{{ message.image.url }}" alt="Image" class="img-fluid rounded" style="max-width: 300px;">
+                                    </div>
+                                {% elif message.message_type == 'file' %}
+                                    <div class="alert alert-light mb-1">
+                                        <i class="fas fa-file"></i>
+                                        <a href="{{ message.file.url }}" download>{{ message.content }}</a>
+                                    </div>
+                                {% elif message.message_type == 'link' %}
+                                    <div class="card mb-1" style="max-width: 400px;">
+                                        {% if message.link_image %}
+                                            <img src="{{ message.link_image }}" class="card-img-top" alt="Link preview">
+                                        {% endif %}
+                                        <div class="card-body">
+                                            <h6 class="card-title">{{ message.link_title }}</h6>
+                                            <p class="card-text text-muted small">{{ message.link_description }}</p>
+                                            <a href="{{ message.link_url }}" target="_blank" class="btn btn-sm btn-primary">
+                                                Open Link
+                                            </a>
+                                        </div>
+                                    </div>
+                                {% endif %}
+                                <small class="text-muted d-block">
+                                    {{ message.created_at|date:"H:i" }}
+                                    {% if message.is_edited %}<em>(edited)</em>{% endif %}
+                                </small>
+                            </div>
+                        </div>
+                    {% empty %}
+                        <div class="text-center text-muted mt-5">
+                            <i class="fas fa-comments" style="font-size: 3rem; opacity: 0.3;"></i>
+                            <p class="mt-3">No messages yet. Start the conversation!</p>
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Message Input -->
+                <div class="card-footer bg-light">
+                    <form id="messageForm" class="d-flex gap-2">
+                        <input type="text" id="messageInput" class="form-control" placeholder="Type a message..." required>
+                        <button type="button" class="btn btn-outline-secondary" onclick="sendImage()">
+                            <i class="fas fa-image"></i>
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary" onclick="sendFile()">
+                            <i class="fas fa-paperclip"></i>
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary" onclick="sendLink()">
+                            <i class="fas fa-link"></i>
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-paper-plane"></i> Send
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Hidden file inputs -->
+<input type="file" id="imageInput" accept="image/*" style="display: none;">
+<input type="file" id="fileInput" style="display: none;">
+
+<script>
+const chatId = {{ chat.id }};
+const chatType = 'private';
+
+document.getElementById('messageForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    sendMessage();
+});
+
+function sendMessage() {
+    const input = document.getElementById('messageInput');
+    const content = input.value.trim();
+
+    if (!content) return;
+
+    fetch('/chat/send-message/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCsrfToken()
+        },
+        body: JSON.stringify({
+            chat_type: chatType,
+            chat_id: chatId,
+            content: content
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            input.value = '';
+            location.reload();
+        } else {
+            alert('Error: ' + data.error);
+        }
+    })
+    .catch(error => console.error('Error:', error));
+}
+
+function sendImage() {
+    document.getElementById('imageInput').click();
+}
+
+document.getElementById('imageInput').addEventListener('change', function() {
+    const file = this.files[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('chat_type', chatType);
+    formData.append('chat_id', chatId);
+    formData.append('image', file);
+
+    fetch('/chat/send-image/', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCsrfToken()
+        },
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert('Error: ' + data.error);
+        }
+    })
+    .catch(error => console.error('Error:', error));
+});
+
+function sendFile() {
+    document.getElementById('fileInput').click();
+}
+
+document.getElementById('fileInput').addEventListener('change', function() {
+    const file = this.files[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('chat_type', chatType);
+    formData.append('chat_id', chatId);
+    formData.append('file', file);
+
+    fetch('/chat/send-file/', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCsrfToken()
+        },
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert('Error: ' + data.error);
+        }
+    })
+    .catch(error => console.error('Error:', error));
+});
+
+function sendLink() {
+    const url = prompt('Enter the URL:');
+    if (!url) return;
+
+    fetch('/chat/send-link/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCsrfToken()
+        },
+        body: JSON.stringify({
+            chat_type: chatType,
+            chat_id: chatId,
+            link_url: url
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert('Error: ' + data.error);
+        }
+    })
+    .catch(error => console.error('Error:', error));
+}
+
+// Auto-scroll to bottom
+document.addEventListener('DOMContentLoaded', function() {
+    const container = document.getElementById('messagesContainer');
+    container.scrollTop = container.scrollHeight;
+});
+</script>
+
+<style>
+#messagesContainer {
+    scroll-behavior: smooth;
+}
+
+.alert {
+    padding: 10px 15px;
+    border-radius: 10px;
+    margin: 0;
+}
+
+.alert-primary {
+    background-color: #6366f1;
+    color: white;
+    border: none;
+}
+
+.alert-light {
+    background-color: white;
+    border: 1px solid #dee2e6;
+}
+</style>
+{% endblock %}

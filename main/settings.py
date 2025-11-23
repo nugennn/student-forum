@@ -43,6 +43,10 @@ INSTALLED_APPS = [
     'tagbadge',
     # App
     'help',
+    # Chat App
+    'chat',
+    # Community App
+    'community',
     'taggit',
     'crispy_forms',
     'crispy_bootstrap4',
@@ -130,27 +134,24 @@ If you don't want to use postgresql then remove comment of sqlite's configuratio
 comment in the postgresql configuration
 """
 
-# import os
-# BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.sqlite3',
-#         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-#     }
-# }
-
-
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'postgres',        # your DB name from pgAdmin
-        'USER': 'postgres',      # your PostgreSQL user
-        'PASSWORD': '1234',     # your PostgreSQL password
-        'HOST': 'localhost',
-        'PORT': '5432',
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
     }
 }
+
+# PostgreSQL Configuration (uncomment to use PostgreSQL)
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql',
+#         'NAME': 'postgres',        # your DB name from pgAdmin
+#         'USER': 'postgres',      # your PostgreSQL user
+#         'PASSWORD': '1234',     # your PostgreSQL password
+#         'HOST': 'localhost',
+#         'PORT': '5432',
+#     }
+# }
 
 
 # Password validation
@@ -276,3 +277,9 @@ CKEDITOR_IMAGE_BACKEND = "pillow"
 
 # Heroku setting
 # django_heroku.settings(locals())
+
+# CSRF Configuration
+CSRF_COOKIE_HTTPONLY = False  # Allow JavaScript to read CSRF token from cookies
+CSRF_COOKIE_SECURE = False  # Set to True in production with HTTPS
+CSRF_TRUSTED_ORIGINS = ['http://localhost:8000', 'http://127.0.0.1:8000']
+CSRF_COOKIE_SAMESITE = 'Lax'  # Prevent CSRF attacks while allowing form submissions

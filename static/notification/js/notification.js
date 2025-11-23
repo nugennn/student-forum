@@ -34,6 +34,8 @@ function openInbox() {
         forBackground.removeClass('forBackgroundClass');
     }
 
+    // Mark all notifications as read when inbox is opened
+    markNotificationsAsRead();
 }
 
 
@@ -70,7 +72,8 @@ function openAchievementInbox() {
         forBackground.removeClass('forBackgroundClass');
     }
 
-
+    // Mark all achievements as read when inbox is opened
+    markAchievementsAsRead();
 }
 
 
@@ -156,4 +159,64 @@ function openReviewInbox() {
         forBackground.addClass('forBackgroundClass');
     }
 });
+
+// Function to mark all notifications as read
+function markNotificationsAsRead() {
+    $.ajax({
+        url: '/notification/read_All_Notifications/',
+        type: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        success: function(response) {
+            // Remove the notification badge
+            $('.button__badge').fadeOut(300, function() {
+                $(this).remove();
+            });
+            // Update the unread count
+            $('.js-unread-count._important').text('0');
+        },
+        error: function(error) {
+            console.log('Error marking notifications as read:', error);
+        }
+    });
+}
+
+// Function to mark all achievements as read
+function markAchievementsAsRead() {
+    $.ajax({
+        url: '/notification/read_All_Priv_Notifications/',
+        type: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        success: function(response) {
+            // Remove the reputation badge
+            $('.unseen-reputation').fadeOut(300, function() {
+                $(this).remove();
+            });
+            // Update the unread count
+            $('.js-unread-count._positive').text('+0');
+        },
+        error: function(error) {
+            console.log('Error marking achievements as read:', error);
+        }
+    });
+}
+
+// Helper function to get CSRF token from cookies
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
 

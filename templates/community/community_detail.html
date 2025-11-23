@@ -1,0 +1,373 @@
+{% extends 'profile/base.html' %}
+{% load static %}
+
+{% block css %}
+<style>
+    .community-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 40px 20px;
+        margin-bottom: 32px;
+        border-radius: 8px;
+        display: flex;
+        gap: 24px;
+        align-items: flex-start;
+    }
+
+    .community-icon-large {
+        width: 120px;
+        height: 120px;
+        background: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 60px;
+        flex-shrink: 0;
+    }
+
+    .community-icon-large img {
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+
+    .community-info {
+        flex: 1;
+    }
+
+    .community-name {
+        font-size: 32px;
+        font-weight: 700;
+        margin: 0 0 8px;
+    }
+
+    .community-meta {
+        font-size: 14px;
+        opacity: 0.9;
+        margin-bottom: 16px;
+    }
+
+    .community-actions {
+        display: flex;
+        gap: 12px;
+    }
+
+    .btn {
+        padding: 10px 16px;
+        border: none;
+        border-radius: 4px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-size: 14px;
+    }
+
+    .btn-primary {
+        background: white;
+        color: #667eea;
+    }
+
+    .btn-primary:hover {
+        background: #f0f0f0;
+    }
+
+    .btn-secondary {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        border: 1px solid white;
+    }
+
+    .btn-secondary:hover {
+        background: rgba(255, 255, 255, 0.3);
+    }
+
+    .btn-danger {
+        background: #dc3545;
+        color: white;
+    }
+
+    .btn-danger:hover {
+        background: #c82333;
+    }
+
+    .community-content {
+        display: grid;
+        grid-template-columns: 1fr 300px;
+        gap: 24px;
+    }
+
+    .community-description {
+        background: white;
+        padding: 24px;
+        border-radius: 8px;
+        border: 1px solid #e1e4e8;
+    }
+
+    .community-description h2 {
+        font-size: 18px;
+        font-weight: 600;
+        margin: 0 0 16px;
+        color: #0c0d0e;
+    }
+
+    .community-description-text {
+        color: #3c3f44;
+        line-height: 1.6;
+    }
+
+    .community-sidebar {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .sidebar-card {
+        background: white;
+        padding: 16px;
+        border-radius: 8px;
+        border: 1px solid #e1e4e8;
+    }
+
+    .sidebar-card h3 {
+        font-size: 14px;
+        font-weight: 600;
+        margin: 0 0 12px;
+        color: #0c0d0e;
+    }
+
+    .member-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .member-item {
+        padding: 8px 0;
+        border-bottom: 1px solid #f0f0f0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .member-item:last-child {
+        border-bottom: none;
+    }
+
+    .member-avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: #e1e4e8;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        font-weight: 600;
+        color: white;
+    }
+
+    .member-name {
+        font-size: 13px;
+        color: #0066cc;
+        text-decoration: none;
+        flex: 1;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .member-role {
+        font-size: 11px;
+        color: #999;
+        background: #f6f8fa;
+        padding: 2px 6px;
+        border-radius: 3px;
+    }
+
+    .view-all-members {
+        display: block;
+        text-align: center;
+        padding: 8px;
+        color: #0066cc;
+        text-decoration: none;
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+    .view-all-members:hover {
+        background: #f6f8fa;
+        border-radius: 4px;
+    }
+
+    .stats {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        margin-bottom: 16px;
+    }
+
+    .stat {
+        text-align: center;
+        padding: 12px;
+        background: #f6f8fa;
+        border-radius: 4px;
+    }
+
+    .stat-value {
+        font-size: 20px;
+        font-weight: 700;
+        color: #0c0d0e;
+    }
+
+    .stat-label {
+        font-size: 12px;
+        color: #6a737d;
+        margin-top: 4px;
+    }
+
+    @media (max-width: 768px) {
+        .community-header {
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .community-content {
+            grid-template-columns: 1fr;
+        }
+
+        .community-name {
+            font-size: 24px;
+        }
+    }
+</style>
+{% endblock css %}
+
+{% block content %}
+<div class="community-header">
+    <div class="community-icon-large">
+        {% if community.icon %}
+            <img src="{{ community.icon.url }}" alt="{{ community.name }}">
+        {% else %}
+            <i class="fas fa-users"></i>
+        {% endif %}
+    </div>
+    <div class="community-info">
+        <h1 class="community-name">{{ community.name }}</h1>
+        <div class="community-meta">
+            Created by <strong>{{ community.creator.username }}</strong> • {{ community.member_count }} members
+        </div>
+        <div class="community-actions">
+            {% if is_member %}
+                <button class="btn btn-secondary" onclick="leaveCommunity('{{ community.slug }}')">Leave Community</button>
+            {% else %}
+                <button class="btn btn-primary" onclick="joinCommunity('{{ community.slug }}')">Join Community</button>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="community-content">
+    <div>
+        <div class="community-description">
+            <h2>About</h2>
+            <div class="community-description-text">
+                {{ community.description|safe }}
+            </div>
+        </div>
+    </div>
+
+    <div class="community-sidebar">
+        <div class="sidebar-card">
+            <div class="stats">
+                <div class="stat">
+                    <div class="stat-value">{{ community.member_count }}</div>
+                    <div class="stat-label">Members</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value">{{ community.created_at|date:"M d, Y" }}</div>
+                    <div class="stat-label">Created</div>
+                </div>
+            </div>
+        </div>
+
+        {% if members %}
+            <div class="sidebar-card">
+                <h3>Recent Members</h3>
+                <ul class="member-list">
+                    {% for member in members %}
+                        <li class="member-item">
+                            <div class="member-avatar">
+                                {{ member.user.username|first|upper }}
+                            </div>
+                            <a href="{% url 'profile:userProfile' member.user.id member.user.username %}" class="member-name">
+                                {{ member.user.username }}
+                            </a>
+                            {% if member.role != 'member' %}
+                                <span class="member-role">{{ member.role|title }}</span>
+                            {% endif %}
+                        </li>
+                    {% endfor %}
+                </ul>
+                {% if community.member_count > 10 %}
+                    <a href="{% url 'community:community_members' community.slug %}" class="view-all-members">
+                        View all members →
+                    </a>
+                {% endif %}
+            </div>
+        {% endif %}
+
+        {% if is_member and member_role == 'admin' %}
+            <div class="sidebar-card">
+                <h3>Admin Options</h3>
+                <a href="#" style="display: block; padding: 8px; color: #0066cc; text-decoration: none; font-size: 13px;">Edit Community</a>
+                <a href="#" style="display: block; padding: 8px; color: #0066cc; text-decoration: none; font-size: 13px;">Manage Members</a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+async function joinCommunity(slug) {
+    try {
+        const response = await fetch(`/community/${slug}/join/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || '',
+                'Content-Type': 'application/json'
+            }
+        });
+        if (response.ok) {
+            location.reload();
+        } else {
+            alert('Failed to join community');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+    }
+}
+
+async function leaveCommunity(slug) {
+    if (confirm('Are you sure you want to leave this community?')) {
+        try {
+            const response = await fetch(`/community/${slug}/leave/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || '',
+                    'Content-Type': 'application/json'
+                }
+            });
+            if (response.ok) {
+                location.reload();
+            } else {
+                alert('Failed to leave community');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+        }
+    }
+}
+</script>
+{% endblock content %}

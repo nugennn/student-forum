@@ -1,0 +1,239 @@
+{% extends 'profile/base.html' %}
+{% load static %}
+
+{% block css %}
+<style>
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+        padding: 0 16px;
+    }
+
+    .page-title {
+        font-size: 24px;
+        font-weight: 600;
+        color: #0c0d0e;
+        margin: 0;
+    }
+
+    .create-btn {
+        background: #0066cc;
+        color: white;
+        border: none;
+        padding: 10px 16px;
+        border-radius: 4px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .create-btn:hover {
+        background: #0052a3;
+    }
+
+    .communities-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 16px;
+        padding: 0 16px;
+    }
+
+    .community-card {
+        background: white;
+        border: 1px solid #e1e4e8;
+        border-radius: 8px;
+        overflow: hidden;
+        transition: all 0.3s ease;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+    }
+
+    .community-card:hover {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        border-color: #0066cc;
+    }
+
+    .community-card-banner {
+        height: 120px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .community-card-icon {
+        position: absolute;
+        bottom: -20px;
+        left: 16px;
+        width: 80px;
+        height: 80px;
+        background: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 40px;
+        border: 3px solid white;
+    }
+
+    .community-card-icon img {
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+
+    .community-card-content {
+        padding: 60px 16px 16px;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .community-card-name {
+        font-size: 16px;
+        font-weight: 600;
+        color: #0c0d0e;
+        margin: 0 0 4px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .community-card-desc {
+        font-size: 13px;
+        color: #6a737d;
+        margin: 0 0 12px;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        flex: 1;
+    }
+
+    .community-card-meta {
+        font-size: 12px;
+        color: #999;
+        margin-bottom: 12px;
+    }
+
+    .community-card-actions {
+        display: flex;
+        gap: 8px;
+    }
+
+    .community-card-actions a {
+        flex: 1;
+        padding: 8px 12px;
+        border: 1px solid #d1d5da;
+        border-radius: 4px;
+        background: white;
+        color: #0066cc;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        text-decoration: none;
+        text-align: center;
+    }
+
+    .community-card-actions a:hover {
+        background: #f6f8fa;
+        border-color: #0066cc;
+    }
+
+    .no-communities {
+        text-align: center;
+        padding: 40px 16px;
+        color: #6a737d;
+    }
+
+    .pagination {
+        display: flex;
+        justify-content: center;
+        gap: 8px;
+        margin-top: 32px;
+        padding: 0 16px;
+    }
+
+    .pagination a, .pagination span {
+        padding: 8px 12px;
+        border: 1px solid #d1d5da;
+        border-radius: 4px;
+        text-decoration: none;
+        color: #0066cc;
+    }
+
+    .pagination .current {
+        background: #0066cc;
+        color: white;
+        border-color: #0066cc;
+    }
+</style>
+{% endblock css %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">My Communities</h1>
+    <a href="{% url 'community:community_list' %}" class="create-btn">Browse Communities</a>
+</div>
+
+{% if communities %}
+    <div class="communities-grid">
+        {% for community in communities %}
+            <div class="community-card">
+                <div class="community-card-banner" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                    {% if community.banner %}
+                        <img src="{{ community.banner.url }}" style="width: 100%; height: 100%; object-fit: cover;">
+                    {% endif %}
+                    <div class="community-card-icon">
+                        {% if community.icon %}
+                            <img src="{{ community.icon.url }}" alt="{{ community.name }}">
+                        {% else %}
+                            <i class="fas fa-users"></i>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="community-card-content">
+                    <h3 class="community-card-name">{{ community.name }}</h3>
+                    <p class="community-card-desc">{{ community.description|truncatewords:15 }}</p>
+                    <div class="community-card-meta">
+                        {{ community.member_count }} member{{ community.member_count|pluralize }}
+                    </div>
+                    <div class="community-card-actions">
+                        <a href="{% url 'community:community_detail' community.slug %}">View</a>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+    {% if page_obj.has_other_pages %}
+        <div class="pagination">
+            {% if page_obj.has_previous %}
+                <a href="?page=1">First</a>
+                <a href="?page={{ page_obj.previous_page_number }}">Previous</a>
+            {% endif %}
+
+            {% for num in page_obj.paginator.page_range %}
+                {% if page_obj.number == num %}
+                    <span class="current">{{ num }}</span>
+                {% else %}
+                    <a href="?page={{ num }}">{{ num }}</a>
+                {% endif %}
+            {% endfor %}
+
+            {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}">Next</a>
+                <a href="?page={{ page_obj.paginator.num_pages }}">Last</a>
+            {% endif %}
+        </div>
+    {% endif %}
+{% else %}
+    <div class="no-communities">
+        <p>You haven't joined any communities yet. <a href="{% url 'community:community_list' %}">Browse and join communities</a></p>
+    </div>
+{% endif %}
+{% endblock content %}

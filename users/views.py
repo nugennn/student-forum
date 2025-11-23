@@ -25,11 +25,22 @@ def signup_view(request):
             getFormEmail = form.cleaned_data['email']
             user.email = getFormEmail
             user.save()
+            
+            # Determine user type and verification based on email domain
+            if getFormEmail.endswith('@khwopa.edu.np'):
+                user.profile.user_type = 'Teacher'
+                user.profile.is_verified = True  # Auto-verify teachers
+            else:
+                user.profile.user_type = 'Student'
+                user.profile.is_verified = False
+            
             # Set password_change_required to True for new accounts
             user.profile.password_change_required = True
             user.profile.email = getFormEmail
             user.profile.save()
-            messages.success(request, f"Account created for {user.username}. Student must change password on first login.")
+            
+            user_type_label = "Teacher" if getFormEmail.endswith('@khwopa.edu.np') else "Student"
+            messages.success(request, f"Account created for {user.username} ({user_type_label}). Must change password on first login.")
             return redirect('profile:home')
     else:
         form = SignUpForm()
@@ -54,9 +65,9 @@ def login_request(request):
                             context={"form": form})
             
             if user is not None:
-                # Verify email ends with @khec.edu.np
-                if not user.email.endswith('@khec.edu.np'):
-                    messages.error(request, "Only users with @khec.edu.np email addresses can login.")
+                # Verify email ends with @khec.edu.np or @khwopa.edu.np
+                if not (user.email.endswith('@khec.edu.np') or user.email.endswith('@khwopa.edu.np')):
+                    messages.error(request, "Only users with institutional email addresses can login.")
                     return render(request=request,
                                 template_name="registration/login.html",
                                 context={"form": form})

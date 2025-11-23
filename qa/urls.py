@@ -107,6 +107,12 @@ urlpatterns = [
 	path('load_answer_upvotes_downvotes/<int:answer_id>/', views.load_answer_upvotes_downvotes, name='load_answer_upvotes_downvotes'),
 
 	path('search/', views.search_questions, name='search_questions'),
+
+	path('share-post/', views.share_post, name='share_post'),
+
+	path('get-shares/<int:post_id>/<str:post_type>/', views.get_shares, name='get_shares'),
+
+	path('like-post/', views.like_post, name='like_post'),
     
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

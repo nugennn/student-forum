@@ -1,0 +1,253 @@
+{% extends 'profile/base.html' %}
+{% load static %}
+
+{% block css %}
+<style>
+    .form-container {
+        max-width: 600px;
+        margin: 0 auto;
+        background: white;
+        padding: 32px;
+        border-radius: 8px;
+        border: 1px solid #e1e4e8;
+    }
+
+    .form-title {
+        font-size: 24px;
+        font-weight: 600;
+        margin: 0 0 24px;
+        color: #0c0d0e;
+    }
+
+    .form-group {
+        margin-bottom: 24px;
+    }
+
+    .form-group label {
+        display: block;
+        font-size: 14px;
+        font-weight: 600;
+        margin-bottom: 8px;
+        color: #0c0d0e;
+    }
+
+    .form-group input,
+    .form-group textarea {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid #d1d5da;
+        border-radius: 4px;
+        font-size: 14px;
+        font-family: inherit;
+        box-sizing: border-box;
+    }
+
+    .form-group input:focus,
+    .form-group textarea:focus {
+        outline: none;
+        border-color: #0066cc;
+        box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1);
+    }
+
+    .form-group textarea {
+        resize: vertical;
+        min-height: 150px;
+    }
+
+    .form-group .help-text {
+        font-size: 12px;
+        color: #6a737d;
+        margin-top: 4px;
+    }
+
+    .form-group input[type="checkbox"] {
+        width: auto;
+        margin-right: 8px;
+    }
+
+    .checkbox-label {
+        display: flex;
+        align-items: center;
+        font-weight: normal;
+        margin: 0;
+    }
+
+    .form-actions {
+        display: flex;
+        gap: 12px;
+        margin-top: 32px;
+    }
+
+    .btn {
+        padding: 10px 16px;
+        border: none;
+        border-radius: 4px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-size: 14px;
+    }
+
+    .btn-primary {
+        background: #0066cc;
+        color: white;
+        flex: 1;
+    }
+
+    .btn-primary:hover {
+        background: #0052a3;
+    }
+
+    .btn-secondary {
+        background: white;
+        color: #0066cc;
+        border: 1px solid #d1d5da;
+        flex: 1;
+    }
+
+    .btn-secondary:hover {
+        background: #f6f8fa;
+    }
+
+    .errorlist {
+        list-style: none;
+        padding: 0;
+        margin: 8px 0 0;
+        color: #d32f2f;
+        font-size: 13px;
+    }
+
+    .errorlist li {
+        padding: 4px 0;
+    }
+
+    .form-group.error input,
+    .form-group.error textarea {
+        border-color: #d32f2f;
+    }
+
+    .file-input-wrapper {
+        position: relative;
+        display: inline-block;
+        width: 100%;
+    }
+
+    .file-input-label {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        border: 2px dashed #d1d5da;
+        border-radius: 4px;
+        background: #f6f8fa;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .file-input-label:hover {
+        border-color: #0066cc;
+        background: #f0f4ff;
+    }
+
+    .file-input-wrapper input[type="file"] {
+        display: none;
+    }
+
+    .file-name {
+        font-size: 13px;
+        color: #6a737d;
+        margin-top: 8px;
+    }
+</style>
+{% endblock css %}
+
+{% block content %}
+<div class="form-container">
+    <h1 class="form-title">Create a New Community</h1>
+
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        <!-- Community Name -->
+        <div class="form-group {% if form.name.errors %}error{% endif %}">
+            <label for="{{ form.name.id_for_label }}">{{ form.name.label }}</label>
+            {{ form.name }}
+            {% if form.name.errors %}
+                {{ form.name.errors }}
+            {% endif %}
+            <div class="help-text">Choose a unique, descriptive name for your community</div>
+        </div>
+
+        <!-- Description -->
+        <div class="form-group {% if form.description.errors %}error{% endif %}">
+            <label for="{{ form.description.id_for_label }}">{{ form.description.label }}</label>
+            {{ form.description }}
+            {% if form.description.errors %}
+                {{ form.description.errors }}
+            {% endif %}
+            <div class="help-text">Provide guidelines and describe what your community is about</div>
+        </div>
+
+        <!-- Community Icon -->
+        <div class="form-group {% if form.icon.errors %}error{% endif %}">
+            <label for="{{ form.icon.id_for_label }}">{{ form.icon.label }}</label>
+            <div class="file-input-wrapper">
+                <label class="file-input-label" for="{{ form.icon.id_for_label }}">
+                    <span>
+                        <i class="fas fa-image"></i> Click to upload community icon
+                    </span>
+                </label>
+                {{ form.icon }}
+            </div>
+            {% if form.icon.errors %}
+                {{ form.icon.errors }}
+            {% endif %}
+            <div class="help-text">Upload a square image (recommended: 200x200px)</div>
+        </div>
+
+        <!-- Community Banner -->
+        <div class="form-group {% if form.banner.errors %}error{% endif %}">
+            <label for="{{ form.banner.id_for_label }}">{{ form.banner.label }}</label>
+            <div class="file-input-wrapper">
+                <label class="file-input-label" for="{{ form.banner.id_for_label }}">
+                    <span>
+                        <i class="fas fa-image"></i> Click to upload community banner
+                    </span>
+                </label>
+                {{ form.banner }}
+            </div>
+            {% if form.banner.errors %}
+                {{ form.banner.errors }}
+            {% endif %}
+            <div class="help-text">Upload a banner image (recommended: 1200x300px)</div>
+        </div>
+
+        <!-- Private Community -->
+        <div class="form-group">
+            <label class="checkbox-label">
+                {{ form.is_private }}
+                {{ form.is_private.label }}
+            </label>
+            <div class="help-text">Private communities require approval to join</div>
+        </div>
+
+        <!-- Form Actions -->
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Create Community</button>
+            <a href="{% url 'community:community_list' %}" class="btn btn-secondary" style="text-decoration: none; text-align: center;">Cancel</a>
+        </div>
+    </form>
+</div>
+
+<script>
+// File input display
+document.querySelectorAll('.file-input-wrapper input[type="file"]').forEach(input => {
+    input.addEventListener('change', function() {
+        const label = this.parentElement.querySelector('.file-input-label');
+        if (this.files.length > 0) {
+            label.innerHTML = `<span><i class="fas fa-check"></i> ${this.files[0].name}</span>`;
+        }
+    });
+});
+</script>
+{% endblock content %}

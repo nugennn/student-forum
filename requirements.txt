@@ -2,6 +2,7 @@ asgiref
 atomicwrites
 attrs
 autopep8
+beautifulsoup4
 django-adminactions
 black
 certifi
