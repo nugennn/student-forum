@@ -1,14 +1,15 @@
-{% extends 'profile/base.html' %}
 {% load humanize %}
 {% load static %}
 {% load qa_tags %}
 
-{% block css %}
-<link rel="stylesheet" type="text/css" href="https://cdn.sstatic.net/Shared/stacks.css?v=556e4333f24c">
-<link rel="stylesheet" type="text/css" href="https://cdn.sstatic.net/Sites/stackoverflow/primary.css?v=753a90643fc4">
-<link rel="stylesheet" type="text/css" href="https://cdn.sstatic.net/Sites/stackoverflow/secondary.css?v=12f70c5b46fe">    
-<link href="{% static 'profile/css/summary.css' %}" type="text/css" media="all" rel="stylesheet" />
-<link href="{% static 'profile/css/badge.css' %}" type="text/css" media="all" rel="stylesheet" />
+{% block content %}
+
+    <head>
+        <link rel="stylesheet" type="text/css" href="https://cdn.sstatic.net/Shared/stacks.css?v=556e4333f24c">
+        <link rel="stylesheet" type="text/css" href="https://cdn.sstatic.net/Sites/stackoverflow/primary.css?v=753a90643fc4">
+        <link rel="stylesheet" type="text/css" href="https://cdn.sstatic.net/Sites/stackoverflow/secondary.css?v=12f70c5b46fe">    
+        <link href="{% static 'profile/css/summary.css' %}" type="text/css" media="all" rel="stylesheet" />
+        <link href="{% static 'profile/css/badge.css' %}" type="text/css" media="all" rel="stylesheet" />
 <style>
 
     .logo-name {
@@ -26,11 +27,184 @@
     }
 
 </style>
-{% endblock css %}
+    </head>
 
-{% block content %}
-<div id="notify-container"></div>
-<div id="custom-header"></div>
+
+
+
+
+
+
+    <body class="user-page unified-theme">
+    <div id="notify-container"></div>
+    <div id="custom-header"></div>
+    <body class="faq-page unified-theme privileges-page">
+    <div id="notify-container"></div>
+    <div id="custom-header"></div>
+
+{% if request.user.is_authenticated %}
+
+
+<header class="top-bar js-top-bar top-bar__network">
+    <div class="wmx12 mx-auto d-flex ai-center h100" role="menubar">
+        <div class="-main flex--item">
+            <a href="#" class="left-sidebar-toggle p0 ai-center jc-center" role="menuitem" aria-haspopup="true" aria-controls="left-sidebar" aria-expanded="false"><span class="ps-relative"></span></a>
+            <div class="topbar-dialog leftnav-dialog js-leftnav-dialog dno">
+                <div class="left-sidebar js-unpinned-left-sidebar" data-can-be="left-sidebar" data-is-here-when="sm"></div>
+            </div>
+            <a href="{% url 'profile:home' %}" class="-logo">
+                <i class="fab fa-stack-overflow fa-3x"></i><div class="logo-name">StackOverFlow-<b>Clone</b></div>
+            </a>
+        </div>
+
+<ol class="overflow-x-auto ml-auto -secondary d-flex ai-center list-reset h100 user-logged-in" role="presentation">
+        <li class="-item searchbar-trigger"><a href="#" class="-link js-searchbar-trigger" role="button" aria-label="Search" aria-haspopup="true" aria-controls="search" title="Click to show search"><svg aria-hidden="true" class="svg-icon iconSearch" width="18" height="18" viewBox="0 0 18 18"><path d="m18 16.5-5.14-5.18h-.35a7 7 0 10-1.19 1.19v.35L16.5 18l1.5-1.5ZM12 7A5 5 0 112 7a5 5 0 0110 0Z"/></svg></a></li>
+
+
+
+            <li class="-item">
+                <a href="{% url 'profile:ActivityTabSummary' user.id user.username %}" class="my-profile " >
+<div class="gravatar-wrapper-24" title="Van"><img src="{% if request.user.profile.profile_photo %}{{request.user.profile.profile_photo.url}}{% endif %}" alt="" width="24" height="24" class="bar-sm -avatar js-avatar-me"></div><span class="v-visible-sr">{{request.user.username}}</span>
+
+                        <div class="-rep js-header-rep" title="your reputation: {{request.user|calculate_reputation}}" aria-hidden="true">{{request.user|calculate_reputation}}</div>
+                        <span class="v-visible-sr">, {{request.user|calculate_reputation}} reputation</span>
+                            <div class="-badges">
+                                    <span title="{{request.user|calculateGoldBadges}} gold badges" aria-hidden="true">
+                                        <span class="badge1">&#9679;</span>
+                                        <span class="badgecount">{{request.user|calculateGoldBadges}}</span>
+                                    </span>
+                                    <span class="v-visible-sr">{{request.user|calculateGoldBadges}} gold badges</span>                                
+                                    <span title="{{request.user|calculatSilvereBadges}} silver badges" aria-hidden="true">
+                                        <span class="badge2">&#9679;</span>
+                                        <span class="badgecount">{{request.user|calculatSilvereBadges}}</span>
+                                    </span>
+                                    <span class="v-visible-sr">{{request.user|calculatSilvereBadges}} silver badges</span> 
+
+                                    <span title="{{request.user|calculateBronzeBadges}} bronze badges" aria-hidden="true">
+                                        <span class="badge3">&#9679;</span>
+                                        <span class="badgecount">{{request.user|calculateBronzeBadges}}</span>
+                                    </span>
+                                    <span class="v-visible-sr">{{request.user|calculateBronzeBadges}} bronze badges</span> 
+                            </div>
+                </a>
+            </li>
+
+        <li class="-item inbox-button-item myInboxSVGOuter thisIsOuter">
+            <a class="-link myInboxSVGLink readNotification" data-pk="{{ data.id }}" onClick="openInbox();">
+                {% if showAlert %}<span class="button__badge">{{countUnreadNotifications}}</span>{% endif %}
+                <i class="fa fa-inbox fa-2x iconInbox myInboxSVG" aria-hidden="true"></i>
+                
+                <span class="indicator-badge js-unread-count _important d-none">0</span>
+            </a>
+        </li>
+
+
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        window.addEventListener('load', function() {
+            $('.readNotification').on('click',function(e) {
+                e.preventDefault();
+                let thisElement = $(this)
+                $.ajax({
+                    url:"{% url 'notification:read_All_Notifications' %}",
+                    dataType: 'json',
+                    method: 'get',
+                    success: function(response) {
+                        if (response.action == 'readedAll') {
+                            $(`.button__badge`).text(``)
+                            $(`.button__badge`).removeClass("button__badge");
+                        }
+                    }
+                })
+            })
+        })
+    })
+</script>
+
+
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        window.addEventListener('load', function() {
+            $('.readPrivNotification').on('click',function(e) {
+                e.preventDefault();
+                let thisElement = $(this)
+                $.ajax({
+                    url:"{% url 'notification:read_All_Priv_Notifications' %}",
+                    dataType: 'json',
+                    method: 'get',
+                    success: function(response) {
+                        if (response.action == 'readedAllPrivNotifications') { // Accept Only
+                            $(`.unseen-reputation`).text(``)
+                            $(`.unseen-reputation`).removeClass("unseen-reputation");
+                            // $(`.unreadDot`).text(``)
+
+                            // $(`.button__badge`).text(`0`)
+                        }
+                    }
+                })
+            })
+        })
+    })
+</script>
+
+
+
+
+        <li class="-item achievements-button-item achieveSVGOuter achThisIsOuter">
+            <a href="#" class="-link readPrivNotification" onclick="openAchievementInbox();">
+                <i class="fa fa-trophy fa-2x iconAchievements achieveSVG" aria-hidden="true"></i>
+                {% if countUnreadPrivNotifications_1 %}<span class="unseen-reputation">+{{countUnreadPrivNotifications.countTheUnRead_Rep}}</span>{% endif %}
+                <span class="indicator-badge js-unread-count _positive d-none">+0</span>
+            </a>
+        </li>
+
+        {% if request.user.profile.access_review_queues %}
+        <li class="-item review-button-item reviewSVGOuter revThisIsOuter">
+            <a href="#" class="-link svg-icon iconReviewQueue" onclick="openReviewInbox();">
+                <i class="fa fa-tasks fa-2x iconReviewQueue reviewSVG" aria-hidden="true"></i>
+            </a>
+        </li>
+        {% endif %}
+
+
+</ol>
+
+    </div>
+</header>
+
+
+{% else %}
+
+<header class="top-bar js-top-bar top-bar__network">
+    <div class="wmx12 mx-auto d-flex ai-center h100" role="menubar">
+        <div class="-main flex--item">
+                <a href="#" class="left-sidebar-toggle p0 ai-center jc-center js-left-sidebar-toggle" role="menuitem" aria-haspopup="true" aria-controls="left-sidebar" aria-expanded="false"><span class="ps-relative"></span></a>
+                <div class="topbar-dialog leftnav-dialog js-leftnav-dialog dno">
+                    <div class="left-sidebar js-unpinned-left-sidebar" data-can-be="left-sidebar" data-is-here-when="sm"></div>
+                </div>
+            <a href="{% url 'profile:home' %}" class="-logo">
+                <i class="fab fa-stack-overflow fa-3x"></i><div class="logo-name">StackOverFlow-<b>Clone</b></div>
+            </a>
+        </div>
+
+        <ol class="overflow-x-auto ml-auto -secondary d-flex ai-center list-reset h100 user-logged-out" role="presentation">
+            <li class="-ctas">
+                <a href="{% url 'users:login_request' %}" class="login-link s-btn s-btn__filled py8" rel="nofollow" >Log in</a>
+                <a href="{% url 'users:signup_view' %}" class="login-link s-btn s-btn__primary py8">Sign up</a>
+            </li>
+            <li class="js-topbar-dialog-corral" role="presentation">
+            </li>
+        </ol>
+
+    </div>
+</header>
+
+{% endif %}
+
+
+
 
 
 
@@ -65,10 +239,10 @@
                             {% for notification in notifications %}
                             <li class="inbox-item ">
                                 <a href="{{notification.url}}" class="d-flex gs8 gsx">
-                                        <div class="favicon favicon-stackoverflow site-icon flex--item" title="KHEC Forum"></div>
+                                        <div class="favicon favicon-stackoverflow site-icon flex--item" title="Stack Overflow"></div>
                                     <div class="item-content flex--item fl1">
                                         <div class="item-header">
-                                            <span class="item-type "><span class="v-visible-sr">KHEC Forum&nbsp;</span>
+                                            <span class="item-type "><span class="v-visible-sr">Stack Overflow - Clone&nbsp;</span>
                                             {% if notification.type_of_noti == "comment_answer" %}
                                             Comment on Answer
                                             {% elif notification.type_of_noti == "question_comment" %}
@@ -139,8 +313,8 @@
                                         <li class="">
                                             <a href="{% if privNotification.type_of_PrivNotify == 'ANSWER_ACCEPT_REP_P' %}
                                                     {{privNotification.answer_priv_noti.questionans.get_absolute_url}}#{{privNotification.answer_priv_noti.id}}{% elif privNotification.type_of_PrivNotify == 'QUESTION_EDIT_REP_P' %}{{privNotification.question_priv_noti.get_absolute_url}}{% elif privNotification.type_of_PrivNotify == 'ANSWER_EDIT_REP_P' %}{{privNotification.answer_priv_noti.questionans.get_absolute_url}}#{{privNotification.answer_priv_noti.id}}{% elif privNotification.type_of_PrivNotify == 'DOWN_VOTE_ANSWER_REP_M'%}{{privNotification.answer_priv_noti.questionans.get_absolute_url}}#{{privNotification.answer_priv_noti.id}}{% elif privNotification.type_of_PrivNotify == 'BOUNTY_AWARDED_REP_P' %}{{privNotification.question_priv_noti.get_absolute_url}}{% elif privNotification.type_of_PrivNotify == 'MY_ANSWER_UPVOTE_REP_P' %}{{privNotification.answer_priv_noti.questionans.get_absolute_url}}#{{privNotification.answer_priv_noti.id}}{% elif privNotification.type_of_PrivNotify == 'QUESTION_DOWNVOTE' %}{{privNotification.question_priv_noti.get_absolute_url}}{% elif privNotification.type_of_PrivNotify == 'Privilege_Earned' %}
-                                                    {{privNotification.privilegeURL}}{% elif privNotification.type_of_PrivNotify == 'BADGE_EARNED' %}{{privNotification.url}}{% endif %}" class="d-flex gs8 gsx" aria-label="2 reputation change: Pop-up-Notification-Panel box is not staying to the right, earned on KHEC Forum, 5 hours ago">
-                <div class="favicon favicon-stackoverflow site-icon flex--item" title="KHEC Forum"></div>
+                                                    {{privNotification.privilegeURL}}{% elif privNotification.type_of_PrivNotify == 'BADGE_EARNED' %}{{privNotification.url}}{% endif %}" class="d-flex gs8 gsx" aria-label="2 reputation change: Pop-up-Notification-Panel box is not staying to the right, earned on Stack Overflow, 5 hours ago">
+                <div class="favicon favicon-stackoverflow site-icon flex--item" title="Stack Overflow - Clone"></div>
 
 
 
@@ -413,8 +587,80 @@
     </div>
     <!-- REVIEW'S INBOX - END -->
 
+    <div class="container">
+            
 
-    <div id="content" style="width: 100%; max-width: 100%;">
+
+
+
+
+<div id="left-sidebar" data-is-here-when="md lg" class="left-sidebar js-pinned-left-sidebar ps-relative">
+    <div class="left-sidebar--sticky-container js-sticky-leftnav">
+        <nav role="navigation">
+            <ol class="nav-links">
+        <li class="">
+            <a
+               href="/"
+               class="pl8  nav-links--link">
+                    <div class="d-flex ai-center">
+                        <div class="flex--item truncate">
+                            Home
+                        </div>
+                    </div>
+            </a>
+        </li>
+                <li>
+                    <ol class="nav-links">
+                            <li class="fs-fine tt-uppercase ml8 mt16 mb4 fc-light">Public</li>
+
+        <li class="">
+            <a id="nav-questions"
+               href="{% url 'qa:questions' %}"
+               class="pl8  nav-links--link -link__with-icon">
+<svg aria-hidden="true" class="svg-icon iconGlobe" width="18" height="18" viewBox="0 0 18 18"><path d="M9 1C4.64 1 1 4.64 1 9c0 4.36 3.64 8 8 8 4.36 0 8-3.64 8-8 0-4.36-3.64-8-8-8ZM8 15.32a6.46 6.46 0 01-4.3-2.74 6.46 6.46 0 01-.93-5.01L7 11.68v.8c0 .88.12 1.32 1 1.32v1.52Zm5.72-2c-.2-.66-1-1.32-1.72-1.32h-1v-2c0-.44-.56-1-1-1H6V7h1c.44 0 1-.56 1-1V5h2c.88 0 1.4-.72 1.4-1.6v-.33a6.45 6.45 0 013.83 4.51 6.45 6.45 0 01-1.51 5.73v.01Z"/></svg>                    <span class="-link--channel-name">Questions</span>
+            </a>
+        </li>
+
+        <li class="">
+            <a id="nav-tags"
+               href="{% url 'profile:tagsPage' %}"
+               class="  nav-links--link">
+                    <div class="d-flex ai-center">
+                        <div class="flex--item truncate">
+                            Tags
+                        </div>
+                    </div>
+            </a>
+        </li>
+        <li class=" youarehere">
+            <a id="nav-users"
+               href="{% url 'profile:usersPage' %}"
+               class="  nav-links--link">
+                    <div class="d-flex ai-center">
+                        <div class="flex--item truncate">
+                            Users
+                        </div>
+                    </div>
+            </a>
+        </li>
+
+
+
+
+                    </ol>
+                </li>
+            </ol>
+        </nav>
+    </div>
+
+
+
+
+</div>
+
+
+
+        <div id="content" class="snippet-hidden">
 
 
 <div id="mainbar-full" class="user-show-new">
@@ -429,9 +675,7 @@
     <div class="flex--item">
         <div class="d-flex ai-center fw-wrap gs8 wmx4">
             <div class="flex--item mb12 fs-headline2 lh-xs">
-                {% if profileData.full_name %}{{profileData.full_name}}{% else %}{{profileData.user.username}}{% endif %}
-                {% load profile_extras %}
-                {% show_verification_badge profileData.user %}
+                {{profileData.user}}
             </div>
             <div class="flex--item">
                 <div class="d-flex ai-center fw-nowrap gs4">
@@ -439,17 +683,6 @@
             </div>
         </div>
                 <div class="mb8 fc-light fs-title lh-xs">{{profileData.title}}</div>
-        
-        {% if request.user != profileData.user and request.user.is_authenticated %}
-        <div class="mb12 d-flex gs8">
-            <a class="s-btn s-btn__primary" href="{% url 'chat:private_chat' profileData.user.id %}">
-                <i class="fas fa-comments"></i> Chat
-            </a>
-            <a class="s-btn s-btn__outlined" href="{% url 'chat:private_chat' profileData.user.id %}">
-                <i class="fas fa-envelope"></i> Send Message
-            </a>
-        </div>
-        {% endif %}
 
         <ul class="list-reset s-anchors s-anchors__inherit d-flex fc-light gs8 mln4 fw-wrap">
 
@@ -1364,10 +1597,10 @@ $(document).ready(function(){
             <tbody>
                 <tr>
                     <td class="icon-cell">
-                        <div class="favicon favicon-stackoverflow favicon" title="KHEC Forum"></div>
+                        <div class="favicon favicon-stackoverflow favicon" title="Stack Overflow"></div>
                     </td>
                     <td>
-                        <a class="site-hyperlink" href="{{profileData.get_absolute_url}}">KHEC Forum</a>
+                        <a class="site-hyperlink" href="{{profileData.get_absolute_url}}">Stack Overflow - Clone</a>
                     </td>
                     <td class="reputation">
                         <span class="reputation-score">{{profileData.user|calculate_reputation}}</span> rep
@@ -1555,11 +1788,11 @@ You have no active <a href="#">bounties</a>
             <footer id="footer" class="site-footer js-footer" role="contentinfo">
         <div class="site-footer--container">
                 <div class="site-footer--logo">
-                    <i class="fas fa-graduation-cap fa-3x" style="color: #6366f1;"></i>
+                    <i class="fab fa-stack-overflow fa-3x"></i>
                 </div>
             <nav class="site-footer--nav">
                     <div class="site-footer--col site-footer--col__visible js-footer-col" data-name="default">
-                        <h5 class="-title"><a href="" class="" >KHEC Forum</a></h5>
+                        <h5 class="-title"><a href="" class="" >Stack Overflow - Clone</a></h5>
                         <ul class="-list js-primary-footer-links">
                             <li class="-item"><a href="/questions" class=" -link">Questions</a></li>
                                 <li class="-item"><a href="" class=" -link" >Jobs</a></li>
@@ -2373,7 +2606,13 @@ site design / logo &#169; 2021 Stack Exchange Inc; user contributions licensed u
 
 
 
-<script type="text/javascript" src="{% static 'profile/js/summary.js' %}"></script>
-<script type="text/javascript" src="{% static 'profile/js/badge.js' %}"></script>
+    <script type="text/javascript" src="{% static 'profile/js/summary.js' %}"></script>
+    <script type="text/javascript" src="{% static 'profile/js/badge.js' %}"></script>
 
-{% endblock %}
+
+
+
+    </body>
+    </html>
+
+{% endblock content %}

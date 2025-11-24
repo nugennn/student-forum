@@ -7,6 +7,7 @@
 <link rel="stylesheet" type="text/css" href="https://cdn.sstatic.net/Sites/stackoverflow/primary.css?v=34c234f84be8">
 <link rel="stylesheet" type="text/css" href="https://cdn.sstatic.net/Sites/stackoverflow/secondary.css?v=bbf1061b903d">
 <link rel="stylesheet" type="text/css" href="https://cdn.sstatic.net/Shared/DevStory/story.css?v=2afdf441843b">
+<link rel="stylesheet" type="text/css" href="https://cdn.sstatic.net/Shared/Channels/channels.css?v=47a5e0f03c81">
 
 <style>
             .goldBadge {
@@ -132,15 +133,9 @@ function ThirdTab_Q() {
 
 </script>
 
-        <link rel="stylesheet" type="text/css" href="https://cdn.sstatic.net/Shared/Channels/channels.css?v=47a5e0f03c81">
-
-
-    <noscript id="noscript-css"><style>body,.top-bar{margin-top:1.9em}
-</style>
 {% endblock css %}
 
 {% block content %}
-<div id="content" class="snippet-hidden" style="width: 100%; max-width: 100%;">
 <div id="mainbar-full" class="user-show-new">
     
 <div class="ps-relative mb16">
@@ -155,9 +150,7 @@ function ThirdTab_Q() {
     <div class="flex--item">
         <div class="d-flex ai-center fw-wrap gs8 wmx4">
             <div class="flex--item mb12 fs-headline2 lh-xs">
-                {% if profileData.full_name %}{{profileData.full_name}}{% else %}{{profileData.user.username}}{% endif %}
-                {% load profile_extras %}
-                {% show_verification_badge profileData.user %}
+                {{profileData.user}}
             </div>
             <div class="flex--item">
                 <div class="d-flex ai-center fw-nowrap gs4">
@@ -222,11 +215,11 @@ Joined <span title="2021-07-25 23:41:40Z">{{profileData.user.date_joined|natural
 <div class="d-flex ai-center jc-space-between fw-wrap mb16 js-user-header">
     <div class="flex--item s-navigation">
 
-            <a href="{% url 'profile:activityPageTabProfile' profileData.user.id profileData.user.username %}" class="s-navigation--item {% if 'activityPageTabProfile' in request.resolver_match.url_name %}is-selected{% endif %}" data-shortcut="P">Profile</a>
-            <a href="{% url 'profile:ActivityTabSummary' profileData.user.id profileData.user.username %}" class="s-navigation--item {% if 'ActivityTabSummary' in request.resolver_match.url_name %}is-selected{% endif %}" data-shortcut="A">Activity</a>
+            <a href="{% url 'profile:activityPageTabProfile' profileData.user.id profileData.user.username %}" class="s-navigation--item is-selected" data-shortcut="P">Profile</a>
+            <a href="{% url 'profile:ActivityTabSummary' profileData.user.id profileData.user.username %}" class="s-navigation--item" data-shortcut="A">Activity</a>
             {% if request.user.is_authenticated %}
             {% if request.user == profileData.user %}
-            <a href="{% url 'profile:userProfileEdit_Settings' profileData.user.id %}" class="s-navigation--item {% if 'userProfileEdit_Settings' in request.resolver_match.url_name %}is-selected{% endif %}">Settings</a>
+            <a href="{% url 'profile:userProfileEdit_Settings' profileData.user.id %}" class="s-navigation--item">Settings</a>
             {% endif %}
             {% endif %}
     </div>
@@ -278,10 +271,10 @@ Joined <span title="2021-07-25 23:41:40Z">{{profileData.user.date_joined|natural
         <div class="s-card bar-md">
             <ul class="list-reset d-flex fd-column gs12 gsy">
                         <li class="flex--item">
-                            <a class="d-flex gs4 gsx ai-center" href="#" title="KHEC Forum">
-                                <div class="favicon favicon-stackoverflow flex--item fl-shrink0 favicon" title="KHEC Forum"></div>
+                            <a class="d-flex gs4 gsx ai-center" href="#" title="Stack Overflow">
+                                <div class="favicon favicon-stackoverflow flex--item fl-shrink0 favicon" title="Stack Overflow"></div>
                                 <div class="flex--item fl-grow1 wmn0 pr4">
-                                    <div class="truncate">KHEC Forum</div>
+                                    <div class="truncate">Stack Overflow - Clone</div>
                                 </div>
                                 <div class="flex--item fl-shrink0 ml-auto fc-light">
                                     
@@ -604,71 +597,4 @@ Joined <span title="2021-07-25 23:41:40Z">{{profileData.user.date_joined|natural
 </div>
 
                 </div>
-            </div>
-        </div>
-    </div>
-</div></div>
-
-        </div>
-    </div>
-
-
-            <footer id="footer" class="site-footer js-footer" role="contentinfo">
-        <div class="site-footer--container">
-                <div class="site-footer--logo">
-                    <i class="fas fa-graduation-cap fa-3x" style="color: #6366f1;"></i>
-                </div>
-            <nav class="site-footer--nav">
-                    <div class="site-footer--col site-footer--col__visible js-footer-col" data-name="default">
-                        <h5 class="-title"><a href="" class="" >KHEC Forum</a></h5>
-                        <ul class="-list js-primary-footer-links">
-                            <li class="-item"><a href="/questions" class=" -link" data-gps-track="footer.click({ location: 4, link: 16})">Questions</a></li>
-                                <li class="-item"><a href="" class=" -link" >Jobs</a></li>
-                                <li class="-item"><a href="" class=" -link" >Developer Jobs Directory</a></li>
-                                     <li class="-item"><a href="" class=" -link" >Salary Calculator</a></li>
-                                <li class="-item"><a href="" class=" -link" >Help</a></li>
-                                <li class="-item"><a onclick='StackExchange.switchMobile("on")' class=" -link" >Mobile</a></li>
-                        </ul>
-                    </div>
-                    <div class="site-footer--col site-footer--col__visible js-footer-col" data-name="default">
-                        <h5 class="-title"><a href="">Products</a></h5>
-                        <ul class="-list">
-                            <li class="-item"><a href="" class=" -link" 
-                                                 
-                                                >Teams</a></li>
-                            <li class="-item"><a href="" class=" -link" >Talent</a></li>
-                            <li class="-item"><a href="" class=" -link" >Advertising</a></li>
-                            <li class="-item"><a href="" class=" -link">Enterprise</a></li>
-                        </ul>
-                    </div>
-                <div class="site-footer--col site-footer--col__visible js-footer-col" data-name="default">
-                    <h5 class="-title"><a href="">Company</a></h5>
-                    <ul class="-list">
-                            <li class="-item"><a class=" -link" href="">About</a></li>
-                        <li class="-item"><a class=" -link" href="">Press</a></li>
-                            <li class="-item"><a class=" -link" href="">Work Here</a></li>
-                        <li class="-item"><a class=" -link" href="">Legal</a></li>
-                        <li class="-item"><a class=" -link" href="">Privacy Policy</a></li>
-                        <li class="-item"><a class="-link" href="">Terms of Service</a></li>
-                            <li class="-item"><a class=" -link"  href="">Contact Us</a></li>
-                            <li class="-item" id="consent-footer-link"><a class="-link js-cookie-settings" href="#" data-consent-popup-loader="footer">Cookie Settings</a></li>
-                        <li class="-item"><a class=" -link"  href="">Cookie Policy</a></li>
-                    </ul>
-                </div>
-            </nav>
-            <div class="site-footer--copyright fs-fine">
-                <ul class="-list">
-                    <li class="-item"><a class="-link" href="">Blog</a></li>
-                    <li class="-item"><a href="" class="-link" >Facebook</a></li>
-                    <li class="-item"><a href="" class="-link" >Twitter</a></li>
-                    <li class="-item"><a href="" class="-link" >LinkedIn</a></li>
-                    <li class="-item"><a href="" class="-link">Instagram</a></li>
-                </ul>
-
-                <p class="mt-auto mb24">
-site design / logo &#169; 2021 Stack Exchange Inc; user contributions licensed under <a href="https://stackoverflow.com/help/licensing">cc by-sa</a>.                    <span id="svnrev">rev&nbsp;2021.11.12.40742</span>
-                </p>
-            </div>
-        </div>
-
-    {% endblock content %}
+{% endblock content %}
