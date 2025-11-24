@@ -2,9 +2,9 @@
 {% load static %}
 
 {% block content %}
-<div class="container mt-5">
+<div class="container-fluid px-3 mt-5" style="max-width: 1400px; margin: 0 auto;">
     <div class="row">
-        <div class="col-md-12">
+        <div class="col-12">
             <div class="card shadow-sm">
                 <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
                     <h4 class="mb-0">💬 Messages</h4>
@@ -56,9 +56,9 @@
 
 <!-- Suggested Users Section -->
 {% if suggested_users %}
-<div class="container mt-4">
+<div class="container-fluid px-3 mt-4" style="max-width: 1400px; margin: 0 auto;">
     <div class="row">
-        <div class="col-md-12">
+        <div class="col-12">
             <div class="card shadow-sm border-0">
                 <div class="card-header bg-gradient-primary text-white d-flex justify-content-between align-items-center">
                     <h5 class="mb-0">
@@ -128,9 +128,9 @@
 </div>
 {% else %}
 <!-- Show suggestions even when empty -->
-<div class="container mt-4">
+<div class="container-fluid px-3 mt-4" style="max-width: 1400px; margin: 0 auto;">
     <div class="row">
-        <div class="col-md-12">
+        <div class="col-12">
             <div class="card shadow-sm border-0">
                 <div class="card-header bg-gradient-primary text-white">
                     <h5 class="mb-0">
@@ -315,6 +315,47 @@ function createGroup() {
 @media (max-width: 768px) {
     .suggestion-card {
         margin-bottom: 1rem;
+    }
+}
+
+/* Prevent horizontal scrolling */
+body {
+    overflow-x: hidden;
+}
+
+.container-fluid {
+    overflow-x: hidden;
+}
+
+.row {
+    margin-left: 0;
+    margin-right: 0;
+}
+
+.row > * {
+    padding-left: 12px;
+    padding-right: 12px;
+}
+
+/* Ensure suggested people cards fit properly */
+@media (max-width: 1200px) {
+    .col-lg-3 {
+        flex: 0 0 33.333333%;
+        max-width: 33.333333%;
+    }
+}
+
+@media (max-width: 992px) {
+    .col-lg-3 {
+        flex: 0 0 50%;
+        max-width: 50%;
+    }
+}
+
+@media (max-width: 576px) {
+    .col-lg-3 {
+        flex: 0 0 100%;
+        max-width: 100%;
     }
 }
 </style>
