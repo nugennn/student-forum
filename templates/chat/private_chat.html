@@ -17,7 +17,7 @@
                             <small class="text-light">@{{ other_user.username }}</small>
                         </div>
                     </div>
-                    <a href="{% url 'profile:user_profile' other_user.id %}" class="btn btn-sm btn-light">
+                    <a href="{% url 'profile:activityPageTabProfile' other_user.id other_user.username %}" class="btn btn-sm btn-light">
                         <i class="fas fa-user"></i> View Profile
                     </a>
                 </div>
@@ -28,7 +28,7 @@
                         <div class="mb-3 {% if message.sender == request.user %}text-end{% endif %}">
                             <div class="d-inline-block">
                                 {% if message.message_type == 'text' %}
-                                    <div class="alert {% if message.sender == request.user %}alert-primary{% else %}alert-light{% %} mb-1" 
+                                    <div class="alert {% if message.sender == request.user %}alert-primary{% else %}alert-light{% endif %} mb-1" 
                                          style="max-width: 500px; word-wrap: break-word;">
                                         {{ message.content }}
                                     </div>

@@ -1,0 +1,36 @@
+{
+    "files.associations": {
+        "*.html": "django-html",
+        "**/templates/**/*.html": "django-html",
+        "**/templates/**": "django-txt"
+    },
+    "emmet.includeLanguages": {
+        "django-html": "html"
+    },
+    "[django-html]": {
+        "editor.quickSuggestions": {
+            "other": true,
+            "comments": false,
+            "strings": true
+        }
+    },
+    "html.validate.scripts": false,
+    "html.validate.styles": false,
+    "javascript.validate.enable": false,
+    "css.validate": false,
+    "python.linting.enabled": true,
+    "python.linting.pylintEnabled": false,
+    "python.linting.flake8Enabled": false,
+    "files.exclude": {
+        "**/__pycache__": true,
+        "**/*.pyc": true,
+        "**/.pytest_cache": true,
+        "**/node_modules": true
+    },
+    "search.exclude": {
+        "**/__pycache__": true,
+        "**/*.pyc": true,
+        "**/venv": true,
+        "**/env": true
+    }
+}

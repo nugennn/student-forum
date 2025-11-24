@@ -35,7 +35,7 @@ urlpatterns = [
     path('accounts/',include('users.urls')),
     path('adminactions/', include('adminactions.urls')),
     path('martor/', include('martor.urls')),
-    path('chat/', include('chat.urls')),
+    path('chat/', include('chat.urls', namespace='chat')),
     path('community/', include('community.urls')),
     # path('__debug__/', include(debug_toolbar.urls)),
 

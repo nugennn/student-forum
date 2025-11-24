@@ -1,18 +1,14 @@
 from pathlib import Path
 import os
-# import django_heroku
-from django.conf import settings
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-
 
 # Quick-start development settings - unsuitable for production
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-=dei9kx=^q))zm#z-(_cwdii75e-4bsf5_7suo9ll&besz088u'
-# from django.conf import settings
-settings.configure()
+
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
@@ -138,6 +134,9 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        'OPTIONS': {
+            'timeout': 20,  # Increase timeout to 20 seconds to prevent "database is locked" errors
+        }
     }
 }
 

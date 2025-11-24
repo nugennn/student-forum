@@ -232,249 +232,103 @@ def searchTagFromQuery(request):
 # @cache_page(60 * 15)
 def activitAnswers(request, user_id, username):
     profileData = get_object_or_404(Profile, pk=user_id)
+    user = profileData.user
 
-    countAnswers = Answer.objects.filter(answer_owner=profileData.user).exclude(is_deleted=True).count()
+    # ------------------- Answers -------------------
+    answers_queryset = Answer.objects.filter(answer_owner=user).exclude(is_deleted=True)
+    
+    # Most Votes
+    most_vote_answers = answers_queryset.annotate(count_votes=Count('a_vote_ups')).order_by('-count_votes')
+    
+    # Recently Edited
+    recent_edited_answers = answers_queryset.order_by('-a_edited_time')
+    
+    # Newest
+    newest_answers = answers_queryset.order_by('-date')
+    
+    # Pagination
+    def paginate_queryset(queryset, request, per_page=35):
+        page = request.GET.get('page', 1)
+        paginator = Paginator(queryset, per_page)
+        try:
+            return paginator.page(page)
+        except PageNotAnInteger:
+            return paginator.page(1)
+        except EmptyPage:
+            return paginator.page(paginator.num_pages)
+    
+    mostVotes_answers = paginate_queryset(most_vote_answers, request)
+    recentEdited_answers = paginate_queryset(recent_edited_answers, request)
+    newest_answers = paginate_queryset(newest_answers, request)
 
-    # Most Votes Answer - Tab One
-    most_vote_answers = Answer.objects.filter(answer_owner=user_id).annotate(countThem=Count('a_vote_ups')).order_by('-countThem')
-    page = request.GET.get('page', 1)
-    paginator = Paginator(most_vote_answers, 35)
-    try:
-        mostVotes_answers = paginator.page(page)
-    except PageNotAnInteger:
-        mostVotes_answers = paginator.page(1)
-    except EmptyPage:
-        mostVotes_answers = paginator.page(paginator.num_pages)
-
-
-    # Most Votes Answer - Tab One
-    recent_edited_answers = Answer.objects.filter(answer_owner=user_id).order_by('-a_edited_time')
-    recentAnswerPage = request.GET.get('page', 1)
-    recentAnswerPaginator = Paginator(recent_edited_answers, 35)
-    try:
-        recentEdited_answers = recentAnswerPaginator.page(recentAnswerPage)
-    except PageNotAnInteger:
-        recentEdited_answers = recentAnswerPaginator.page(1)
-    except EmptyPage:
-        recentEdited_answers = recentAnswerPaginator.page(recentAnswerPaginator.num_pages)
-
-
-    # Most Votes Answer - Tab One
-    new_answers = Answer.objects.filter(answer_owner=user_id).order_by('-date')
-
-    newest_answer_page = request.GET.get('page', 1)
-    newest_answer_paginator = Paginator(new_answers, 35)
-    try:
-        newest_answers = newest_answer_paginator.page(newest_answer_page)
-    except PageNotAnInteger:
-        newest_answers = newest_answer_paginator.page(1)
-    except EmptyPage:
-        newest_answers = newest_answer_paginator.page(newest_answer_paginator.num_pages)
-
-
-
+    # ------------------- Online Status -------------------
     USER_ONLINE_TIMEOUT = timedelta(seconds=5)
-    min_time = timezone.now() - (USER_ONLINE_TIMEOUT)
-    queryset = online_users.models.OnlineUserActivity.objects.filter(
-        user_id=user_id).annotate(is_online=Case(
+    min_time = timezone.now() - USER_ONLINE_TIMEOUT
+
+    online_user_activity = online_users.models.OnlineUserActivity.objects.filter(
+        user_id=user
+    ).annotate(
+        is_online=Case(
             When(last_activity__gte=min_time, then=Value(True)),
             default=Value(False),
-            output_field=BooleanField(),
-        ))
+            output_field=BooleanField()
+        )
+    ).first()
 
-    online_user_activity = get_object_or_404(queryset)
+    # ------------------- Votes Cast -------------------
+    votes_cast = (
+        QUpvote.objects.filter(upvote_by_q=user).count() +
+        QDownvote.objects.filter(downvote_by_q=user).count() +
+        Answer.objects.filter(a_vote_ups=user).count() +
+        Answer.objects.filter(a_vote_downs=user).count()
+    )
 
+    # ------------------- People Reached -------------------
+    total_views = Question.objects.filter(post_owner=user).annotate(
+        total_views=Count('viewers')
+    ).aggregate(Sum('total_views'))['total_views__sum'] or 0
 
-    countVotedPosts_Q = QUpvote.objects.filter(upvote_by_q=user_id).count()
-    countDownVotedPosts_Q = QDownvote.objects.filter(downvote_by_q=user_id).count()
+    # ------------------- Reputation Graph -------------------
+    reputation_graph = Reputation.objects.filter(awarded_to=user).order_by('-date')[:15]
 
-    countVotedPosts_A = Answer.objects.filter(a_vote_ups=user_id).count()
-    countDownVotedPosts_A = Answer.objects.filter(a_vote_downs=user_id).count()
+    # ------------------- Badges -------------------
+    badge_names = [
+        "Benefactor", "Citizen Patrol", "Civic Duty", "Critic", "Deputy",
+        "Disciplined", "Excavator", "Investor", "Marshal", "Necromancer",
+        "Peer Pressure", "Promoter", "Proofreader", "Refiner", "Revival",
+        "Self-Learner", "Strunk & White", "Suffrage", "Vox Populi", "Teacher"
+    ]
+    
+    badges = {}
+    for badge in badge_names:
+        badges[f"{badge.lower().replace(' ', '_')}_earned"] = TagBadge.objects.filter(
+            awarded_to_user=user,
+            tag_name=badge
+        ).exists()
 
-    getVotesCast_Final = countVotedPosts_Q + countDownVotedPosts_Q + countVotedPosts_A + countDownVotedPosts_A
+    # ------------------- Other Info -------------------
+    countAnswers = answers_queryset.count()
+    countComments = CommentQ.objects.filter(commented_by=user).count()
+    completed = bool(profileData.about_me)
 
-    # People Reached
-    getAllTheViewsOfAllTheQuestion = Question.objects.filter(post_owner=profileData.user).annotate(total_views=Count('viewers')).aggregate(Sum('total_views'))
-
-    reputation_graph = Reputation.objects.filter(awarded_to=user_id)[:15]
-
-
-    # ----------Next Badge---------- START----------
-    countComments = CommentQ.objects.filter(commented_by=profileData.user).count()
-
-
-
-    if profileData.about_me == '':
-        completed = True
-    else:
-        completed = False
-
-
-    if TagBadge.objects.filter(awarded_to_user=profileData.user, badge_type="BRONZE", tag_name="Benefactor").exists():
-        benefactor_earned = True
-    else:
-        benefactor_earned = False
-
-
-
-    if TagBadge.objects.filter(awarded_to_user=profileData.user,badge_type="BRONZE", tag_name="Citizen Patrol",bade_position="BADGE").exists():
-        ctzn_ptrl_earned = True
-    else:
-        ctzn_ptrl_earned = False
-
-
-
-    if TagBadge.objects.filter(awarded_to_user=profileData.user,badge_type="SILVER", tag_name="Civic Duty",bade_position="BADGE").exists():
-        civc_duty = True
-    else:
-        civc_duty = False
-    getVotedOnQ = Question.objects.filter(qupvote__upvote_by_q=profileData.user).count()
-    getVotedOnQ_Down = Question.objects.filter(qdownvote__downvote_by_q=profileData.user).count()
-    getVotedOn = Answer.objects.filter(a_vote_ups=profileData.user).count()
-    getVotedOn_Down = Answer.objects.filter(a_vote_downs=profileData.user).count()
-
-    countVotes = getVotedOnQ+getVotedOnQ_Down+getVotedOn+getVotedOn_Down
-
-
-
-    if TagBadge.objects.filter(awarded_to_user=profileData.user, badge_type="BRONZE", tag_name="Critic", bade_position="BADGE").exists():
-        critic_earned = True
-    else:
-        critic_earned = False
-
-
-
-    if profileData.helpful_flags_counter:
-        deputy_earned = True
-    else:
-        deputy_earned = False
-
-    if TagBadge.objects.filter(awarded_to_user=profileData.user,badge_type="BRONZE", tag_name="Disciplined",bade_position="BADGE").exists():
-        disclpned_earned = True
-    else:
-        disclpned_earned = False
-
-
-    if TagBadge.objects.filter(awarded_to_user=profileData.user,badge_type="BRONZE", tag_name="Excavator",bade_position="BADGE").exists():
-        excvter_earned = True
-    else:
-        excvter_earned = False
-
-
-    if TagBadge.objects.filter(awarded_to_user=profileData.user, badge_type="BRONZE", tag_name="Investor", bade_position="BADGE").exists():
-        investor_earned = True
-    else:
-        investor_earned = False
-
-
-    if TagBadge.objects.filter(awarded_to_user=profileData.user, badge_type="GOLD", tag_name="Marshal", bade_position="BADGE").exists():
-        marshal_earned = True
-    else:
-        marshal_earned = False
-
-
-    if TagBadge.objects.filter(awarded_to_user=profileData.user,badge_type="SILVER", tag_name="Necromancer",bade_position="BADGE").exists():
-        necromancer_earned = True
-    else:
-        necromancer_earned = False
-
-
-    if TagBadge.objects.filter(awarded_to_user=profileData.user,badge_type="BRONZE", tag_name="Peer Pressure",bade_position="BADGE").exists():
-        pr_pressre_earned = True
-    else:
-        pr_pressre_earned = False
-
-
-    if TagBadge.objects.filter(awarded_to_user=profileData.user, badge_type="BRONZE", tag_name="Promoter", bade_position="BADGE").exists():
-        promoter_earned = True
-    else:
-        promoter_earned = False
-
-
-    if TagBadge.objects.filter(awarded_to_user=profileData.user,badge_type="BRONZE", tag_name="Proofreader",bade_position="BADGE").exists():
-        proffreader_earned = True
-    else:
-        proffreader_earned = False
-
-    if TagBadge.objects.filter(awarded_to_user=profileData.user,badge_type="SILVER", tag_name="Refiner",bade_position="BADGE").exists():
-        refiner_earned = True
-    else:
-        refiner_earned = False
-
-
-    if TagBadge.objects.filter(awarded_to_user=profileData.user,badge_type="Bronze", tag_name="Revival",bade_position="BADGE").exists():
-        reviv_earned = True
-    else:
-        reviv_earned = False
-
-    if TagBadge.objects.filter(awarded_to_user=profileData.user,badge_type="SILVER", tag_name="Self-Learner",bade_position="BADGE").exists():
-        slf_lrnr_earned = True
-    else:
-        slf_lrnr_earned = False
-
-    if TagBadge.objects.filter(awarded_to_user=profileData.user,badge_type="SILVER", tag_name="Strunk & White",bade_position="BADGE").exists():
-        stnk_whte_earned = True
-    else:
-        stnk_whte_earned = False
-
-
-
-    if TagBadge.objects.filter(awarded_to_user=profileData.user,badge_type="BRONZE", tag_name="Suffrage",bade_position="BADGE").exists():
-        suffrage_earned = True
-    else:
-        suffrage_earned = False
-
-    last_24_hours = timezone.now() - timedelta(hours=24)
-    getQ_Votes_in_24_Hours = QUpvote.objects.filter(date__gt=last_24_hours).count()
-    getQ_DownVotes_in_24_Hours = QDownvote.objects.filter(downvote_by_q=profileData.user, date__gt=last_24_hours).count()
-    getA_Votes_in_24_Hours = Answer.objects.filter(a_vote_ups=profileData.user, date__gt=last_24_hours).count()
-    getA_DownVotes_in_24_Hours = Answer.objects.filter(a_vote_downs=profileData.user, date__gt=last_24_hours).count()
-    totalVotes = getQ_Votes_in_24_Hours + getQ_DownVotes_in_24_Hours + getA_Votes_in_24_Hours + getA_DownVotes_in_24_Hours
-
-    if TagBadge.objects.filter(awarded_to_user=profileData.user,badge_type="BRONZE", tag_name="Vox Populi",bade_position="BADGE").exists():
-        vx_pop_earned = True
-    else:
-        vx_pop_earned = False  
-
-
-
-    if TagBadge.objects.filter(awarded_to_user=profileData.user,badge_type="SILVER", tag_name="Teacher",bade_position="BADGE").exists():
-        teacher_earned = True
-    else:
-        teacher_earned = False
-
-    newestBadge = TagBadge.objects.filter(awarded_to_user=profileData.user).last()
-
-    # ----------Next Badge---------- END----------
-
+    newestBadge = TagBadge.objects.filter(awarded_to_user=user).last()
 
     context = {
-        'newestBadge':newestBadge,
-        'countVotes':countVotes,
-        'teacher_earned':teacher_earned,
-        'totalVotes':totalVotes,
-        'vx_pop_earned':vx_pop_earned,
-        'suffrage_earned':suffrage_earned,
-        'stnk_whte_earned':stnk_whte_earned,
-        'slf_lrnr_earned':slf_lrnr_earned,
-        'reviv_earned':reviv_earned,
-        'refiner_earned':refiner_earned,
-        'proffreader_earned':proffreader_earned,
-        'promoter_earned':promoter_earned,
-        'necromancer_earned':necromancer_earned,
-        'marshal_earned':marshal_earned,
-        'investor_earned':investor_earned,
-        'pr_pressre_earned':pr_pressre_earned,
-        'excvter_earned':excvter_earned,
-        'deputy_earned':deputy_earned,
-        'disclpned_earned':disclpned_earned,
-        'civc_duty':civc_duty,
-        'critic_earned':critic_earned,
-        'ctzn_ptrl_earned':ctzn_ptrl_earned,
-        'benefactor_earned':benefactor_earned,
-        'completed':completed,
-        'countComments':countComments,
-        'countAnswers':countAnswers,'reputation_graph':reputation_graph,'getAllTheViewsOfAllTheQuestion':getAllTheViewsOfAllTheQuestion,'recentEdited_answers':recentEdited_answers,'newest_answers':newest_answers,'mostVotes_answers':mostVotes_answers,'profileData':profileData,'online_user_activity':online_user_activity,'getVotesCast_Final':getVotesCast_Final,}
+        'profileData': profileData,
+        'mostVotes_answers': mostVotes_answers,
+        'recentEdited_answers': recentEdited_answers,
+        'newest_answers': newest_answers,
+        'online_user_activity': online_user_activity,
+        'getVotesCast_Final': votes_cast,
+        'getAllTheViewsOfAllTheQuestion': total_views,
+        'reputation_graph': reputation_graph,
+        'countAnswers': countAnswers,
+        'countComments': countComments,
+        'completed': completed,
+        'newestBadge': newestBadge,
+        **badges  # unpack all badge booleans
+    }
+
     return render(request, 'profile/activitAnswers.html', context)
 
 # IMPLEMENTED THE LOGIC
@@ -483,485 +337,208 @@ def activitAnswers(request, user_id, username):
     # with pagination
 def questionsActivity(request, user_id, username):
     profileData = get_object_or_404(Profile, pk=user_id)
+    user = profileData.user
 
-    countQuestions = Question.objects.filter(post_owner=profileData.user).exclude(is_deleted=True).count()
+    questions_queryset = Question.objects.filter(post_owner=user).exclude(is_deleted=True)
 
-    question_most_votes = Question.objects.filter(post_owner=user_id).exclude(is_deleted=True).annotate(countThem=Count('qupvote')).order_by('-countThem')
+    # Question tabs
+    question_most_votes = questions_queryset.annotate(count_votes=Count('qupvote')).order_by('-count_votes')
+    question_recent_activity = questions_queryset.order_by('-active_date')
+    question_newest = questions_queryset.order_by('-date')
+    question_most_views = questions_queryset.annotate(count_views=Count('viewers')).order_by('-count_views')
 
-    question_recent_activity = Question.objects.filter(post_owner=user_id).exclude(is_deleted=True).order_by('-active_date')
+    # Pagination function
+    def paginate_queryset(queryset, request, per_page=35):
+        page = request.GET.get('page', 1)
+        paginator = Paginator(queryset, per_page)
+        try:
+            return paginator.page(page)
+        except PageNotAnInteger:
+            return paginator.page(1)
+        except EmptyPage:
+            return paginator.page(paginator.num_pages)
 
-    question_newest = Question.objects.filter(post_owner=user_id).exclude(is_deleted=True).order_by('-date')
+    question_most_votes_page = paginate_queryset(question_most_votes, request)
+    question_recent_activity_page = paginate_queryset(question_recent_activity, request)
+    question_newest_page = paginate_queryset(question_newest, request)
+    question_most_views_page = paginate_queryset(question_most_views, request)
 
-    question_most_views = Question.objects.filter(post_owner=user_id).exclude(is_deleted=True).annotate(countTheViews=Count('viewers')).order_by('-viewers')
-
-    # page = request.GET.get('page', 1)
-    # paginator = Paginator(most_vote_answers, 35)
-    # try:
-    #     mostVotes_answers = paginator.page(page)
-    # except PageNotAnInteger:
-    #     mostVotes_answers = paginator.page(1)
-    # except EmptyPage:
-    #     mostVotes_answers = paginator.page(paginator.num_pages)
-
-
-
-
-
+    # Online status
     USER_ONLINE_TIMEOUT = timedelta(seconds=5)
-    min_time = timezone.now() - (USER_ONLINE_TIMEOUT)
-    queryset = online_users.models.OnlineUserActivity.objects.filter(
-        user_id=user_id).annotate(is_online=Case(
+    min_time = timezone.now() - USER_ONLINE_TIMEOUT
+
+    online_user_activity = online_users.models.OnlineUserActivity.objects.filter(
+        user_id=user
+    ).annotate(
+        is_online=Case(
             When(last_activity__gte=min_time, then=Value(True)),
             default=Value(False),
-            output_field=BooleanField(),
-        ))
-
-    online_user_activity = get_object_or_404(queryset)
-
-
-
-    countVotedPosts_Q = QUpvote.objects.filter(upvote_by_q=user_id).count()
-    countDownVotedPosts_Q = QDownvote.objects.filter(downvote_by_q=user_id).count()
-
-    countVotedPosts_A = Answer.objects.filter(a_vote_ups=user_id).count()
-    countDownVotedPosts_A = Answer.objects.filter(a_vote_downs=user_id).count()
-
-    getVotesCast_Final = countVotedPosts_Q + countDownVotedPosts_Q + countVotedPosts_A + countDownVotedPosts_A
-
-
-    # People Reached
-    getAllTheViewsOfAllTheQuestion = Question.objects.filter(post_owner=profileData.user).annotate(total_views=Count('viewers')).aggregate(Sum('total_views'))
-
-    reputation_graph = Reputation.objects.filter(awarded_to=user_id)[:15]
-
-
-
-    # ----------Next Badge---------- START----------
-    countComments = CommentQ.objects.filter(commented_by=profileData.user).count()
-
-
-
-    if profileData.about_me != '':
-        completed = True
-    else:
-        completed = False
-
-
-
-    if TagBadge.objects.filter(awarded_to_user=profileData.user, badge_type="BRONZE", tag_name="Benefactor").exists():
-        benefactor_earned = True
-    else:
-        benefactor_earned = False
-
-
-
-    if TagBadge.objects.filter(awarded_to_user=profileData.user,badge_type="BRONZE", tag_name="Citizen Patrol",bade_position="BADGE").exists():
-        ctzn_ptrl_earned = True
-    else:
-        ctzn_ptrl_earned = False
-
-
-
-    if TagBadge.objects.filter(awarded_to_user=profileData.user,badge_type="SILVER", tag_name="Civic Duty",bade_position="BADGE").exists():
-        civc_duty = True
-    else:
-        civc_duty = False
-    getVotedOnQ = Question.objects.filter(qupvote__upvote_by_q=profileData.user).count()
-    getVotedOnQ_Down = Question.objects.filter(qdownvote__downvote_by_q=profileData.user).count()
-    getVotedOn = Answer.objects.filter(a_vote_ups=profileData.user).count()
-    getVotedOn_Down = Answer.objects.filter(a_vote_downs=profileData.user).count()
-
-    countVotes = getVotedOnQ+getVotedOnQ_Down+getVotedOn+getVotedOn_Down
-
-
-
-    if TagBadge.objects.filter(awarded_to_user=profileData.user, badge_type="BRONZE", tag_name="Critic", bade_position="BADGE").exists():
-        critic_earned = True
-    else:
-        critic_earned = False
-
-
-
-    if profileData.helpful_flags_counter:
-        deputy_earned = True
-    else:
-        deputy_earned = False
-
-    if TagBadge.objects.filter(awarded_to_user=profileData.user,badge_type="BRONZE", tag_name="Disciplined",bade_position="BADGE").exists():
-        disclpned_earned = True
-    else:
-        disclpned_earned = False
-
-
-    if TagBadge.objects.filter(awarded_to_user=profileData.user,badge_type="BRONZE", tag_name="Excavator",bade_position="BADGE").exists():
-        excvter_earned = True
-    else:
-        excvter_earned = False
-
-
-    if TagBadge.objects.filter(awarded_to_user=profileData.user, badge_type="BRONZE", tag_name="Investor", bade_position="BADGE").exists():
-        investor_earned = True
-    else:
-        investor_earned = False
-
-
-    if TagBadge.objects.filter(awarded_to_user=profileData.user, badge_type="GOLD", tag_name="Marshal", bade_position="BADGE").exists():
-        marshal_earned = True
-    else:
-        marshal_earned = False
-
-
-    if TagBadge.objects.filter(awarded_to_user=profileData.user,badge_type="SILVER", tag_name="Necromancer",bade_position="BADGE").exists():
-        necromancer_earned = True
-    else:
-        necromancer_earned = False
-
-
-    if TagBadge.objects.filter(awarded_to_user=profileData.user,badge_type="BRONZE", tag_name="Peer Pressure",bade_position="BADGE").exists():
-        pr_pressre_earned = True
-    else:
-        pr_pressre_earned = False
-
-
-    if TagBadge.objects.filter(awarded_to_user=profileData.user, badge_type="BRONZE", tag_name="Promoter", bade_position="BADGE").exists():
-        promoter_earned = True
-    else:
-        promoter_earned = False
-
-
-    if TagBadge.objects.filter(awarded_to_user=profileData.user,badge_type="BRONZE", tag_name="Proofreader",bade_position="BADGE").exists():
-        proffreader_earned = True
-    else:
-        proffreader_earned = False
-
-    if TagBadge.objects.filter(awarded_to_user=profileData.user,badge_type="SILVER", tag_name="Refiner",bade_position="BADGE").exists():
-        refiner_earned = True
-    else:
-        refiner_earned = False
-
-
-    if TagBadge.objects.filter(awarded_to_user=profileData.user,badge_type="Bronze", tag_name="Revival",bade_position="BADGE").exists():
-        reviv_earned = True
-    else:
-        reviv_earned = False
-
-    if TagBadge.objects.filter(awarded_to_user=profileData.user,badge_type="SILVER", tag_name="Self-Learner",bade_position="BADGE").exists():
-        slf_lrnr_earned = True
-    else:
-        slf_lrnr_earned = False
-
-    if TagBadge.objects.filter(awarded_to_user=profileData.user,badge_type="SILVER", tag_name="Strunk & White",bade_position="BADGE").exists():
-        stnk_whte_earned = True
-    else:
-        stnk_whte_earned = False
-
-
-
-    if TagBadge.objects.filter(awarded_to_user=profileData.user,badge_type="BRONZE", tag_name="Suffrage",bade_position="BADGE").exists():
-        suffrage_earned = True
-    else:
-        suffrage_earned = False
-
-    last_24_hours = timezone.now() - timedelta(hours=24)
-    getQ_Votes_in_24_Hours = QUpvote.objects.filter(date__gt=last_24_hours).count()
-    getQ_DownVotes_in_24_Hours = QDownvote.objects.filter(downvote_by_q=profileData.user, date__gt=last_24_hours).count()
-    getA_Votes_in_24_Hours = Answer.objects.filter(a_vote_ups=profileData.user, date__gt=last_24_hours).count()
-    getA_DownVotes_in_24_Hours = Answer.objects.filter(a_vote_downs=profileData.user, date__gt=last_24_hours).count()
-    totalVotes = getQ_Votes_in_24_Hours + getQ_DownVotes_in_24_Hours + getA_Votes_in_24_Hours + getA_DownVotes_in_24_Hours
-
-    if TagBadge.objects.filter(awarded_to_user=profileData.user,badge_type="BRONZE", tag_name="Vox Populi",bade_position="BADGE").exists():
-        vx_pop_earned = True
-    else:
-        vx_pop_earned = False  
-
-
-
-    if TagBadge.objects.filter(awarded_to_user=profileData.user,badge_type="SILVER", tag_name="Teacher",bade_position="BADGE").exists():
-        teacher_earned = True
-    else:
-        teacher_earned = False
-
-    newestBadge = TagBadge.objects.filter(awarded_to_user=profileData.user).last()
-
-    # ----------Next Badge---------- END----------
+            output_field=BooleanField()
+        )
+    ).first()
 
     context = {
-        'newestBadge':newestBadge,
-        'countVotes':countVotes,
-        'teacher_earned':teacher_earned,
-        'totalVotes':totalVotes,
-        'vx_pop_earned':vx_pop_earned,
-        'suffrage_earned':suffrage_earned,
-        'stnk_whte_earned':stnk_whte_earned,
-        'slf_lrnr_earned':slf_lrnr_earned,
-        'reviv_earned':reviv_earned,
-        'refiner_earned':refiner_earned,
-        'proffreader_earned':proffreader_earned,
-        'promoter_earned':promoter_earned,
-        'necromancer_earned':necromancer_earned,
-        'marshal_earned':marshal_earned,
-        'investor_earned':investor_earned,
-        'pr_pressre_earned':pr_pressre_earned,
-        'excvter_earned':excvter_earned,
-        'deputy_earned':deputy_earned,
-        'disclpned_earned':disclpned_earned,
-        'civc_duty':civc_duty,
-        'critic_earned':critic_earned,
-        'ctzn_ptrl_earned':ctzn_ptrl_earned,
-        'benefactor_earned':benefactor_earned,
-        'completed':completed,
-        'countComments':countComments,
-
-        'reputation_graph':reputation_graph,
-        'online_user_activity':online_user_activity,
-        'getVotesCast_Final':getVotesCast_Final,
-        'question_most_votes':question_most_votes,
-        'profileData':profileData,
-        'question_recent_activity':question_recent_activity,
-        'question_newest':question_newest,
-        'question_most_views':question_most_views,
-        'getAllTheViewsOfAllTheQuestion':getAllTheViewsOfAllTheQuestion,
-        'countQuestions':countQuestions,
+        'profileData': profileData,
+        'countQuestions': questions_queryset.count(),
+        'question_most_votes': question_most_votes_page,
+        'question_recent_activity': question_recent_activity_page,
+        'question_newest': question_newest_page,
+        'question_most_views': question_most_views_page,
+        'online_user_activity': online_user_activity,
     }
-    return render(request, 'profile/questionsActivity.html', context)
 
+    return render(request, 'profile/questionsActivity.html', context)
 # IMPLEMENTED THE LOGIC
     # It will contain all the tags user answered on.
 def tagsActivity(request, user_id, username):
     profileData = get_object_or_404(Profile, pk=user_id)
-    tags = Tag.objects.filter(question__answer__answer_owner=user_id).annotate(answeredOn=Count('taggit_taggeditem_items'))
 
+    # TAGS FOR ANSWERS
+    tags = Tag.objects.filter(
+        question__answer__answer_owner=profileData.user
+    ).annotate(answeredOn=Count('taggit_taggeditem_items'))
 
+    totalBookmarks = BookmarkQuestion.objects.filter(
+        bookmarked_by=profileData.user
+    ).count()
 
-    totalBookmarks = BookmarkQuestion.objects.filter(bookmarked_by=user_id).count()
-
-# Last seen
-# To Show Last Seen in Profile. You'll see as "Last seen"
-# Transfer this Variable into config.py
+    # -------------------- ONLINE STATUS --------------------
     USER_ONLINE_TIMEOUT = timedelta(seconds=5)
-    min_time = timezone.now() - (USER_ONLINE_TIMEOUT)
-    queryset = online_users.models.OnlineUserActivity.objects.filter(
-        user_id=user_id).annotate(is_online=Case(
+    min_time = timezone.now() - USER_ONLINE_TIMEOUT
+
+    online_qs = online_users.models.OnlineUserActivity.objects.filter(
+        user_id=profileData.user
+    ).annotate(
+        is_online=Case(
             When(last_activity__gte=min_time, then=Value(True)),
             default=Value(False),
-            output_field=BooleanField(),
-        ))
+            output_field=BooleanField()
+        )
+    )
 
-    online_user_activity = get_object_or_404(queryset)
+    online_user_activity = online_qs.first()   # avoids 404/blank page
 
+    # -------------------- TOTAL VOTES CAST --------------------
+    countVotedPosts_Q = QUpvote.objects.filter(upvote_by_q=profileData.user).count()
+    countDownVotedPosts_Q = QDownvote.objects.filter(downvote_by_q=profileData.user).count()
+    countVotedPosts_A = Answer.objects.filter(a_vote_ups=profileData.user).count()
+    countDownVotedPosts_A = Answer.objects.filter(a_vote_downs=profileData.user).count()
 
+    getVotesCast_Final = (
+        countVotedPosts_Q + countDownVotedPosts_Q +
+        countVotedPosts_A + countDownVotedPosts_A
+    )
 
-    # Total Votes Cast
-    countVotedPosts_Q = QUpvote.objects.filter(upvote_by_q=user_id).count()
-    countDownVotedPosts_Q = QDownvote.objects.filter(downvote_by_q=user_id).count()
+    # -------------------- PEOPLE REACHED --------------------
+    getAllTheViewsOfAllTheQuestion = Question.objects.filter(
+        post_owner=profileData.user
+    ).annotate(
+        total_views=Count('viewers')
+    ).aggregate(Sum('total_views'))
 
-    countVotedPosts_A = Answer.objects.filter(a_vote_ups=user_id).count()
-    countDownVotedPosts_A = Answer.objects.filter(a_vote_downs=user_id).count()
+    reputation_graph = Reputation.objects.filter(
+        awarded_to=profileData.user
+    )[:15]
 
-    getVotesCast_Final = countVotedPosts_Q + countDownVotedPosts_Q + countVotedPosts_A + countDownVotedPosts_A
+    # -------------------- NEXT BADGES --------------------
 
+    countComments = CommentQ.objects.filter(
+        commented_by=profileData.user
+    ).count()
 
+    completed = bool(profileData.about_me.strip())
 
-    # People Reached
-    getAllTheViewsOfAllTheQuestion = Question.objects.filter(post_owner=profileData.user).annotate(total_views=Count('viewers')).aggregate(Sum('total_views'))
+    # Create a function to check badges easily
+    def has_badge(tag, btype):
+        return TagBadge.objects.filter(
+            awarded_to_user=profileData.user,
+            badge_type=btype,
+            tag_name=tag,
+            bade_position="BADGE"
+        ).exists()
 
+    benefactor_earned = has_badge("Benefactor", "BRONZE")
+    ctzn_ptrl_earned = has_badge("Citizen Patrol", "BRONZE")
+    civc_duty = has_badge("Civic Duty", "SILVER")
+    critic_earned = has_badge("Critic", "BRONZE")
+    disclpned_earned = has_badge("Disciplined", "BRONZE")
+    excvter_earned = has_badge("Excavator", "BRONZE")
+    investor_earned = has_badge("Investor", "BRONZE")
+    marshal_earned = has_badge("Marshal", "GOLD")
+    necromancer_earned = has_badge("Necromancer", "SILVER")
+    pr_pressre_earned = has_badge("Peer Pressure", "BRONZE")
+    promoter_earned = has_badge("Promoter", "BRONZE")
+    proffreader_earned = has_badge("Proofreader", "BRONZE")
+    refiner_earned = has_badge("Refiner", "SILVER")
+    reviv_earned = has_badge("Revival", "BRONZE")
+    slf_lrnr_earned = has_badge("Self-Learner", "SILVER")
+    stnk_whte_earned = has_badge("Strunk & White", "SILVER")
+    suffrage_earned = has_badge("Suffrage", "BRONZE")
+    vx_pop_earned = has_badge("Vox Populi", "BRONZE")
+    teacher_earned = has_badge("Teacher", "SILVER")
 
-    reputation_graph = Reputation.objects.filter(awarded_to=user_id)[:15]
+    deputy_earned = bool(profileData.helpful_flags_counter)
 
+    newestBadge = TagBadge.objects.filter(
+        awarded_to_user=profileData.user
+    ).last()
 
-
-
-    # ----------Next Badge---------- START----------
-    countComments = CommentQ.objects.filter(commented_by=profileData.user).count()
-
-
-
-    if profileData.about_me != '':
-        completed = True
-    else:
-        completed = False
-
-
-
-    if TagBadge.objects.filter(awarded_to_user=profileData.user, badge_type="BRONZE", tag_name="Benefactor").exists():
-        benefactor_earned = True
-    else:
-        benefactor_earned = False
-
-
-
-    if TagBadge.objects.filter(awarded_to_user=profileData.user,badge_type="BRONZE", tag_name="Citizen Patrol",bade_position="BADGE").exists():
-        ctzn_ptrl_earned = True
-    else:
-        ctzn_ptrl_earned = False
-
-
-
-    if TagBadge.objects.filter(awarded_to_user=profileData.user,badge_type="SILVER", tag_name="Civic Duty",bade_position="BADGE").exists():
-        civc_duty = True
-    else:
-        civc_duty = False
+    # Votes count (Q + A)
     getVotedOnQ = Question.objects.filter(qupvote__upvote_by_q=profileData.user).count()
     getVotedOnQ_Down = Question.objects.filter(qdownvote__downvote_by_q=profileData.user).count()
     getVotedOn = Answer.objects.filter(a_vote_ups=profileData.user).count()
     getVotedOn_Down = Answer.objects.filter(a_vote_downs=profileData.user).count()
 
-    countVotes = getVotedOnQ+getVotedOnQ_Down+getVotedOn+getVotedOn_Down
+    countVotes = getVotedOnQ + getVotedOnQ_Down + getVotedOn + getVotedOn_Down
 
-
-
-    if TagBadge.objects.filter(awarded_to_user=profileData.user, badge_type="BRONZE", tag_name="Critic", bade_position="BADGE").exists():
-        critic_earned = True
-    else:
-        critic_earned = False
-
-
-
-    if profileData.helpful_flags_counter:
-        deputy_earned = True
-    else:
-        deputy_earned = False
-
-    if TagBadge.objects.filter(awarded_to_user=profileData.user,badge_type="BRONZE", tag_name="Disciplined",bade_position="BADGE").exists():
-        disclpned_earned = True
-    else:
-        disclpned_earned = False
-
-
-    if TagBadge.objects.filter(awarded_to_user=profileData.user,badge_type="BRONZE", tag_name="Excavator",bade_position="BADGE").exists():
-        excvter_earned = True
-    else:
-        excvter_earned = False
-
-
-    if TagBadge.objects.filter(awarded_to_user=profileData.user, badge_type="BRONZE", tag_name="Investor", bade_position="BADGE").exists():
-        investor_earned = True
-    else:
-        investor_earned = False
-
-
-    if TagBadge.objects.filter(awarded_to_user=profileData.user, badge_type="GOLD", tag_name="Marshal", bade_position="BADGE").exists():
-        marshal_earned = True
-    else:
-        marshal_earned = False
-
-
-    if TagBadge.objects.filter(awarded_to_user=profileData.user,badge_type="SILVER", tag_name="Necromancer",bade_position="BADGE").exists():
-        necromancer_earned = True
-    else:
-        necromancer_earned = False
-
-
-    if TagBadge.objects.filter(awarded_to_user=profileData.user,badge_type="BRONZE", tag_name="Peer Pressure",bade_position="BADGE").exists():
-        pr_pressre_earned = True
-    else:
-        pr_pressre_earned = False
-
-
-    if TagBadge.objects.filter(awarded_to_user=profileData.user, badge_type="BRONZE", tag_name="Promoter", bade_position="BADGE").exists():
-        promoter_earned = True
-    else:
-        promoter_earned = False
-
-
-    if TagBadge.objects.filter(awarded_to_user=profileData.user,badge_type="BRONZE", tag_name="Proofreader",bade_position="BADGE").exists():
-        proffreader_earned = True
-    else:
-        proffreader_earned = False
-
-    if TagBadge.objects.filter(awarded_to_user=profileData.user,badge_type="SILVER", tag_name="Refiner",bade_position="BADGE").exists():
-        refiner_earned = True
-    else:
-        refiner_earned = False
-
-
-    if TagBadge.objects.filter(awarded_to_user=profileData.user,badge_type="Bronze", tag_name="Revival",bade_position="BADGE").exists():
-        reviv_earned = True
-    else:
-        reviv_earned = False
-
-    if TagBadge.objects.filter(awarded_to_user=profileData.user,badge_type="SILVER", tag_name="Self-Learner",bade_position="BADGE").exists():
-        slf_lrnr_earned = True
-    else:
-        slf_lrnr_earned = False
-
-    if TagBadge.objects.filter(awarded_to_user=profileData.user,badge_type="SILVER", tag_name="Strunk & White",bade_position="BADGE").exists():
-        stnk_whte_earned = True
-    else:
-        stnk_whte_earned = False
-
-
-
-    if TagBadge.objects.filter(awarded_to_user=profileData.user,badge_type="BRONZE", tag_name="Suffrage",bade_position="BADGE").exists():
-        suffrage_earned = True
-    else:
-        suffrage_earned = False
-
-    last_24_hours = timezone.now() - timedelta(hours=24)
-    getQ_Votes_in_24_Hours = QUpvote.objects.filter(date__gt=last_24_hours).count()
-    getQ_DownVotes_in_24_Hours = QDownvote.objects.filter(downvote_by_q=profileData.user, date__gt=last_24_hours).count()
-    getA_Votes_in_24_Hours = Answer.objects.filter(a_vote_ups=profileData.user, date__gt=last_24_hours).count()
-    getA_DownVotes_in_24_Hours = Answer.objects.filter(a_vote_downs=profileData.user, date__gt=last_24_hours).count()
-    totalVotes = getQ_Votes_in_24_Hours + getQ_DownVotes_in_24_Hours + getA_Votes_in_24_Hours + getA_DownVotes_in_24_Hours
-
-    if TagBadge.objects.filter(awarded_to_user=profileData.user,badge_type="BRONZE", tag_name="Vox Populi",bade_position="BADGE").exists():
-        vx_pop_earned = True
-    else:
-        vx_pop_earned = False  
-
-
-
-    if TagBadge.objects.filter(awarded_to_user=profileData.user,badge_type="SILVER", tag_name="Teacher",bade_position="BADGE").exists():
-        teacher_earned = True
-    else:
-        teacher_earned = False
-
-    newestBadge = TagBadge.objects.filter(awarded_to_user=profileData.user).last()
-
-    # ----------Next Badge---------- END----------
-
-
-
+    # -------------------- CONTEXT --------------------
     context = {
-        'newestBadge':newestBadge,
-        'countVotes':countVotes,
-        'teacher_earned':teacher_earned,
-        'totalVotes':totalVotes,
-        'vx_pop_earned':vx_pop_earned,
-        'suffrage_earned':suffrage_earned,
-        'stnk_whte_earned':stnk_whte_earned,
-        'slf_lrnr_earned':slf_lrnr_earned,
-        'reviv_earned':reviv_earned,
-        'refiner_earned':refiner_earned,
-        'proffreader_earned':proffreader_earned,
-        'promoter_earned':promoter_earned,
-        'necromancer_earned':necromancer_earned,
-        'marshal_earned':marshal_earned,
-        'investor_earned':investor_earned,
-        'pr_pressre_earned':pr_pressre_earned,
-        'excvter_earned':excvter_earned,
-        'deputy_earned':deputy_earned,
-        'disclpned_earned':disclpned_earned,
-        'civc_duty':civc_duty,
-        'critic_earned':critic_earned,
-        'ctzn_ptrl_earned':ctzn_ptrl_earned,
-        'benefactor_earned':benefactor_earned,
-        'completed':completed,
-        'countComments':countComments,
-        'reputation_graph':reputation_graph,'totalBookmarks':totalBookmarks,'getAllTheViewsOfAllTheQuestion':getAllTheViewsOfAllTheQuestion,'getVotesCast_Final':getVotesCast_Final,'online_user_activity':online_user_activity,'tags':tags,'profileData':profileData}
-    return render(request, 'profile/tagsActivity.html', context)
+        'newestBadge': newestBadge,
+        'countVotes': countVotes,
+        'teacher_earned': teacher_earned,
+        'totalVotes': getVotesCast_Final,
+        'vx_pop_earned': vx_pop_earned,
+        'suffrage_earned': suffrage_earned,
+        'stnk_whte_earned': stnk_whte_earned,
+        'slf_lrnr_earned': slf_lrnr_earned,
+        'reviv_earned': reviv_earned,
+        'refiner_earned': refiner_earned,
+        'proffreader_earned': proffreader_earned,
+        'promoter_earned': promoter_earned,
+        'necromancer_earned': necromancer_earned,
+        'marshal_earned': marshal_earned,
+        'investor_earned': investor_earned,
+        'pr_pressre_earned': pr_pressre_earned,
+        'excvter_earned': excvter_earned,
+        'deputy_earned': deputy_earned,
+        'disclpned_earned': disclpned_earned,
+        'civc_duty': civc_duty,
+        'critic_earned': critic_earned,
+        'ctzn_ptrl_earned': ctzn_ptrl_earned,
+        'benefactor_earned': benefactor_earned,
+        'completed': completed,
+        'countComments': countComments,
+        'reputation_graph': reputation_graph,
+        'totalBookmarks': totalBookmarks,
+        'getAllTheViewsOfAllTheQuestion': getAllTheViewsOfAllTheQuestion,
+        'getVotesCast_Final': getVotesCast_Final,
+        'online_user_activity': online_user_activity,
+        'tags': tags,
+        'profileData': profileData,
+    }
 
+    return render(request, 'profile/tagsActivity.html', context)
 
 # IMPLEMENTED THE LOGIC
     # It will display all the badges and tag badges.
     # Recent Earned | Only TagBadge 
 def badgesActivity(request, user_id, username):
     profileData = get_object_or_404(Profile, pk=user_id)
-    badges = TagBadge.objects.filter(awarded_to_user=user_id)
+    badges = TagBadge.objects.filter(awarded_to_user=profileData.user)
 
     totalBadges = badges.count()
 
-    totalBookmarks = BookmarkQuestion.objects.filter(bookmarked_by=user_id).count()
+    totalBookmarks = BookmarkQuestion.objects.filter(bookmarked_by=profileData.user).count()
 
 
 
@@ -971,22 +548,22 @@ def badgesActivity(request, user_id, username):
     USER_ONLINE_TIMEOUT = timedelta(seconds=5)
     min_time = timezone.now() - (USER_ONLINE_TIMEOUT)
     queryset = online_users.models.OnlineUserActivity.objects.filter(
-        user_id=user_id).annotate(is_online=Case(
+        user_id=profileData.user).annotate(is_online=Case(
             When(last_activity__gte=min_time, then=Value(True)),
             default=Value(False),
             output_field=BooleanField(),
         ))
 
-    online_user_activity = get_object_or_404(queryset)
+    online_user_activity = queryset.first()
 
 
 
     # Total Votes Cast
-    countVotedPosts_Q = QUpvote.objects.filter(upvote_by_q=user_id).count()
-    countDownVotedPosts_Q = QDownvote.objects.filter(downvote_by_q=user_id).count()
+    countVotedPosts_Q = QUpvote.objects.filter(upvote_by_q=profileData.user).count()
+    countDownVotedPosts_Q = QDownvote.objects.filter(downvote_by_q=profileData.user).count()
 
-    countVotedPosts_A = Answer.objects.filter(a_vote_ups=user_id).count()
-    countDownVotedPosts_A = Answer.objects.filter(a_vote_downs=user_id).count()
+    countVotedPosts_A = Answer.objects.filter(a_vote_ups=profileData.user).count()
+    countDownVotedPosts_A = Answer.objects.filter(a_vote_downs=profileData.user).count()
 
     getVotesCast_Final = countVotedPosts_Q + countDownVotedPosts_Q + countVotedPosts_A + countDownVotedPosts_A
 
@@ -996,7 +573,7 @@ def badgesActivity(request, user_id, username):
 
 
 
-    reputation_graph = Reputation.objects.filter(awarded_to=user_id)[:15]
+    reputation_graph = Reputation.objects.filter(awarded_to=profileData.user)[:15]
 
 
     # ----------Next Badge---------- START----------
@@ -1203,29 +780,29 @@ def bountiesActivity(request, user_id, username):
     LAST_SEVEN_DAYS = timezone.now() - timedelta(days=7)
 
     # Earned | Active | Offered by user_id
-    active_bounties = Bounty.objects.filter(by_user=user_id, date__gt=LAST_SEVEN_DAYS)
+    active_bounties = Bounty.objects.filter(by_user=profileData.user, date__gt=LAST_SEVEN_DAYS)
 
-    earned_bounties = Bounty.objects.filter(bounty_awarded_to=user_id)
+    earned_bounties = Bounty.objects.filter(bounty_awarded_to=profileData.user)
 
 
     USER_ONLINE_TIMEOUT = timedelta(seconds=5)
     min_time = timezone.now() - (USER_ONLINE_TIMEOUT)
     queryset = online_users.models.OnlineUserActivity.objects.filter(
-        user_id=user_id).annotate(is_online=Case(
+        user_id=profileData.user).annotate(is_online=Case(
             When(last_activity__gte=min_time, then=Value(True)),
             default=Value(False),
             output_field=BooleanField(),
         ))
 
-    online_user_activity = get_object_or_404(queryset)
+    online_user_activity = queryset.first()
 
 
     # Total Votes Cast
-    countVotedPosts_Q = QUpvote.objects.filter(upvote_by_q=user_id).count()
-    countDownVotedPosts_Q = QDownvote.objects.filter(downvote_by_q=user_id).count()
+    countVotedPosts_Q = QUpvote.objects.filter(upvote_by_q=profileData.user).count()
+    countDownVotedPosts_Q = QDownvote.objects.filter(downvote_by_q=profileData.user).count()
 
-    countVotedPosts_A = Answer.objects.filter(a_vote_ups=user_id).count()
-    countDownVotedPosts_A = Answer.objects.filter(a_vote_downs=user_id).count()
+    countVotedPosts_A = Answer.objects.filter(a_vote_ups=profileData.user).count()
+    countDownVotedPosts_A = Answer.objects.filter(a_vote_downs=profileData.user).count()
 
     getVotesCast_Final = countVotedPosts_Q + countDownVotedPosts_Q + countVotedPosts_A + countDownVotedPosts_A
 
@@ -1234,7 +811,7 @@ def bountiesActivity(request, user_id, username):
     getAllTheViewsOfAllTheQuestion = Question.objects.filter(post_owner=profileData.user).annotate(total_views=Count('viewers')).aggregate(Sum('total_views'))
 
 
-    reputation_graph = Reputation.objects.filter(awarded_to=user_id)[:15]
+    reputation_graph = Reputation.objects.filter(awarded_to=profileData.user)[:15]
 
 
     # ----------Next Badge---------- START----------
@@ -1432,7 +1009,7 @@ def reputationActivity(request, user_id, username):
             output_field=BooleanField(),
         ))
 
-    online_user_activity = get_object_or_404(queryset)
+    online_user_activity = queryset.first()
 
 
     # Total Votes Cast
@@ -1744,7 +1321,7 @@ def allActionsActivity(request, user_id, username):
             output_field=BooleanField(),
         ))
 
-    online_user_activity = get_object_or_404(queryset)
+    online_user_activity = queryset.first()
 
 
 
@@ -2036,7 +1613,7 @@ def Votes_castActivity(request, user_id, username):
             output_field=BooleanField(),
         ))
 
-    online_user_activity = get_object_or_404(queryset)
+    online_user_activity = queryset.first()
 
 
 
@@ -2330,7 +1907,7 @@ def activityPageTabProfile(request,user_id,username):
             output_field=BooleanField(),
         ))
 
-    online_user_activity = get_object_or_404(queryset)
+    online_user_activity = queryset.first()
 
     # Peoples Reached
     getAllTheViewsOfAllTheQuestion = Question.objects.filter(post_owner=profileData.user).annotate(total_views=Count('viewers')).aggregate(Sum('total_views'))
@@ -2438,7 +2015,7 @@ def bookmarksActivity(request, user_id, username):
             output_field=BooleanField(),
         ))
 
-    online_user_activity = get_object_or_404(queryset)
+    online_user_activity = queryset.first()
 
 
 
@@ -2643,7 +2220,14 @@ def bookmarksActivity(request, user_id, username):
 # @cache_page(DEFAULT_TIMEOUT)
 def ActivityTabSummary(request, user_id, username):
     profileData = get_object_or_404(Profile, pk=user_id)
-
+    
+    # Get notifications for the current user
+    if request.user.is_authenticated:
+        notifications = Notification.objects.filter(noti_receiver=request.user).order_by('-date_created')[:10]
+        privNotifications = PrivRepNotification.objects.filter(for_user=request.user).order_by('-date_created_PrivNotify')[:10]
+    else:
+        notifications = []
+        privNotifications = []
 
 
 # Question DIVs - START
@@ -2734,7 +2318,7 @@ def ActivityTabSummary(request, user_id, username):
             output_field=BooleanField(),
         ))
 
-    online_user_activity = get_object_or_404(queryset)
+    online_user_activity = queryset.first()
 
 
 
@@ -2963,6 +2547,8 @@ def ActivityTabSummary(request, user_id, username):
         'bookmarks_views':bookmarks_views,
         'badges':badges,
         'bounties':bounties,
+        'notifications':notifications,
+        'privNotifications':privNotifications,
         # 'mixed_vote_count':mixed_vote_count,
     }
 
@@ -3034,7 +2620,7 @@ def userProfileEdit_Settings(request, user_id):
             output_field=BooleanField(),
         ))
 
-    online_user_activity = get_object_or_404(queryset)
+    online_user_activity = queryset.first()
 
 
     context = {'Edit_profile_form': Edit_profile_form,'profileData':profileData,'online_user_activity':online_user_activity,}
@@ -3107,7 +2693,7 @@ def userProfileJonPrefrences_Settings(request, user_id):
             output_field=BooleanField(),
         ))
 
-    online_user_activity = get_object_or_404(queryset)
+    online_user_activity = queryset.first()
 
 
     context = {'online_user_activity':online_user_activity,'profileData':profileData,'editProfile_Job': editProfile_Job}

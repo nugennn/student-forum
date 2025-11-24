@@ -156,6 +156,8 @@ function ThirdTab_Q() {
         <div class="d-flex ai-center fw-wrap gs8 wmx4">
             <div class="flex--item mb12 fs-headline2 lh-xs">
                 {% if profileData.full_name %}{{profileData.full_name}}{% else %}{{profileData.user.username}}{% endif %}
+                {% load profile_extras %}
+                {% show_verification_badge profileData.user %}
             </div>
             <div class="flex--item">
                 <div class="d-flex ai-center fw-nowrap gs4">
@@ -220,11 +222,11 @@ Joined <span title="2021-07-25 23:41:40Z">{{profileData.user.date_joined|natural
 <div class="d-flex ai-center jc-space-between fw-wrap mb16 js-user-header">
     <div class="flex--item s-navigation">
 
-            <a href="{% url 'profile:activityPageTabProfile' profileData.user.id profileData.user.username %}" class="s-navigation--item is-selected" data-shortcut="P">Profile</a>
-            <a href="{% url 'profile:ActivityTabSummary' profileData.user.id profileData.user.username %}" class="s-navigation--item" data-shortcut="A">Activity</a>
+            <a href="{% url 'profile:activityPageTabProfile' profileData.user.id profileData.user.username %}" class="s-navigation--item {% if 'activityPageTabProfile' in request.resolver_match.url_name %}is-selected{% endif %}" data-shortcut="P">Profile</a>
+            <a href="{% url 'profile:ActivityTabSummary' profileData.user.id profileData.user.username %}" class="s-navigation--item {% if 'ActivityTabSummary' in request.resolver_match.url_name %}is-selected{% endif %}" data-shortcut="A">Activity</a>
             {% if request.user.is_authenticated %}
             {% if request.user == profileData.user %}
-            <a href="{% url 'profile:userProfileEdit_Settings' profileData.user.id %}" class="s-navigation--item">Settings</a>
+            <a href="{% url 'profile:userProfileEdit_Settings' profileData.user.id %}" class="s-navigation--item {% if 'userProfileEdit_Settings' in request.resolver_match.url_name %}is-selected{% endif %}">Settings</a>
             {% endif %}
             {% endif %}
     </div>
@@ -669,4 +671,4 @@ site design / logo &#169; 2021 Stack Exchange Inc; user contributions licensed u
             </div>
         </div>
 
-{% endblock content %}
+    {% endblock content %}
