@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.http import JsonResponse, HttpResponseForbidden
+from django.contrib import messages
 from django.views.decorators.http import require_http_methods
 from django.db.models import Q
 from django.core.paginator import Paginator
@@ -26,6 +27,7 @@ def get_suggested_users(user, limit=10):
     Excludes:
     - The current user
     - Users already in active chats
+    - Superusers (admin accounts)
     """
     from datetime import timedelta
     from qa.models import Question, Answer, CommentQ, QUpvote
@@ -46,18 +48,18 @@ def get_suggested_users(user, limit=10):
     user_questions = Question.objects.filter(post_owner=user, is_deleted=False)
     commenters_on_my_posts = User.objects.filter(
         commentq__question_comment__in=user_questions
-    ).exclude(id=user.id).exclude(id__in=chatted_user_ids).distinct()
+    ).exclude(id=user.id).exclude(id__in=chatted_user_ids).exclude(is_superuser=True).distinct()
     
     # Users who upvoted current user's questions
     upvoters_on_my_posts = User.objects.filter(
         qupvote__upvote_question_of__in=user_questions
-    ).exclude(id=user.id).exclude(id__in=chatted_user_ids).distinct()
+    ).exclude(id=user.id).exclude(id__in=chatted_user_ids).exclude(is_superuser=True).distinct()
     
     # Users whose posts current user has interacted with
     my_comments = CommentQ.objects.filter(commented_by=user)
     users_i_commented_on = User.objects.filter(
         Q(question__commentq__in=my_comments) | Q(answer__commentq__in=my_comments)
-    ).exclude(id=user.id).exclude(id__in=chatted_user_ids).distinct()
+    ).exclude(id=user.id).exclude(id__in=chatted_user_ids).exclude(is_superuser=True).distinct()
     
     # Combine mutual interaction users
     mutual_interaction_users = (
@@ -69,19 +71,19 @@ def get_suggested_users(user, limit=10):
         Q(last_login__gte=recent_24h) |
         Q(question__date__gte=recent_24h) |
         Q(answer__date__gte=recent_24h)
-    ).exclude(id=user.id).exclude(id__in=chatted_user_ids).distinct()
+    ).exclude(id=user.id).exclude(id__in=chatted_user_ids).exclude(is_superuser=True).distinct()
     
     # Priority 3: Recently active users (48 hours)
     recently_active_48h = User.objects.filter(
         Q(last_login__gte=recent_48h) |
         Q(question__date__gte=recent_48h) |
         Q(answer__date__gte=recent_48h)
-    ).exclude(id=user.id).exclude(id__in=chatted_user_ids).distinct()
+    ).exclude(id=user.id).exclude(id__in=chatted_user_ids).exclude(is_superuser=True).distinct()
     
     # Priority 4: Other active users
     other_active_users = User.objects.filter(
         is_active=True
-    ).exclude(id=user.id).exclude(id__in=chatted_user_ids).order_by('-last_login')
+    ).exclude(id=user.id).exclude(id__in=chatted_user_ids).exclude(is_superuser=True).order_by('-last_login')
     
     # Build prioritized list
     suggested_user_ids = []
@@ -152,12 +154,29 @@ def chat_list(request):
     all_chats = []
     
     for chat in private_chats:
+        other_user = chat.get_other_user(user)
+        if not other_user:
+            continue  # Skip chats with no other participant
+        
         latest_msg = chat.get_latest_message()
+        
+        # Get user's full name safely
+        if hasattr(other_user, 'profile') and other_user.profile and other_user.profile.full_name:
+            display_name = other_user.profile.full_name
+        else:
+            display_name = other_user.get_full_name() or other_user.username
+        
+        # Get profile photo safely
+        photo_url = None
+        if hasattr(other_user, 'profile') and other_user.profile and other_user.profile.profile_photo:
+            photo_url = other_user.profile.profile_photo.url
+        
         all_chats.append({
             'type': 'private',
             'id': chat.id,
-            'name': chat.get_other_user(user).get_full_name() or chat.get_other_user(user).username,
-            'photo': chat.get_other_user(user).profile.profile_photo.url if hasattr(chat.get_other_user(user), 'profile') else None,
+            'user_id': other_user.id,  # Add other user's ID for URL
+            'name': display_name,
+            'photo': photo_url,
             'latest_message': latest_msg.content if latest_msg else 'No messages yet',
             'latest_message_time': latest_msg.created_at if latest_msg else None,
             'unread_count': ChatNotification.objects.filter(user=user, message__private_chat=chat, is_read=False).count(),
@@ -195,10 +214,17 @@ def chat_list(request):
 def private_chat(request, user_id):
     """Display private chat with a specific user"""
     user = request.user
-    other_user = get_object_or_404(User, id=user_id)
+    
+    # Check if other user exists
+    try:
+        other_user = User.objects.get(id=user_id)
+    except User.DoesNotExist:
+        messages.error(request, f"User with ID {user_id} does not exist or has been deleted.")
+        return redirect('chat:chat_list')
     
     if user == other_user:
-        return HttpResponseForbidden("Cannot chat with yourself")
+        messages.error(request, "You cannot chat with yourself.")
+        return redirect('chat:chat_list')
     
     # Get or create private chat
     chat = PrivateChat.objects.filter(participants=user).filter(participants=other_user).first()
@@ -207,14 +233,14 @@ def private_chat(request, user_id):
         chat = PrivateChat.objects.create()
         chat.participants.add(user, other_user)
     
-    # Get messages
-    messages = chat.messages.all()
+    # Get chat messages
+    chat_messages = chat.messages.all()
     
     # Mark notifications as read
     ChatNotification.objects.filter(user=user, message__private_chat=chat).update(is_read=True)
     
     # Paginate messages
-    paginator = Paginator(messages, 50)
+    paginator = Paginator(chat_messages, 50)
     page_number = request.GET.get('page', 1)
     page_obj = paginator.get_page(page_number)
     
@@ -232,19 +258,26 @@ def private_chat(request, user_id):
 def group_chat(request, group_id):
     """Display group chat"""
     user = request.user
-    group = get_object_or_404(GroupChat, id=group_id)
+    
+    # Check if group exists
+    try:
+        group = GroupChat.objects.get(id=group_id)
+    except GroupChat.DoesNotExist:
+        messages.error(request, f"Group chat with ID {group_id} does not exist or has been deleted.")
+        return redirect('chat:chat_list')
     
     if user not in group.members.all():
-        return HttpResponseForbidden("You are not a member of this group")
+        messages.error(request, "You are not a member of this group.")
+        return redirect('chat:chat_list')
     
-    # Get messages
-    messages = group.messages.all()
+    # Get chat messages
+    chat_messages = group.messages.all()
     
     # Mark notifications as read
     ChatNotification.objects.filter(user=user, message__group_chat=group).update(is_read=True)
     
     # Paginate messages
-    paginator = Paginator(messages, 50)
+    paginator = Paginator(chat_messages, 50)
     page_number = request.GET.get('page', 1)
     page_obj = paginator.get_page(page_number)
     
