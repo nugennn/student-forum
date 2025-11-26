@@ -35,8 +35,10 @@ def community_list(request):
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     
-    # Get user's joined communities
-    user_communities = request.user.community_memberships.values_list('community_id', flat=True)
+    # Get user's ACTIVE joined communities only
+    user_communities = request.user.community_memberships.filter(
+        is_active=True
+    ).values_list('community_id', flat=True)
     
     context = {
         'page_obj': page_obj,
@@ -110,36 +112,46 @@ def create_community(request):
 @login_required
 @require_http_methods(["POST"])
 def join_community(request, slug):
-    """Join a community"""
+    """Join a community - atomic operation"""
     community = get_object_or_404(Community, slug=slug, is_active=True)
     
-    # Check if already a member
-    if CommunityMember.objects.filter(community=community, user=request.user).exists():
+    # Check if already an active member
+    if CommunityMember.objects.filter(
+        community=community, 
+        user=request.user,
+        is_active=True
+    ).exists():
         return JsonResponse({'success': False, 'message': 'Already a member'}, status=400)
     
-    # Create membership
-    CommunityMember.objects.create(
+    # Handle re-join: reactivate if soft-deleted
+    member, created = CommunityMember.objects.get_or_create(
         community=community,
         user=request.user,
-        role='member'
+        defaults={'role': 'member', 'is_active': True}
     )
+    if not created and not member.is_active:
+        member.is_active = True
+        member.save()
     
     # Update member count
     community.member_count = community.members.filter(is_active=True).count()
     community.save()
     
-    messages.success(request, f'You joined {community.name}!')
     return JsonResponse({'success': True, 'message': 'Joined community successfully'})
 
 
 @login_required
 @require_http_methods(["POST"])
 def leave_community(request, slug):
-    """Leave a community"""
+    """Leave a community - atomic operation"""
     community = get_object_or_404(Community, slug=slug, is_active=True)
     
     try:
-        member = CommunityMember.objects.get(community=community, user=request.user)
+        member = CommunityMember.objects.get(
+            community=community, 
+            user=request.user,
+            is_active=True
+        )
         
         # Don't allow last admin to leave
         if member.role == 'admin':
@@ -157,7 +169,6 @@ def leave_community(request, slug):
         community.member_count = community.members.filter(is_active=True).count()
         community.save()
         
-        messages.success(request, f'You left {community.name}')
         return JsonResponse({'success': True, 'message': 'Left community successfully'})
     
     except CommunityMember.DoesNotExist:
