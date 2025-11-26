@@ -142,7 +142,7 @@
 <header class="top-bar js-top-bar top-bar__network">
     <div class="wmx12 mx-auto d-flex ai-center h100" role="menubar">
         <div class="-main flex--item">
-            <a href="#" class="left-sidebar-toggle p0 ai-center jc-center" role="menuitem" aria-haspopup="true" aria-controls="left-sidebar" aria-expanded="false"><span class="ps-relative"></span></a>
+            <a href="#" class="left-sidebar-toggle p0 ai-center jc-center {% if request.path == '/' %}d-none{% endif %}" role="menuitem" aria-haspopup="true" aria-controls="left-sidebar" aria-expanded="false"><span class="ps-relative"></span></a>
             <div class="topbar-dialog leftnav-dialog js-leftnav-dialog dno">
                 <div class="left-sidebar js-unpinned-left-sidebar" data-can-be="left-sidebar" data-is-here-when="sm"></div>
             </div>
@@ -203,12 +203,6 @@
                 </a>
             </li>
 
-            <li class="-item logout-button-item" style="display: flex; align-items: center;">
-                <a href="{% url 'users:logout_view' %}" class="-link" style="display: flex; align-items: center; justify-content: center; padding: 8px; cursor: pointer;" title="Logout">
-                    <i class="fa fa-sign-out fa-lg" aria-hidden="true" style="font-size: 18px; color: #ef4444;"></i>
-                </a>
-            </li>
-
             <li class="-item chat-button-item chatSVGOuter chatThisIsOuter" style="display: flex; align-items: center; position: relative;">
                 <a href="{% url 'chat:chat_list' %}" class="-link" style="display: flex; align-items: center; justify-content: center; padding: 8px; cursor: pointer; position: relative;" title="Messages">
                     <i class="fa fa-comments fa-lg iconChat chatSVG" aria-hidden="true" style="font-size: 18px;"></i>
@@ -231,6 +225,12 @@
                 </a>
             </li>
             {% endif %}
+
+            <li class="-item logout-button-item" style="display: flex; align-items: center;">
+                <a href="{% url 'users:logout_view' %}" class="-link" style="display: flex; align-items: center; justify-content: center; padding: 8px; cursor: pointer;" title="Logout">
+                    <i class="fa fa-sign-out fa-lg" aria-hidden="true" style="font-size: 18px; color: #ef4444;"></i>
+                </a>
+            </li>
 
         </ol>
 
@@ -295,7 +295,7 @@
 <header class="top-bar js-top-bar top-bar__network">
     <div class="wmx12 mx-auto d-flex ai-center h100" role="menubar">
         <div class="-main flex--item">
-            <a href="#" class="left-sidebar-toggle p0 ai-center jc-center js-left-sidebar-toggle" role="menuitem" aria-haspopup="true" aria-controls="left-sidebar" aria-expanded="false"><span class="ps-relative"></span></a>
+            <a href="#" class="left-sidebar-toggle p0 ai-center jc-center {% if request.path == '/' %}d-none{% endif %}" role="menuitem" aria-haspopup="true" aria-controls="left-sidebar" aria-expanded="false"><span class="ps-relative"></span></a>
             <div class="topbar-dialog leftnav-dialog js-leftnav-dialog dno">
                 <div class="left-sidebar js-unpinned-left-sidebar" data-can-be="left-sidebar" data-is-here-when="sm"></div>
             </div>
