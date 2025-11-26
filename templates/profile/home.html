@@ -417,7 +417,7 @@
         <h2 class="bottom-notice" data-loc="2">
             Looking for more? Browse the <a href="{% url 'qa:questions' %}">complete list of questions</a>, 
             or explore <a href="{% url 'profile:tagsPage' %}">popular topics</a>. 
-            Help fellow members by answering <a href="/unanswered">unanswered questions</a>.
+            Help fellow members by answering <a href="{% url 'qa:unansweredQuestions' query=None %}">unanswered questions</a>.
         </h2>
 
     </div>
