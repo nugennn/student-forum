@@ -32,15 +32,12 @@
                                              class="rounded-circle me-3" width="50" height="50" 
                                              onerror="this.src='https://via.placeholder.com/50'">
                                         <div class="flex-grow-1">
-                                            <h6 class="mb-1">
+                                            <h6 class="mb-0">
                                                 {% if chat.type == 'group' %}
                                                     <i class="fas fa-users text-muted"></i>
                                                 {% endif %}
                                                 {{ chat.name }}
                                             </h6>
-                                            <p class="mb-0 text-muted text-truncate" style="font-size: 0.9rem;">
-                                                {{ chat.latest_message }}
-                                            </p>
                                         </div>
                                     </div>
                                     {% if chat.unread_count > 0 %}

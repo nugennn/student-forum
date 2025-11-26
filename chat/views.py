@@ -244,11 +244,34 @@ def private_chat(request, user_id):
     page_number = request.GET.get('page', 1)
     page_obj = paginator.get_page(page_number)
     
+    # Get recent chats for sidebar
+    private_chats = PrivateChat.objects.filter(participants=user).prefetch_related('participants')[:10]
+    recent_chats = []
+    
+    for pc in private_chats:
+        other = pc.get_other_user(user)
+        if not other:
+            continue
+        
+        display_name = other.get_full_name() or other.username
+        photo_url = None
+        if hasattr(other, 'profile') and other.profile and other.profile.profile_photo:
+            photo_url = other.profile.profile_photo.url
+        
+        recent_chats.append({
+            'user_id': other.id,
+            'name': display_name,
+            'username': other.username,
+            'photo': photo_url,
+            'is_current': other.id == other_user.id,
+        })
+    
     context = {
         'chat': chat,
         'other_user': other_user,
         'messages': page_obj,
         'chat_type': 'private',
+        'recent_chats': recent_chats,
     }
     
     return render(request, 'chat/private_chat.html', context)
@@ -281,11 +304,34 @@ def group_chat(request, group_id):
     page_number = request.GET.get('page', 1)
     page_obj = paginator.get_page(page_number)
     
+    # Get recent chats for sidebar
+    private_chats = PrivateChat.objects.filter(participants=user).prefetch_related('participants')[:10]
+    recent_chats = []
+    
+    for pc in private_chats:
+        other = pc.get_other_user(user)
+        if not other:
+            continue
+        
+        display_name = other.get_full_name() or other.username
+        photo_url = None
+        if hasattr(other, 'profile') and other.profile and other.profile.profile_photo:
+            photo_url = other.profile.profile_photo.url
+        
+        recent_chats.append({
+            'user_id': other.id,
+            'name': display_name,
+            'username': other.username,
+            'photo': photo_url,
+            'is_current': False,
+        })
+    
     context = {
         'group': group,
         'messages': page_obj,
         'chat_type': 'group',
         'members': group.members.all(),
+        'recent_chats': recent_chats,
     }
     
     return render(request, 'chat/group_chat.html', context)

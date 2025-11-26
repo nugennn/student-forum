@@ -87,7 +87,10 @@ class Message(models.Model):
         ordering = ['created_at']
 
     def __str__(self):
-        return f"Message from {self.sender.username} - {self.message_type}"
+        # Return just the content preview instead of sender info
+        if self.content:
+            return self.content[:50] + ('...' if len(self.content) > 50 else '')
+        return f"{self.message_type.capitalize()} message"
 
     def mark_as_edited(self):
         """Mark message as edited"""
