@@ -1819,12 +1819,13 @@ def Votes_castActivity(request, user_id, username):
     # User can vote for deletion (if Q is -3 or lower) if the close is older than 48 hours
     # User can vote for deletion to As (if Q is -1 or lower)
 
-# @login_required
+@login_required
 def home(request):
 
     context = {}
     return render(request, 'profile/home.html', context)
 
+@login_required
 def bountied_home(request):
     questions = Question.objects.filter(
                     is_bountied=True)[:50]
@@ -1832,6 +1833,7 @@ def bountied_home(request):
     context = {'questions':questions,}
     return render(request, 'home/bountied_home.html', context)
 
+@login_required
 def hot_q_day_home(request):
     last_3_days = timezone.now() - timedelta(days=3)
     questions = Question.objects.filter(
@@ -1845,6 +1847,7 @@ def hot_q_day_home(request):
     context = {'questions':questions,}
     return render(request, 'home/hot_q_home.html', context)
 
+@login_required
 def hot_q_week_home(request):
     last_7_days = timezone.now() - timedelta(days=7)
     questions = Question.objects.filter(
@@ -1858,6 +1861,7 @@ def hot_q_week_home(request):
     context = {'questions':questions,}
     return render(request, 'home/hot_q_week_home.html', context)
 
+@login_required
 def hot_q_month_home(request):
     last_28_days = timezone.now() - timedelta(days=28)
     questions = Question.objects.filter(
