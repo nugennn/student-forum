@@ -3,233 +3,476 @@
 
 {% block css %}
 <style>
+    /* Modern Card Design */
     .community-card {
         background: white;
-        border: 1px solid #e1e4e8;
-        border-radius: 8px;
+        border: 1px solid #eaeef2;
+        border-radius: 12px;
         overflow: hidden;
-        transition: all 0.3s ease;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         display: flex;
         flex-direction: column;
         height: 100%;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
     }
 
     .community-card:hover {
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        border-color: #0066cc;
+        transform: translateY(-4px);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+        border-color: #e1e4e8;
     }
 
     .community-card-banner {
-        height: 120px;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        height: 140px;
+        background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
         position: relative;
         overflow: hidden;
     }
 
+    .community-card-banner img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.5s ease;
+    }
+
+    .community-card:hover .community-card-banner img {
+        transform: scale(1.05);
+    }
+
     .community-card-icon {
         position: absolute;
-        bottom: -20px;
-        left: 16px;
-        width: 80px;
-        height: 80px;
+        bottom: -24px;
+        left: 20px;
+        width: 88px;
+        height: 88px;
         background: white;
-        border-radius: 50%;
+        border-radius: 16px;
         display: flex;
         align-items: center;
         justify-content: center;
         font-size: 40px;
-        border: 3px solid white;
+        border: 4px solid white;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        z-index: 1;
+        transition: all 0.3s ease;
+    }
+
+    .community-card:hover .community-card-icon {
+        transform: scale(1.05);
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
     }
 
     .community-card-icon img {
         width: 100%;
         height: 100%;
-        border-radius: 50%;
+        border-radius: 12px;
         object-fit: cover;
     }
 
     .community-card-content {
-        padding: 60px 16px 16px;
+        padding: 48px 20px 20px;
         flex: 1;
         display: flex;
         flex-direction: column;
     }
 
     .community-card-name {
-        font-size: 16px;
-        font-weight: 600;
-        color: #0c0d0e;
-        margin: 0 0 4px;
+        font-size: 18px;
+        font-weight: 700;
+        color: #1a1a1a;
+        margin: 0 0 8px;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
+        line-height: 1.3;
     }
 
     .community-card-desc {
-        font-size: 13px;
-        color: #6a737d;
-        margin: 0 0 12px;
+        font-size: 14px;
+        color: #4b5563;
+        margin: 0 0 16px;
         display: -webkit-box;
-        -webkit-line-clamp: 2;
+        -webkit-line-clamp: 3;
         -webkit-box-orient: vertical;
         overflow: hidden;
         flex: 1;
+        line-height: 1.5;
     }
 
     .community-card-meta {
-        font-size: 12px;
-        color: #999;
-        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 13px;
+        color: #6b7280;
+        margin-bottom: 16px;
+    }
+
+    .member-count {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .member-count i {
+        font-size: 14px;
+        color: #6366f1;
     }
 
     .community-card-actions {
         display: flex;
-        gap: 8px;
+        gap: 10px;
+        margin-top: auto;
     }
 
-    .community-card-actions button {
+    .view-btn, .join-btn, .joined-btn {
         flex: 1;
-        padding: 8px 12px;
-        border: 1px solid #d1d5da;
-        border-radius: 4px;
-        background: white;
-        color: #0066cc;
-        font-size: 12px;
+        padding: 10px 12px;
+        border-radius: 8px;
+        font-size: 13px;
         font-weight: 600;
+        text-align: center;
         cursor: pointer;
-        transition: all 0.2s;
-    }
-
-    .community-card-actions button:hover {
-        background: #f6f8fa;
-        border-color: #0066cc;
-    }
-
-    .community-card-actions button.joined {
-        background: #f6f8fa;
-        color: #6a737d;
-        border-color: #d1d5da;
-    }
-
-    .page-header {
+        transition: all 0.2s ease;
+        text-decoration: none;
         display: flex;
-        justify-content: space-between;
         align-items: center;
-        margin-bottom: 24px;
-        padding: 0 16px;
+        justify-content: center;
+        gap: 6px;
+    }
+
+    .view-btn {
+        background: #f3f4f6;
+        color: #374151;
+        border: 1px solid #e5e7eb;
+    }
+
+    .view-btn:hover {
+        background: #e5e7eb;
+        color: #111827;
+    }
+
+    .join-btn {
+        background: #6366f1;
+        color: white;
+        border: 1px solid #6366f1;
+    }
+
+    .join-btn:hover {
+        background: #4f46e5;
+        border-color: #4f46e5;
+    }
+
+    .joined-btn {
+        background: #f9fafb;
+        color: #6b7280;
+        border: 1px solid #e5e7eb;
+        cursor: default;
+    }
+
+    /* Page Header */
+    .header-container {
+        max-width: 900px;
+        margin: 0 auto 32px;
+        padding: 0 24px;
+    }
+
+    .header-content {
+        display: flex;
+        align-items: center;
+        gap: 24px;
+        flex-wrap: wrap;
+    }
+
+    .header-text {
+        flex: 1;
+        min-width: 200px;
+    }
+
+    .search-container {
+        flex: 2;
+        min-width: 300px;
+        margin: 0;
+        padding: 0;
+            justify-content: space-between;
+            align-items: center;
+        }
     }
 
     .page-title {
-        font-size: 24px;
-        font-weight: 600;
-        color: #0c0d0e;
+        font-size: 28px;
+        font-weight: 800;
+        color: #111827;
         margin: 0;
+        line-height: 1.2;
     }
 
     .create-btn {
-        background: #0066cc;
+        background: #6366f1;
         color: white;
         border: none;
-        padding: 10px 16px;
-        border-radius: 4px;
+        padding: 12px 20px;
+        border-radius: 8px;
         font-weight: 600;
         cursor: pointer;
-        transition: all 0.2s;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        white-space: nowrap;
+        box-shadow: 0 2px 4px rgba(99, 102, 241, 0.2);
     }
 
     .create-btn:hover {
-        background: #0052a3;
+        background: #4f46e5;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(99, 102, 241, 0.3);
     }
 
+    .create-btn i {
+        font-size: 16px;
+    }
+
+    /* Search Bar */
+
     .search-bar {
-        margin: 0 16px 24px;
+        position: relative;
+        margin: 0;
+        display: flex;
+        align-items: center;
+    }
+
+    .search-bar form {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        position: relative;
     }
 
     .search-bar input {
         width: 100%;
-        padding: 10px 12px;
-        border: 1px solid #d1d5da;
-        border-radius: 4px;
-        font-size: 14px;
+        padding: 12px 48px 12px 16px;
+        border: 2px solid #e5e7eb;
+        border-radius: 10px;
+        font-size: 15px;
+        transition: all 0.3s ease;
+        background-color: #f9fafb;
     }
 
+    .search-bar input:focus {
+        outline: none;
+        border-color: #6366f1;
+        background-color: white;
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    }
+
+    .search-bar-icon {
+        position: absolute;
+        right: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        color: #9ca3af;
+        cursor: pointer;
+        padding: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+        transition: color 0.2s ease;
+    }
+
+    .search-bar-icon:hover {
+        color: #6366f1;
+    }
+
+    /* Communities Grid */
     .communities-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-        gap: 16px;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 24px;
         padding: 0 16px;
+        margin: 0 auto;
+        max-width: 1400px;
     }
 
+    /* No Communities State */
     .no-communities {
         text-align: center;
-        padding: 40px 16px;
-        color: #6a737d;
+        padding: 60px 16px;
+        background: #f9fafb;
+        border-radius: 12px;
+        margin: 0 16px;
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+    .no-communities i {
+        font-size: 48px;
+        color: #d1d5db;
+        margin-bottom: 16px;
+        display: block;
+    }
+
+    .no-communities h3 {
+        font-size: 20px;
+        color: #111827;
+        margin: 0 0 12px;
+    }
+
+    .no-communities p {
+        color: #6b7280;
+        margin: 0 0 24px;
+        line-height: 1.5;
+    }
+
+    .no-communities .create-btn {
+        display: inline-flex;
+    }
+
+    /* Pagination */
+    .pagination-container {
+        margin-top: 48px;
+        padding: 0 16px;
     }
 
     .pagination {
         display: flex;
         justify-content: center;
         gap: 8px;
-        margin-top: 32px;
-        padding: 0 16px;
+        flex-wrap: wrap;
     }
 
     .pagination a, .pagination span {
-        padding: 8px 12px;
-        border: 1px solid #d1d5da;
-        border-radius: 4px;
+        padding: 8px 14px;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
         text-decoration: none;
-        color: #0066cc;
+        color: #4b5563;
+        font-weight: 500;
+        min-width: 40px;
+        text-align: center;
+        transition: all 0.2s ease;
+    }
+
+    .pagination a:hover {
+        background: #f3f4f6;
+        color: #111827;
     }
 
     .pagination .current {
-        background: #0066cc;
+        background: #6366f1;
         color: white;
-        border-color: #0066cc;
+        border-color: #6366f1;
+    }
+
+    .pagination .disabled {
+        color: #d1d5db;
+        pointer-events: none;
+    }
+
+    /* Responsive Adjustments */
+    @media (max-width: 768px) {
+        .communities-grid {
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 16px;
+        }
+        
+        .page-title {
+            font-size: 24px;
+        }
+        
+        .community-card-banner {
+            height: 120px;
+        }
+        
+        .community-card-icon {
+            width: 72px;
+            height: 72px;
+            bottom: -20px;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .community-card-actions {
+            flex-direction: column;
+        }
+        
+        .community-card-actions .view-btn,
+        .community-card-actions .join-btn,
+        .community-card-actions .joined-btn {
+            width: 100%;
+        }
     }
 </style>
 {% endblock css %}
 
 {% block content %}
-<div class="page-header">
-    <h1 class="page-title">Communities</h1>
-    <a href="{% url 'community:create_community' %}" class="create-btn">+ Create Community</a>
-</div>
-
-<div class="search-bar">
-    <form method="get" action="{% url 'community:community_list' %}">
-        <input type="text" name="q" placeholder="Search communities..." value="{{ search_query }}">
-    </form>
+<div class="header-container">
+    <div class="header-content">
+        <div class="header-text">
+            <h1 class="page-title"><b>Discover Communities</b></h1>
+            <p class="text-gray-600">Find and join communities that match your interests.</p>
+        </div>
+        <div class="search-container">
+            <div class="search-bar">
+                <form method="get" action="{% url 'community:community_list' %}" class="w-full">
+                    <input type="text" name="q" placeholder="Search by name, topic, or description..." value="{{ search_query }}" autocomplete="off">
+                    <button type="submit" class="search-bar-icon" title="Search">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+        <a href="{% url 'community:create_community' %}" class="create-btn">
+            <i class="fas fa-plus"></i>
+            <span>Create Community</span>
+        </a>
+    </div>
 </div>
 
 {% if communities %}
     <div class="communities-grid">
         {% for community in communities %}
             <div class="community-card">
-                <div class="community-card-banner" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                <div class="community-card-banner">
                     {% if community.banner %}
-                        <img src="{{ community.banner.url }}" style="width: 100%; height: 100%; object-fit: cover;">
+                        <img src="{{ community.banner.url }}" alt="{{ community.name }} banner">
                     {% endif %}
                     <div class="community-card-icon">
                         {% if community.icon %}
-                            <img src="{{ community.icon.url }}" alt="{{ community.name }}">
+                            <img src="{{ community.icon.url }}" alt="{{ community.name }} icon">
                         {% else %}
-                            <i class="fas fa-users"></i>
+                            <i class="fas fa-users" style="color: #6366f1;"></i>
                         {% endif %}
                     </div>
                 </div>
                 <div class="community-card-content">
                     <h3 class="community-card-name">{{ community.name }}</h3>
-                    <p class="community-card-desc">{{ community.description|truncatewords:15 }}</p>
+                    <p class="community-card-desc">{{ community.description|truncatewords:20 }}</p>
                     <div class="community-card-meta">
-                        {{ community.member_count }} member{{ community.member_count|pluralize }}
+                        <span class="member-count">
+                            <i class="fas fa-users"></i>
+                            <span>{{ community.member_count }} member{{ community.member_count|pluralize }}</span>
+                        </span>
                     </div>
                     <div class="community-card-actions">
-                        <a href="{% url 'community:community_detail' community.slug %}" style="flex: 1; padding: 8px 12px; border: 1px solid #d1d5da; border-radius: 4px; background: white; color: #0066cc; font-size: 12px; font-weight: 600; cursor: pointer; text-decoration: none; text-align: center;">View</a>
+                        <a href="{% url 'community:community_detail' community.slug %}" class="view-btn">
+                            <i class="fas fa-eye"></i>
+                            <span>View</span>
+                        </a>
                         {% if community.id in user_communities %}
-                            <button class="joined" disabled>Joined</button>
+                            <button class="joined-btn" disabled>
+                                <i class="fas fa-check"></i>
+                                <span>Joined</span>
+                            </button>
                         {% else %}
-                            <button class="join-btn" data-slug="{{ community.slug }}">Join</button>
+                            <button class="join-btn" data-slug="{{ community.slug }}">
+                                <i class="fas fa-user-plus"></i>
+                                <span>Join</span>
+                            </button>
                         {% endif %}
                     </div>
                 </div>
@@ -238,51 +481,146 @@
     </div>
 
     {% if page_obj.has_other_pages %}
-        <div class="pagination">
-            {% if page_obj.has_previous %}
-                <a href="?page=1">First</a>
-                <a href="?page={{ page_obj.previous_page_number }}">Previous</a>
-            {% endif %}
-
-            {% for num in page_obj.paginator.page_range %}
-                {% if page_obj.number == num %}
-                    <span class="current">{{ num }}</span>
+        <div class="pagination-container">
+            <div class="pagination">
+                {% if page_obj.has_previous %}
+                    <a href="?page=1" class="first-page" title="First page">
+                        <i class="fas fa-angle-double-left"></i>
+                    </a>
+                    <a href="?page={{ page_obj.previous_page_number }}" class="prev-page" title="Previous page">
+                        <i class="fas fa-chevron-left"></i>
+                    </a>
                 {% else %}
-                    <a href="?page={{ num }}">{{ num }}</a>
+                    <span class="disabled" aria-disabled="true">
+                        <i class="fas fa-angle-double-left"></i>
+                    </span>
+                    <span class="disabled" aria-disabled="true">
+                        <i class="fas fa-chevron-left"></i>
+                    </span>
                 {% endif %}
-            {% endfor %}
 
-            {% if page_obj.has_next %}
-                <a href="?page={{ page_obj.next_page_number }}">Next</a>
-                <a href="?page={{ page_obj.paginator.num_pages }}">Last</a>
-            {% endif %}
+                {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                        <span class="current" aria-current="page">{{ num }}</span>
+                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                        <a href="?page={{ num }}">{{ num }}</a>
+                    {% elif num == page_obj.number|add:'-3' or num == page_obj.number|add:'3' %}
+                        <span class="ellipsis">...</span>
+                    {% endif %}
+                {% endfor %}
+
+                {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}" class="next-page" title="Next page">
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+                    <a href="?page={{ page_obj.paginator.num_pages }}" class="last-page" title="Last page">
+                        <i class="fas fa-angle-double-right"></i>
+                    </a>
+                {% else %}
+                    <span class="disabled" aria-disabled="true">
+                        <i class="fas fa-chevron-right"></i>
+                    </span>
+                    <span class="disabled" aria-disabled="true">
+                        <i class="fas fa-angle-double-right"></i>
+                    </span>
+                {% endif %}
+            </div>
         </div>
     {% endif %}
 {% else %}
     <div class="no-communities">
-        <p>No communities found. <a href="{% url 'community:create_community' %}">Create one now!</a></p>
+        <i class="fas fa-users-slash"></i>
+        <h3>No communities found</h3>
+        <p>{% if search_query %}
+            No communities match your search. Try different keywords or
+        {% else %}
+            There are no communities yet. Be the first to
+        {% endif %}
+        <a href="{% url 'community:create_community' %}" class="text-indigo-600 hover:text-indigo-800 font-medium">create a community</a>.</p>
     </div>
 {% endif %}
 
 <script>
-document.querySelectorAll('.join-btn').forEach(btn => {
-    btn.addEventListener('click', async function() {
-        const slug = this.dataset.slug;
-        try {
-            const response = await fetch(`/community/${slug}/join/`, {
-                method: 'POST',
-                headers: {
-                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || '',
-                    'Content-Type': 'application/json'
+document.addEventListener('DOMContentLoaded', function() {
+    // Join community functionality
+    document.querySelectorAll('.join-btn').forEach(btn => {
+        btn.addEventListener('click', async function() {
+            const slug = this.dataset.slug;
+            const card = this.closest('.community-card');
+            const button = this;
+            
+            // Show loading state
+            button.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span>Joining...</span>';
+            button.disabled = true;
+            
+            try {
+                const response = await fetch(`/community/${slug}/join/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': getCsrfToken(),
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    // Update button to show joined state
+                    button.innerHTML = '<i class="fas fa-check"></i><span>Joined</span>';
+                    button.className = 'joined-btn';
+                    button.disabled = true;
+                    
+                    // Update member count
+                    const memberCountElement = card.querySelector('.member-count span:last-child');
+                    if (memberCountElement) {
+                        const currentCount = parseInt(memberCountElement.textContent);
+                        memberCountElement.textContent = (currentCount + 1) + (currentCount === 0 ? ' member' : ' members');
+                    }
+                    
+                    // Add a subtle success effect
+                    card.style.boxShadow = '0 4px 20px rgba(34, 197, 94, 0.2)';
+                    setTimeout(() => {
+                        card.style.boxShadow = '0 10px 25px rgba(0, 0, 0, 0.08)';
+                    }, 1000);
+                    
+                } else {
+                    // Show error state
+                    button.innerHTML = '<i class="fas fa-exclamation-circle"></i><span>Try Again</span>';
+                    button.disabled = false;
+                    
+                    // Show error message
+                    const errorMessage = document.createElement('div');
+                    errorMessage.className = 'error-message';
+                    errorMessage.textContent = 'Failed to join community. Please try again.';
+                    errorMessage.style.color = '#ef4444';
+                    errorMessage.style.fontSize = '12px';
+                    errorMessage.style.marginTop = '8px';
+                    
+                    const actions = card.querySelector('.community-card-actions');
+                    if (actions) {
+                        actions.appendChild(errorMessage);
+                        
+                        // Remove error message after 3 seconds
+                        setTimeout(() => {
+                            if (errorMessage.parentNode === actions) {
+                                actions.removeChild(errorMessage);
+                            }
+                        }, 3000);
+                    }
                 }
-            });
-            if (response.ok) {
-                location.reload();
-            } else {
-                alert('Failed to join community');
+            } catch (error) {
+                console.error('Error:', error);
+                button.innerHTML = '<i class="fas fa-exclamation-circle"></i><span>Error</span>';
+                button.disabled = false;
             }
-        } catch (error) {
-            console.error('Error:', error);
+        });
+    });
+    
+    // Add smooth scroll to top when changing pages
+    document.querySelector('.pagination').addEventListener('click', function(e) {
+        if (e.target.tagName === 'A' || e.target.parentElement.tagName === 'A') {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
         }
     });
 });

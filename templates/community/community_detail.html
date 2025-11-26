@@ -302,7 +302,7 @@
                             <div class="member-avatar">
                                 {{ member.user.username|first|upper }}
                             </div>
-                            <a href="{% url 'profile:userProfile' member.user.id member.user.username %}" class="member-name">
+                            <a href="{% url 'profile:activityPageTabProfile' member.user.id member.user.username %}" class="member-name">
                                 {{ member.user.username }}
                             </a>
                             {% if member.role != 'member' %}
@@ -335,7 +335,7 @@ async function joinCommunity(slug) {
         const response = await fetch(`/community/${slug}/join/`, {
             method: 'POST',
             headers: {
-                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || '',
+                'X-CSRFToken': getCsrfToken(),
                 'Content-Type': 'application/json'
             }
         });
@@ -355,7 +355,7 @@ async function leaveCommunity(slug) {
             const response = await fetch(`/community/${slug}/leave/`, {
                 method: 'POST',
                 headers: {
-                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || '',
+                    'X-CSRFToken': getCsrfToken(),
                     'Content-Type': 'application/json'
                 }
             });

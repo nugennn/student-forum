@@ -6,6 +6,7 @@
 <html class="html__responsive">
 
 <head>
+    <title>{% block title %}KhEC FORUM{% endblock %}</title>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
     <script async src="https://cdn.sstatic.net/Js/third-party/stacks/stacks.min.js?v=4c00f8ce1b14"></script>
 
@@ -146,7 +147,7 @@
                 <div class="left-sidebar js-unpinned-left-sidebar" data-can-be="left-sidebar" data-is-here-when="sm"></div>
             </div>
             <a href="{% url 'profile:home' %}" class="-logo">
-                <i class="fas fa-graduation-cap fa-3x" style="color: #6366f1;"></i><div class="logo-name">KHEC<b>FORUM</b></div>
+                <i class="fas fa-graduation-cap fa-3x" style="color: #6366f1;"></i><div class="logo-name">KhEC <b>FORUM</b></div>
             </a>
         </div>
 
@@ -293,7 +294,7 @@
                 <div class="left-sidebar js-unpinned-left-sidebar" data-can-be="left-sidebar" data-is-here-when="sm"></div>
             </div>
             <a href="{% url 'profile:home' %}" class="-logo">
-                <i class="fas fa-graduation-cap fa-3x" style="color: #6366f1;"></i><div class="logo-name">KHEC<b>FORUM</b></div>
+                <i class="fas fa-graduation-cap fa-3x" style="color: #6366f1;"></i><div class="logo-name">KhEC <b>FORUM</b></div>
             </a>
         </div>
 
@@ -709,6 +710,18 @@ $('._review, .reviewSVGOuter').click(function() {
                     </li>
                     
                     <li class="fs-fine">Community</li>
+
+                    <li {% if 'community' in request.path %}class="youarehere"{% endif %}>
+                        <a href="{% url 'community:community_list' %}" class="nav-links--link">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="9" cy="7" r="4"></circle>
+                                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                            </svg>
+                            <span>Communities</span>
+                        </a>
+                    </li>
 
                     <li {% if request.path == '/questions' or request.path == '/questions/' %}class="youarehere"{% endif %}>
                         <a id="nav-questions" href="{% url 'qa:questions' %}" class="nav-links--link">
