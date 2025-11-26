@@ -203,6 +203,12 @@
                 </a>
             </li>
 
+            <li class="-item logout-button-item" style="display: flex; align-items: center;">
+                <a href="{% url 'users:logout_view' %}" class="-link" style="display: flex; align-items: center; justify-content: center; padding: 8px; cursor: pointer;" title="Logout">
+                    <i class="fa fa-sign-out fa-lg" aria-hidden="true" style="font-size: 18px; color: #ef4444;"></i>
+                </a>
+            </li>
+
             <li class="-item chat-button-item chatSVGOuter chatThisIsOuter" style="display: flex; align-items: center; position: relative;">
                 <a href="{% url 'chat:chat_list' %}" class="-link" style="display: flex; align-items: center; justify-content: center; padding: 8px; cursor: pointer; position: relative;" title="Messages">
                     <i class="fa fa-comments fa-lg iconChat chatSVG" aria-hidden="true" style="font-size: 18px;"></i>
@@ -332,7 +338,6 @@
                             <div class="ai-center d-flex jc-end">
                                 <div class="-right">
                                     <a href="#">all items</a>
-                                    • <a href="{% url 'users:logout_view' %}">Logout</a>
                                 </div>
                             </div>
                         </div>
