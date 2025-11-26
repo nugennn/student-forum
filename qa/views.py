@@ -5211,4 +5211,3 @@ def like_post(request):
     
     return JsonResponse({'error': 'Invalid request method'}, status=400)
 
-

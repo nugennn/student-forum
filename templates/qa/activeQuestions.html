@@ -27,12 +27,10 @@
     }
 
     .container {
-        width: 100%;
-        margin: 0;
+        max-width: 1400px;
+        margin: 0 auto;
         background: transparent !important;
         box-shadow: none !important;
-        display: flex;
-        flex-direction: column;
     }
 
     /* --- Main Content Area --- */
@@ -40,8 +38,7 @@
         background-color: var(--bg-secondary); 
         min-height: calc(100vh - 100px);
         width: 100%;
-        flex: 1;
-        overflow-x: hidden;
+        max-width: 100%;
     }
 
     #mainbar { 
@@ -49,6 +46,7 @@
         flex-grow: 1; 
         min-width: 0;
         width: 100%;
+        max-width: 100%;
     }
 
     .fs-headline1 { 
@@ -390,9 +388,8 @@
 {% endblock css %}
 
 {% block content %}
-<div class="container">
-    <div id="content">
-        <div id="mainbar">
+<div id="content" class="snippet-hidden">
+    <div id="mainbar" role="main" aria-labelledby="h-all-questions">
             <div class="d-flex ai-center jc-space-between mb24">
                 <h1 class="fs-headline1">All Questions</h1>
                 <a href="{% url 'qa:new_question' %}" class="s-btn s-btn__primary">Ask Question</a>
@@ -401,8 +398,8 @@
             <div data-controller="se-uql" data-se-uql-id="" data-se-uql-sanitize-tag-query="false">
                 <div class="d-flex ai-center jc-space-between mb12 sm:fd-column sm:ai-stretch">
                     <div class="fs-body3 flex--item fl1 mr12 sm:mr0 sm:mb12">
-                        {{countQuestions}}
-                        question{{countQuestions|pluralize}}
+                        {{questions.count}}
+                        question{{questions.count|pluralize}}
                     </div>
 
                     <div class="uql-nav flex--item">
