@@ -4,7 +4,7 @@ import datetime
 from django.utils import timezone
 from datetime import timedelta
 from qa.models import Answer,ProtectQuestion
-from .forms import EditProfileForm,EmailForm,EditJobPrefrences,EditEmailForm
+from .forms import EditProfileForm, EmailForm, EditEmailForm
 from django.contrib import messages
 from django.core import mail
 from django.template.loader import render_to_string
@@ -2652,14 +2652,13 @@ def EditProfileAjaxForm(request, user_id):
 
 
 
-        request.user.profile.full_name = request.POST.get("full_name")
+        # Full name is not updated here as it's set by admin
         request.user.profile.location = request.POST.get("location")
         request.user.profile.title = request.POST.get("title")
         request.user.profile.about_me = request.POST.get("about_me")
         request.user.profile.website_link = request.POST.get("website_link")
         request.user.profile.twitter_link = request.POST.get("twitter_link")
         request.user.profile.github_link = request.POST.get("github_link")
-        request.user.profile.not_to_Display_Full_name = request.POST.get("not_to_Display_Full_name")
 
         
         if request.FILES != {}:

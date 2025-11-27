@@ -24,31 +24,6 @@ def random_img():
 
 
 
-JOB_STATUS = [
-    ('looking_for_job', 'Actively looking right now'),
-    ('open_but_not_looking', 'Open, but not actively looking'),
-    ('not_interested_in_jobs', 'Not interested in jobs'),
-]
-
-
-EXPERIENCE_LEVEL = [
-
-    ('Student','Student'),
-    ('Junior', 'Junior'),
-    ('Mid_Level', 'Mid Level'),
-    ('Senior', 'Senior'),
-    ('Lead', 'Lead'),
-    ('Manager', 'Manager'),
-
-]
-
-JOB_TYPE_CHOICES = [
-
-    ('FULL_TIME', 'Full Time'),
-    ('CONTRCT', 'Contract'),
-    ('InternShip', 'InternShip'),
-
-]
 
 USER_TYPE_CHOICES = [
     ('Student', 'Student'),
@@ -103,13 +78,8 @@ class Profile(models.Model):
 
 
 # DEVELOPER STORY
-    name = models.CharField(max_length=30, default='')
-    prefered_technologies = models.CharField(max_length=30, default='')
-    min_expierence_level = models.CharField(max_length=30,choices=EXPERIENCE_LEVEL, default='')
-    max_expierence_level = models.CharField(max_length=30,choices=EXPERIENCE_LEVEL, default='')
-    job_type = models.CharField(max_length=30, choices=JOB_TYPE_CHOICES)
-    job_search_status = models.CharField(max_length=30, choices=JOB_STATUS)
-    phone_number = models.CharField(max_length=30, blank=True, null=True)
+    name = models.CharField(max_length=30, default='', blank=True)
+    prefered_technologies = models.CharField(max_length=30, default='', blank=True)
 
 
     create_posts = models.BooleanField(default=True) # Done
