@@ -62,7 +62,7 @@
 
     .form-group input[type="checkbox"] {
         width: auto;
-        margin-right: 8px;
+        margin-right: 0;
     }
 
     .checkbox-label {
@@ -70,6 +70,51 @@
         align-items: center;
         font-weight: normal;
         margin: 0;
+        gap: 0;
+        width: 100%;
+        padding-left: 0;
+    }
+    
+    .checkbox-label input[type="checkbox"] {
+        flex-shrink: 0;
+        margin-right: 20px;
+        position: relative;
+        left: 0;
+        width: 20px;
+        height: 20px;
+        border: 2px solid #0066cc;
+        border-radius: 4px;
+        cursor: pointer;
+        appearance: none;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        background-color: white;
+    }
+    
+    .checkbox-label input[type="checkbox"]:checked {
+        background-color: #0066cc;
+        border-color: #0066cc;
+    }
+    
+    .checkbox-label input[type="checkbox"]:checked::after {
+        content: '✓';
+        display: block;
+        text-align: center;
+        color: white;
+        font-size: 14px;
+        line-height: 16px;
+        font-weight: bold;
+    }
+    
+    .checkbox-label input[type="checkbox"]:hover {
+        border-color: #0052a3;
+    }
+    
+    .checkbox-label span {
+        flex-grow: 1;
+        white-space: nowrap;
+        padding-left: 0;
+        display: inline-block;
     }
 
     .form-actions {
@@ -226,7 +271,7 @@
         <div class="form-group">
             <label class="checkbox-label">
                 {{ form.is_private }}
-                {{ form.is_private.label }}
+                <span>Private Community</span>
             </label>
             <div class="help-text">Private communities require approval to join</div>
         </div>
