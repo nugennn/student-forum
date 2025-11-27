@@ -1821,8 +1821,21 @@ def Votes_castActivity(request, user_id, username):
 
 @login_required
 def home(request):
-
-    context = {}
+    # Get latest 3 posts within 1 week with highest reputation (votes)
+    last_week = timezone.now() - timedelta(days=7)
+    hot_topics = Question.objects.filter(
+        date__gte=last_week
+    ).annotate(
+        vote_count=Count('qupvote') - Count('qdownvote')
+    ).order_by('-vote_count')[:3]
+    
+    # Get trending questions for the main feed
+    questionsHome = Question.objects.all().order_by('-date')[:20]
+    
+    context = {
+        'hot_topics': hot_topics,
+        'questionsHome': questionsHome,
+    }
     return render(request, 'profile/home.html', context)
 
 @login_required
