@@ -145,16 +145,6 @@
                             <select id="js-select-menu">
                                 <optgroup label="Personal information">
                                     <option value="/users/edit/17131560" selected="selected">Edit profile</option>
-                                    <!-- <option value="/questions">Developer Story preferences</option> -->
-                                    <option value="{% url 'profile:userProfileJonPrefrences_Settings' user.id %}">Job
-                                        preferences</option>
-                                </optgroup>
-                                <optgroup label="Email Settings">
-                                    <option value="/users/email/settings/17131560">Edit email settings</option>
-                                    <!-- <option value="/users/tag-notifications/17131560">Tag watching &amp; ignoring</option> -->
-                                    <!-- <option value="/users/email/digests/17131560">Community digests</option> -->
-                                    <!-- <option value="/users/email/question-subscriptions/17131560">Question subscriptions</option> -->
-                                    <!-- <option value="https://stackoverflow.com/users/email/job-alerts/17131560">Saved job search alerts</option> -->
                                 </optgroup>
                                 <optgroup label="Site settings">
                                     <!-- <option value="/users/preferences/17131560">Preferences</option> -->
@@ -186,17 +176,6 @@
                         <!--                         <li>
                             <a href="/users/storypreferences/17131560" class="s-navigation--item" data-shortcut="">Developer Story preferences </a>
                         </li> -->
-                        <li>
-                            <a href="{% url 'profile:userProfileJonPrefrences_Settings' user.id %}"
-                                class="s-navigation--item" data-shortcut="">Job preferences </a>
-                        </li>
-                        <li class="s-navigation--title">
-                            Email Settings
-                        </li>
-                        <li>
-                            <a href="{% url 'profile:userProfileEdit_Email_Settings' user.id %}"
-                                class="s-navigation--item" data-shortcut="">Edit email settings </a>
-                        </li>
                         <li>
                             <!--                             <a href="/users/tag-notifications/17131560" class="s-navigation--item" data-shortcut="">Tag watching &amp; ignoring </a>
                         </li>
@@ -264,12 +243,15 @@
                             </div>
 
 
-                            <div id="div_id_full_name" class="form-group"> <label for="id_full_name"
-                                    class=" requiredField">
-                                    Full name<span class="asteriskField">*</span> </label>
-                                <div class=""> <input type="text" name="full_name"
-                                        value="{{request.user.profile.full_name}}" maxlength="30"
-                                        class="textinput textInput form-control" required id="id_full_name"> </div>
+                            <div id="div_id_full_name" class="form-group">
+                                <label for="id_full_name" class="requiredField">
+                                    Full name<span class="asteriskField">*</span>
+                                </label>
+                                <div class="">
+                                    <input type="text" name="full_name"
+                                           value="{{request.user.profile.full_name}}" maxlength="30"
+                                           class="textinput textInput form-control" id="id_full_name" readonly>
+                                </div>
                             </div>
 
 
