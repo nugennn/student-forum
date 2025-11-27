@@ -198,7 +198,7 @@
             <li class="-item inbox-button-item myInboxSVGOuter thisIsOuter" style="display: flex; align-items: center; position: relative;">
                 <a class="-link myInboxSVGLink readNotification" data-pk="{{ data.id }}" onClick="openInbox();" style="display: flex; align-items: center; justify-content: center; padding: 8px; cursor: pointer; position: relative;">
                     {% if showAlert %}<span class="button__badge" style="position: absolute; top: 2px; right: 2px; background: #d1383d; color: white; border-radius: 50%; min-width: 16px; height: 16px; font-size: 10px; display: flex; align-items: center; justify-content: center; padding: 2px;">{{countUnreadNotifications}}</span>{% endif %}
-                    <i class="fa fa-inbox fa-lg iconInbox myInboxSVG" aria-hidden="true" style="font-size: 18px;"></i>
+                    <i class="fa fa-bell fa-lg iconInbox myInboxSVG" aria-hidden="true" style="font-size: 18px;"></i>
                     <span class="indicator-badge js-unread-count _important d-none">0</span>
                 </a>
             </li>

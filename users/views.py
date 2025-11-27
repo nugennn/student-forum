@@ -1,5 +1,5 @@
 from django.shortcuts import render,redirect
-from django.contrib.auth import login,authenticate
+from django.contrib.auth import login,authenticate,update_session_auth_hash
 from . forms import SignUpForm, ForcePasswordChangeForm, EmailAuthenticationForm
 from django.contrib import messages
 from django.contrib.auth.forms import UserCreationForm
@@ -111,6 +111,8 @@ def force_password_change(request):
             # Mark that password change is no longer required
             user.profile.password_change_required = False
             user.profile.save()
+            # Keep user logged in after password change
+            update_session_auth_hash(request, user)
             messages.success(request, "Password changed successfully. You can now access the forum.")
             return redirect('profile:home')
     else:
