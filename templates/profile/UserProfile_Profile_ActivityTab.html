@@ -151,6 +151,17 @@ function ThirdTab_Q() {
         <div class="d-flex ai-center fw-wrap gs8 wmx4">
             <div class="flex--item mb12 fs-headline2 lh-xs">
                 {{profileData.user}}
+                {% comment %}Direct chat link: opens private chat with this user{% endcomment %}
+                {% if request.user.is_authenticated and request.user != profileData.user %}
+                <a href="{% url 'chat:private_chat' profileData.user.id %}" 
+                   title="Message {{profileData.user}}" 
+                   role="button"
+                   class="btn btn-outline-primary ms-2 d-inline-flex align-items-center"
+                   style="font-size:1.05rem; padding: .5rem .75rem; gap: .5rem;">
+                    <i class="fas fa-comment" aria-hidden="true" style="font-size:1.2rem;"></i>
+                    <span class="fw-semibold">Chat</span>
+                </a>
+                {% endif %}
             </div>
             <div class="flex--item">
                 <div class="d-flex ai-center fw-nowrap gs4">
@@ -276,7 +287,7 @@ Joined <span title="2021-07-25 23:41:40Z">{{profileData.user.date_joined|natural
                                     <i class="fas fa-graduation-cap" style="color: #6366f1; font-size: 18px;"></i>
                                 </div>
                                 <div class="flex--item fl-grow1 wmn0 pr4">
-                                    <div class="truncate">KHEC Forum</div>
+                                    <div class="truncate">KhEC Forum</div>
                                 </div>
                                 <div class="flex--item fl-shrink0 ml-auto fc-light">
                                     

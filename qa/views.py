@@ -5041,22 +5041,44 @@ from .forms import SearchForm
 
 def search_questions(request):
     query = request.GET.get("q", "")
-    results = Question.objects.none()
+    search_type = request.GET.get('t', 'questions')  # 'questions', 'tags', or 'users'
+
+    results = None
+    result_type = 'questions'
+
     if query:
-        # Search questions by title and body
-        question_matches = Question.objects.filter(
-            Q(title__icontains=query) |
-            Q(body__icontains=query)
-        )
-        # Search answers, get matching question IDs
-        answer_qs = Answer.objects.filter(body__icontains=query)
-        answer_question_ids = answer_qs.values_list('questionans_id', flat=True)
-        # Merge all matched questions (avoid distinct/| error)
-        results = Question.objects.filter(
-            Q(id__in=answer_question_ids) |
-            Q(id__in=question_matches.values_list('id', flat=True))
-        )
-    return render(request, "qa/search_results.html", {"query": query, "results": results})
+        if search_type == 'tags':
+            # Search tags (taggit)
+            from taggit.models import Tag
+            results = Tag.objects.filter(name__icontains=query)
+            result_type = 'tags'
+        elif search_type == 'users':
+            # Search users by username or profile full name
+            from django.contrib.auth.models import User
+            results = User.objects.filter(
+                Q(username__icontains=query) | Q(profile__full_name__icontains=query)
+            ).distinct()
+            result_type = 'users'
+        else:
+            # Default: search questions by title, body, and answers
+            question_matches = Question.objects.filter(
+                Q(title__icontains=query) |
+                Q(body__icontains=query)
+            )
+            answer_qs = Answer.objects.filter(body__icontains=query)
+            answer_question_ids = answer_qs.values_list('questionans_id', flat=True)
+            results = Question.objects.filter(
+                Q(id__in=answer_question_ids) |
+                Q(id__in=question_matches.values_list('id', flat=True))
+            )
+            result_type = 'questions'
+
+    context = {
+        'query': query,
+        'results': results,
+        'result_type': result_type,
+    }
+    return render(request, "qa/search_results.html", context)
 
 
 # Post Sharing Views

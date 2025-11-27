@@ -123,27 +123,69 @@
   </div>
   <form method="get" action="{% url 'qa:search_questions' %}" class="search-box-form">
       <input type="text" name="q" value="{{ query }}" autocomplete="off" placeholder="eg. python decorators, how to get internship, hostel wifi..." />
+      <select name="t" style="padding:.45rem .6rem; border-radius:6px; border:1px solid #e9ecef; background:#fff;">
+        <option value="questions" {% if result_type != 'tags' and result_type != 'users' %}selected{% endif %}>Questions</option>
+        <option value="tags" {% if result_type == 'tags' %}selected{% endif %}>Tags</option>
+        <option value="users" {% if result_type == 'users' %}selected{% endif %}>Users</option>
+      </select>
       <button type="submit">Search</button>
   </form>
-  {% if results and query %}
-    {% for question in results %}
-      <div class="result-card">
-        <a href="{{ question.get_absolute_url }}" class="result-title">{{ question.title }}</a>
-        <div class="result-body">{{ question.body|truncatewords_html:30|safe }}</div>
-        {% with answers=question.answer_set.all %}
-          {% if answers %}
-            <div class="answer-highlight">
-              <strong>Top Answer:</strong>
-              {{ answers.0.body|truncatewords_html:25|safe }}
+  {% if query %}
+    {% if result_type == 'tags' %}
+      {% if results.exists %}
+        {% for tag in results %}
+          <div class="result-card">
+            <a href="{% url 'profile:tagsPage' %}?tag={{ tag.name }}" class="result-title">#{{ tag.name }}</a>
+            <div class="result-body">Related posts and info for the <strong>{{ tag.name }}</strong> tag.</div>
+          </div>
+        {% endfor %}
+      {% else %}
+        <div class="no-results">No tags found for "<b>{{ query }}</b>"</div>
+      {% endif %}
+
+    {% elif result_type == 'users' %}
+      {% if results %}
+        {% for user in results %}
+          <div class="result-card d-flex align-items-center">
+            <div style="width:64px; flex-shrink:0; margin-right:12px;">
+              {% if user.profile.profile_photo %}
+                <img src="{{ user.profile.profile_photo.url }}" alt="{{ user.username }}" style="width:64px;height:64px;border-radius:8px;object-fit:cover;">
+              {% else %}
+                <img src="https://via.placeholder.com/64" alt="{{ user.username }}" style="width:64px;height:64px;border-radius:8px;object-fit:cover;">
+              {% endif %}
             </div>
-          {% else %}
-            <div class="no-answer">No answers yet.</div>
-          {% endif %}
-        {% endwith %}
-      </div>
-    {% endfor %}
-  {% elif query %}
-    <div class="no-results">No results found for "<b>{{ query }}</b>"</div>
+            <div>
+              <a href="{% url 'profile:activityPageTabProfile' user.id user.username %}" class="result-title">{{ user.get_full_name|default:user.username }}</a>
+              <div class="result-body">@{{ user.username }}</div>
+            </div>
+          </div>
+        {% endfor %}
+      {% else %}
+        <div class="no-results">No users found for "<b>{{ query }}</b>"</div>
+      {% endif %}
+
+    {% else %}
+      {% if results and results.count > 0 %}
+        {% for question in results %}
+          <div class="result-card">
+            <a href="{{ question.get_absolute_url }}" class="result-title">{{ question.title }}</a>
+            <div class="result-body">{{ question.body|truncatewords_html:30|safe }}</div>
+            {% with answers=question.answer_set.all %}
+              {% if answers %}
+                <div class="answer-highlight">
+                  <strong>Top Answer:</strong>
+                  {{ answers.0.body|truncatewords_html:25|safe }}
+                </div>
+              {% else %}
+                <div class="no-answer">No answers yet.</div>
+              {% endif %}
+            {% endwith %}
+          </div>
+        {% endfor %}
+      {% else %}
+        <div class="no-results">No results found for "<b>{{ query }}</b>"</div>
+      {% endif %}
+    {% endif %}
   {% endif %}
 </div>
 {% endblock %}

@@ -157,8 +157,10 @@ def chat_list(request):
         other_user = chat.get_other_user(user)
         if not other_user:
             continue  # Skip chats with no other participant
-        
+        # Skip private chats that have no messages (chat box opened only)
         latest_msg = chat.get_latest_message()
+        if not latest_msg:
+            continue
         
         # Get user's full name safely
         if hasattr(other_user, 'profile') and other_user.profile and other_user.profile.full_name:
@@ -252,7 +254,10 @@ def private_chat(request, user_id):
         other = pc.get_other_user(user)
         if not other:
             continue
-        
+        # Only include private chats that already have messages
+        if not pc.get_latest_message():
+            continue
+
         display_name = other.get_full_name() or other.username
         photo_url = None
         if hasattr(other, 'profile') and other.profile and other.profile.profile_photo:
@@ -312,7 +317,10 @@ def group_chat(request, group_id):
         other = pc.get_other_user(user)
         if not other:
             continue
-        
+        # Only include private chats that already have messages
+        if not pc.get_latest_message():
+            continue
+
         display_name = other.get_full_name() or other.username
         photo_url = None
         if hasattr(other, 'profile') and other.profile and other.profile.profile_photo:

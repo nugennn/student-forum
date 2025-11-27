@@ -504,7 +504,16 @@
                     <img src="{% if profileData.profile_photo %}{{ profileData.profile_photo.url }}{% endif %}" alt="{{ profileData.user }}" width="96" height="96">
                 </div>
                 <div class="profile-info">
-                    <h1 class="profile-name">{{ profileData.user }}</h1>
+                    <h1 class="profile-name d-inline-block">{{ profileData.user }}</h1>
+                    {% if request.user.is_authenticated and request.user != profileData.user %}
+                    <a href="{% url 'chat:private_chat' profileData.user.id %}" 
+                       role="button" 
+                       class="btn btn-outline-primary ms-3 align-middle d-inline-flex align-items-center"
+                       style="font-size:1.05rem; padding:.5rem .75rem; gap:.5rem;">
+                        <i class="fas fa-comment" style="font-size:1.2rem;"></i>
+                        <span class="ms-1 fw-semibold">Chat</span>
+                    </a>
+                    {% endif %}
                     <p class="profile-title">{{ profileData.title }}</p>
                     <div class="profile-meta">
                         <span class="meta-item">📅 Joined {{ profileData.user.date_joined|naturaltime }}</span>
