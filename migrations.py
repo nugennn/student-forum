@@ -127,7 +127,7 @@ def saveTag(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('tagbadge', '_____migrate_code_____'),
+        ('tagbadge', '0004_auto_20220105_1220'),
     ]
 
     operations = [

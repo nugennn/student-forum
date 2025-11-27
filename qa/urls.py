@@ -8,6 +8,8 @@ app_name = 'qa'
 
 urlpatterns = [
 
+	path('martor/uploader/', views.martor_upload_image, name='markdown_uploader'),
+
 	path('new_question/', views.new_question, name='new_question'),
 
 	path('questionDetailView/<int:pk>/', views.questionDetailView, name='questionDetailView'),

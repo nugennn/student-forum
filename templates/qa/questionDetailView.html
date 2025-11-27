@@ -212,13 +212,13 @@
                             <a href="#" class="js-share-link" title="Short permalink to this question">Share</a>
                         </div>
 
-                        {% if canMakeAnotherEdit == True %}
+                        {% if request.user == data.post_owner and canMakeAnotherEdit == True %}
 
                             <div class="flex--item">
                                 <a href="{% url 'qa:edit_question' data.id %}" class="js-suggest-edit-post" title="Revise and improve this post">Edit</a>
                             </div>
 
-                        {% else %}
+                        {% elif request.user == data.post_owner and canMakeAnotherEdit == False %}
                         <script>
                             $(function () {
                           $('[data-toggle="popover"]').popover()
@@ -232,12 +232,6 @@
 
                         {% endif %}
 
-
-                        {% if request.user.profile.accessTo_moderatorTools %}
-                        <div class="flex--item">
-                            <a class="js-suggest-edit-post" onclick="openTagEdit();">Edit-Tag</a>
-                        </div>
-                        {% endif %}
 
                         {% if request.user.profile.protect_questions %}
                         {% if data.is_protected == False %}
@@ -285,14 +279,6 @@
                         {% endif %}
                         {% endif %}
 
-                        <div class="inline-tag-editing" id="tag-edit-id">
-                            <form method="post" enctype="multipart/form-data" id="inlne-tag-edit" action="{% url 'qa:InlineTagEditingForm' data.id %}">
-                            {% csrf_token %}
-                                <input type="text" name="tags" value="{% for tag in data.tags.all %}{{ tag }},{% endfor %}" required="" id="id_tags">
-                                <button type="submit">Save Changes</button>
-                        </form>
-                        <div class="successMessage-inline-tag-edit"></div>
-                        </div>
                     </div>
                     <div class="js-menu-popup-container"></div>
                 </div>
@@ -632,9 +618,11 @@
                                     <a href="" class="js-share-link">Share</a>
                                 </div>
 
+                                {% if request.user == answer.answer_owner %}
                                 <div class="flex--item">
                                     <a href="{% url 'qa:edit_answer' answer.id %}" class="js-suggest-edit-post" title="Revise and improve this post">Edit</a>
                                 </div>
+                                {% endif %}
 
                                 {% if request.user == answer.answer_owner %}
                                 {% if answer.is_deleted %}
@@ -1415,6 +1403,7 @@ $(function() {
 
 
 
+{% if request.user == data.post_owner %}
 {% if canMakeAnotherEdit == True %}
 <a href="{% url 'qa:edit_question' data.id %}">Edit Question</a>
 {% else %}
@@ -1424,6 +1413,7 @@ $(function() {
 })
 </script>
 <a href="#" data-toggle="popover" title="Previous Edit Waiting for Review" data-content="Previous Edit is Waiting for Review. Come Back Later" onclick="return false;">Edit Question</a>
+{% endif %}
 {% endif %}
 
 

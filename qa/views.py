@@ -131,12 +131,16 @@ def InlineTagEditingForm(request, question_id):
     of inline tag editing in Question-Detail-View
     """
     data = get_object_or_404(Question, pk=question_id)
+    
+    # Check if user is the question owner or has moderator tools
+    if request.user != data.post_owner and not request.user.profile.accessTo_moderatorTools:
+        return JsonResponse({'action': 'lackOfPrivelege'}, status=403)
 
     if is_ajax(request) and request.method == 'POST':
         form = InlineTagEditForm(
             instance=data, data=request.POST, files=request.FILES)
         if form.is_valid():
-            if request.user.profile.accessTo_moderatorTools:
+            if request.user.profile.accessTo_moderatorTools or request.user == data.post_owner:
                 instance = form.save(commit=False)
                 # instance.user = request.user
                 instance = form.save()
@@ -2389,34 +2393,11 @@ def new_question(request):
     if request.method == 'POST':
         form = QuestionForm(request.POST, request.FILES)
         if form.is_valid():
-            formTags = form.cleaned_data['tags']
-            gettingBody = form.cleaned_data['body']
-            gettingTitle = form.cleaned_data['title']
             new_post = form.save(commit=False)
             new_post.post_owner = request.user
-            # (Tag existence check, or skip entirely for truly "free" tagging)
-            for typedTags in formTags:
-                # Check if tag exists, or allow creation (for student forum, allow all tags)
-                pass
-
-            # Text quality checks (keep for forum quality!)
-            if len(gettingBody) >= 0 and len(gettingBody) <= 29:
-                messages.error(
-                    request, "Body Text should at least 30 words. You entered " + str(len(gettingBody)))
-            elif len(gettingTitle) >= 0 and len(gettingTitle) <= 14:
-                messages.error(
-                    request, "Title must be at least 15 characters.")
-            else:
-                new_post.save()
-                form.save_m2m()
-                if len(gettingBody) <= 200:
-                    create_Low_Quality_Post_Instance, cre = LowQualityPostsCheck.objects.get_or_create(
-                        suggested_through="Automatic", low_is=new_post, why_low_quality="Question_Less_Than_200", is_completed=False
-                    )
-                    createReview_item = ReviewLowQualityPosts.objects.get_or_create(
-                        review_of=create_Low_Quality_Post_Instance, is_question=new_post, is_reviewed=False
-                    )
-                return redirect('qa:questions')
+            new_post.save()
+            form.save_m2m()
+            return redirect('qa:questions')
     else:
         form = QuestionForm()
 
@@ -3870,6 +3851,11 @@ def upvote_comment(request, commentq_id):
 def edit_answer(request, answer_id):
     post = Answer.objects.get(id=answer_id)
     post_owner = post.answer_owner
+    
+    # Check if user is the post owner
+    if request.user != post_owner:
+        messages.error(request, 'You can only edit your own posts.')
+        return redirect('qa:questionDetailView', pk=post.questionans.id)
 
     data = get_object_or_404(Answer, id=answer_id)
     active_time = data.active_time
@@ -4040,6 +4026,11 @@ def edit_question(request, question_id):
     post = Question.objects.get(id=question_id)
     allComments = post.commentq_set.all()
     post_owner = post.post_owner
+    
+    # Check if user is the post owner
+    if request.user != post_owner:
+        messages.error(request, 'You can only edit your own posts.')
+        return redirect('qa:questionDetailView', pk=post.id)
 
     data = get_object_or_404(Question, id=question_id)
     active_time = data.active_date
@@ -5210,4 +5201,58 @@ def like_post(request):
             return JsonResponse({'error': str(e)}, status=500)
     
     return JsonResponse({'error': 'Invalid request method'}, status=400)
+
+
+@login_required
+def martor_upload_image(request):
+    """
+    Handle direct file uploads for media section.
+    Uploads files to the media directory and returns the URL.
+    """
+    if request.method == 'POST' and request.FILES.get('image'):
+        try:
+            image = request.FILES['image']
+            
+            # Validate file size (max 5MB)
+            if image.size > 5 * 1024 * 1024:
+                return JsonResponse({
+                    'status': 400,
+                    'error': 'File size exceeds 5MB limit'
+                })
+            
+            # Validate file type
+            allowed_extensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'pdf', 'doc', 'docx', 'txt']
+            file_ext = image.name.split('.')[-1].lower()
+            if file_ext not in allowed_extensions:
+                return JsonResponse({
+                    'status': 400,
+                    'error': f'File type .{file_ext} not allowed. Allowed: {", ".join(allowed_extensions)}'
+                })
+            
+            # Save file to media directory
+            from django.core.files.storage import default_storage
+            
+            # Create unique filename
+            filename = f"martor_uploads/{timezone.now().strftime('%Y%m%d_%H%M%S')}_{image.name}"
+            path = default_storage.save(filename, image)
+            
+            # Get the full URL
+            file_url = default_storage.url(path)
+            
+            return JsonResponse({
+                'status': 200,
+                'name': image.name,
+                'link': file_url
+            })
+            
+        except Exception as e:
+            return JsonResponse({
+                'status': 400,
+                'error': str(e)
+            })
+    
+    return JsonResponse({
+        'status': 400,
+        'error': 'No image provided'
+    })
 

@@ -29,6 +29,14 @@ class QuestionForm(forms.ModelForm):
 		model = Question
 		fields = ['title','body','tags','community']
 
+	def __init__(self, *args, **kwargs):
+		super().__init__(*args, **kwargs)
+		# Make all fields optional
+		self.fields['title'].required = False
+		self.fields['body'].required = False
+		self.fields['tags'].required = False
+		self.fields['community'].required = False
+
 class AnswerForm(forms.ModelForm):
 
 	class Meta:
