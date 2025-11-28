@@ -1869,68 +1869,97 @@ def home(request):
     # Get latest 3 posts within 1 week with highest reputation (votes)
     last_week = timezone.now() - timedelta(days=7)
     hot_topics = Question.objects.filter(
+        is_deleted=False,  # Added this
         date__gte=last_week
     ).annotate(
         vote_count=Count('qupvote') - Count('qdownvote')
     ).order_by('-vote_count')[:3]
     
     # Get trending questions for the main feed
-    questionsHome = Question.objects.all().order_by('-date')[:20]
+    questionsHome = Question.objects.filter(is_deleted=False).order_by('-date')[:20]  # Added filter
+    
+    # Count bounties (only non-deleted)
+    count_bounty = Question.objects.filter(is_deleted=False, is_bountied=True).count()
     
     context = {
         'hot_topics': hot_topics,
         'questionsHome': questionsHome,
+        'count_bounty': count_bounty,  # Added this for your template
     }
     return render(request, 'profile/home.html', context)
 
 @login_required
 def bountied_home(request):
     questions = Question.objects.filter(
+                    is_deleted=False,  # Added this
                     is_bountied=True)[:50]
+    
+    count_bounty = Question.objects.filter(is_deleted=False, is_bountied=True).count()
 
-    context = {'questions':questions,}
+    context = {
+        'questions': questions,
+        'count_bounty': count_bounty,  # Added for consistency
+    }
     return render(request, 'home/bountied_home.html', context)
 
 @login_required
 def hot_q_day_home(request):
     last_3_days = timezone.now() - timedelta(days=3)
     questions = Question.objects.filter(
+                    is_deleted=False,  # Added this
                     viewers__gte=2
                     ).annotate(countComment=Count('commentq')
                     ).filter(qupvote__date__gt=last_3_days
                     ).order_by('qupvote'
                     ).order_by('-countComment'
                     ).distinct()[:50]
+    
+    count_bounty = Question.objects.filter(is_deleted=False, is_bountied=True).count()
 
-    context = {'questions':questions,}
+    context = {
+        'questions': questions,
+        'count_bounty': count_bounty,  # Added for consistency
+    }
     return render(request, 'home/hot_q_home.html', context)
 
 @login_required
 def hot_q_week_home(request):
     last_7_days = timezone.now() - timedelta(days=7)
     questions = Question.objects.filter(
+                    is_deleted=False,  # Added this
                     viewers__gte=2
                     ).annotate(countComment=Count('commentq')
                     ).filter(qupvote__date__gt=last_7_days
                     ).order_by('qupvote'
                     ).order_by('-countComment'
                     ).distinct()[:50]
+    
+    count_bounty = Question.objects.filter(is_deleted=False, is_bountied=True).count()
 
-    context = {'questions':questions,}
+    context = {
+        'questions': questions,
+        'count_bounty': count_bounty,  # Added for consistency
+    }
     return render(request, 'home/hot_q_week_home.html', context)
 
 @login_required
 def hot_q_month_home(request):
     last_28_days = timezone.now() - timedelta(days=28)
     questions = Question.objects.filter(
+                    is_deleted=False,  # Added this
                     viewers__gte=2
                     ).annotate(countComment=Count('commentq')
                     ).filter(qupvote__date__gt=last_28_days
                     ).order_by('qupvote'
                     ).order_by('-countComment'
                     ).distinct()[:50]
+    
+    count_bounty = Question.objects.filter(is_deleted=False, is_bountied=True).count()
 
-    context = {'questions':questions,}
+    context = {
+        'questions': questions,
+        'count_bounty': count_bounty,  # Added for consistency
+    }
     return render(request, 'home/hot_q_month_home.html', context)
 
 
