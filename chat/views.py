@@ -26,18 +26,19 @@ def get_suggested_users(user, limit=10):
     
     Excludes:
     - The current user
-    - Users already in active chats
+    - Users already in active chats with messages
     - Superusers (admin accounts)
     """
     from datetime import timedelta
     from qa.models import Question, Answer, CommentQ, QUpvote
     
-    # Get users already chatted with (to exclude)
-    chatted_user_ids = set(
-        PrivateChat.objects.filter(participants=user)
-        .values_list('participants', flat=True)
-    )
-    chatted_user_ids.discard(user.id)  # Remove current user if present
+    # Get users already chatted with (to exclude) - only those with actual messages
+    chatted_user_ids = set()
+    for chat in PrivateChat.objects.filter(participants=user):
+        # Only exclude if there are actual messages
+        if chat.messages.exists():
+            other_users = chat.participants.exclude(id=user.id)
+            chatted_user_ids.update(other_users.values_list('id', flat=True))
     
     # Time thresholds for recent activity
     recent_24h = timezone.now() - timedelta(hours=24)

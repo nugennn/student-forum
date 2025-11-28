@@ -2,44 +2,78 @@
 {% load static %}
 
 {% block content %}
-<!-- Custom Chat Sidebar -->
+<!-- Modern Chat Styling -->
 <style>
+    #left-sidebar {
+        width: 300px !important;
+        flex-basis: 300px !important;
+    }
+    
     #left-sidebar .nav-links {
         display: none;
     }
     
     .chat-sidebar-content {
-        padding: 16px 8px;
+        padding: 12px 8px;
+        background: #fafafa;
+        border-radius: 0;
+        box-shadow: none;
+        width: 100%;
+        max-width: 100%;
+        overflow: hidden;
+        border-right: 1px solid #e0e0e0;
+    }
+    
+    .chat-sidebar-section {
+        margin-bottom: 12px;
+    }
+    
+    .chat-sidebar-section:last-child {
+        margin-bottom: 0;
     }
     
     .chat-sidebar-item {
         display: flex;
         align-items: center;
-        padding: 10px 12px;
-        margin-bottom: 4px;
-        border-radius: 6px;
+        padding: 12px 12px;
+        margin-bottom: 0;
+        border-radius: 0;
         text-decoration: none;
-        color: var(--text-primary);
-        transition: background-color 0.2s;
+        color: #222;
+        transition: background-color 0.15s ease;
+        font-size: 13px;
+        font-weight: 500;
+        min-width: 0;
+        border-bottom: 1px solid #efefef;
+    }
+    
+    .chat-sidebar-item:last-child {
+        margin-bottom: 0;
+        border-bottom: none;
     }
     
     .chat-sidebar-item:hover {
-        background-color: var(--bg-secondary);
-        color: var(--text-primary);
+        background-color: #f0f0f0;
+        color: #111;
+        transform: none;
+        box-shadow: none;
     }
     
     .chat-sidebar-item.active {
-        background-color: var(--primary-light);
-        color: var(--primary);
+        background: #e8eaed;
+        color: #111;
         font-weight: 500;
+        box-shadow: none;
     }
     
     .chat-sidebar-item img {
-        width: 32px;
-        height: 32px;
+        width: 48px;
+        height: 48px;
         border-radius: 50%;
         margin-right: 12px;
         object-fit: cover;
+        border: none;
+        flex-shrink: 0;
     }
     
     .chat-sidebar-item .chat-name {
@@ -47,21 +81,343 @@
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
-        font-size: 14px;
+        font-size: 13px;
+        min-width: 0;
+        color: #111;
+        font-weight: 500;
+        line-height: 1.4;
+    }
+    
+    .chat-sidebar-item .chat-name:hover::after {
+        display: none;
     }
     
     .chat-sidebar-header {
-        padding: 12px;
-        font-size: 12px;
-        font-weight: 600;
-        color: var(--text-secondary);
+        padding: 12px 12px 8px 12px;
+        font-size: 10px;
+        font-weight: 700;
+        color: #999;
         text-transform: uppercase;
         letter-spacing: 0.5px;
+        margin-top: 10px;
+        margin-bottom: 8px;
+    }
+    
+    .chat-sidebar-header:first-child {
+        margin-top: 0;
+    }
+    
+    /* Top Navigation Icons */
+    .chat-sidebar-nav {
+        display: flex;
+        gap: 8px;
+        padding: 10px 8px;
+        align-items: center;
+        justify-content: flex-start;
+        border-bottom: 1px solid #efefef;
+        margin-bottom: 10px;
+    }
+    
+    .chat-nav-btn {
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        background: transparent;
+        border: none;
+        color: #999;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+        transition: all 0.2s ease;
+        flex-shrink: 0;
+    }
+    
+    .chat-nav-btn:hover {
+        background: #f5f5f5;
+        color: #667eea;
+        transform: scale(1.05);
+    }
+    
+    .chat-nav-btn i {
+        font-size: 18px;
+    }
+    
+    /* Modern Chat Container */
+    .modern-chat-container {
+        height: 85vh;
+        display: flex;
+        flex-direction: column;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+        background: white;
+        width: 100%;
+        max-width: 100%;
+    }
+    
+    .chat-header-modern {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 20px 24px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: none;
+        box-shadow: 0 2px 8px rgba(102, 126, 234, 0.15);
+    }
+    
+    .chat-header-info {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+    }
+    
+    .chat-header-info img {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        border: 3px solid rgba(255, 255, 255, 0.4);
+        object-fit: cover;
+    }
+    
+    .chat-header-text {
+        min-width: 0;
+        flex: 1;
+    }
+    
+    .chat-header-text h6 {
+        margin: 0;
+        font-weight: 700;
+        font-size: 16px;
+        letter-spacing: 0.3px;
+        color: #ffffff;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        word-break: break-word;
+        line-height: 1.3;
+    }
+    
+    .chat-header-text small {
+        opacity: 0.95;
+        font-size: 13px;
+        display: block;
+        margin-top: 2px;
+        color: rgba(255, 255, 255, 0.9);
+    }
+    
+    .messages-container {
+        flex: 1;
+        overflow-y: auto;
+        padding: 20px 24px;
+        background: #f8f9fa;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+    
+    .message-group {
+        display: flex;
+        width: 100%;
+        margin-bottom: 2px;
+        animation: slideIn 0.2s ease-out;
+    }
+    
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateY(5px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .message-group.own {
+        justify-content: flex-end;
+    }
+    
+    .message-group > div {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        max-width: 65%;
+    }
+    
+    .message-group.own > div {
+        align-items: flex-end;
+    }
+    
+    .message-bubble {
+        padding: 10px 14px;
+        border-radius: 16px;
+        word-wrap: break-word;
+        word-break: break-word;
+        overflow-wrap: break-word;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+        transition: all 0.2s ease;
+        line-height: 1.5;
+        font-size: 14px;
+    }
+    
+    .message-bubble:hover {
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+        transform: translateY(-1px);
+    }
+    
+    .message-bubble.own {
+        background: #0084ff;
+        color: white;
+        border-radius: 18px 18px 4px 18px;
+    }
+    
+    .message-bubble.other {
+        background: #e8eaed;
+        color: #202124;
+        border-radius: 18px 18px 18px 4px;
+    }
+    
+    .message-time {
+        font-size: 11px;
+        opacity: 0.65;
+        margin-top: 4px;
+        text-align: right;
+        color: #888;
+    }
+    
+    .message-group.own .message-time {
+        color: rgba(255, 255, 255, 0.75);
+    }
+    
+    .empty-chat {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+        color: #999;
+    }
+    
+    .empty-chat-icon {
+        font-size: 4rem;
+        opacity: 0.3;
+        margin-bottom: 16px;
+    }
+    
+    .input-container {
+        padding: 18px 24px;
+        background: white;
+        border-top: 1px solid #f0f0f0;
+        display: flex;
+        gap: 12px;
+        align-items: flex-end;
+        box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.06);
+    }
+    
+    .message-input {
+        flex: 1;
+        border: 1px solid #e0e0e0;
+        border-radius: 24px;
+        padding: 12px 18px;
+        font-size: 14px;
+        transition: all 0.2s ease;
+        background: #f8f9fa;
+    }
+    
+    .message-input:focus {
+        outline: none;
+        border-color: #667eea;
+        background: white;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+    
+    .input-btn {
+        width: 42px;
+        height: 42px;
+        border-radius: 50%;
+        border: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        background: #f0f0f0;
+        color: #666;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    }
+    
+    .input-btn:hover {
+        background: #e8eaed;
+        color: #333;
+        transform: translateY(-2px);
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+    }
+    
+    .send-btn {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        box-shadow: 0 2px 6px rgba(102, 126, 234, 0.3);
+    }
+    
+    .send-btn:hover {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        transform: translateY(-2px);
+    }
+    
+    /* Emoji Picker Styles */
+    .emoji-picker {
+        position: absolute;
+        bottom: 60px;
+        right: 120px;
+        background: white;
+        border: 1px solid #e0e0e0;
+        border-radius: 12px;
+        padding: 12px;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+        z-index: 1000;
+        max-height: 300px;
+        overflow-y: auto;
+    }
+    
+    .emoji-grid {
+        display: grid;
+        grid-template-columns: repeat(8, 1fr);
+        gap: 6px;
+        width: 280px;
+    }
+    
+    .emoji-group {
+        position: relative;
+        display: inline-block;
+    }
+    
+    .emoji {
+        font-size: 22px;
+        cursor: pointer;
+        padding: 6px;
+        border-radius: 6px;
+        text-align: center;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        line-height: 1;
+        min-width: 32px;
+        min-height: 32px;
+        position: relative;
+    }
+    
+    .emoji:hover {
+        background: #f0f0f0;
+        transform: scale(1.15);
     }
 </style>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    /* ... */
     const sidebar = document.getElementById('left-sidebar');
     if (sidebar) {
         const navLinks = sidebar.querySelector('.nav-links');
@@ -73,33 +429,29 @@ document.addEventListener('DOMContentLoaded', function() {
         if (stickyContainer) {
             stickyContainer.innerHTML = `
                 <div class="chat-sidebar-content">
-                    <a href="/" class="chat-sidebar-item">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="margin-right: 12px;">
-                            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
-                            <polyline points="9 22 9 12 15 12 15 22"></polyline>
-                        </svg>
-                        <span class="chat-name">Home</span>
-                    </a>
+                    <div class="chat-sidebar-nav">
+                        <a href="/" class="chat-nav-btn" title="Home">
+                            <i class="fas fa-home"></i>
+                        </a>
+                        <a href="{% url 'chat:chat_list' %}" class="chat-nav-btn" title="All Chats">
+                            <i class="fas fa-comments"></i>
+                        </a>
+                    </div>
                     
-                    <a href="{% url 'chat:chat_list' %}" class="chat-sidebar-item">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="margin-right: 12px;">
-                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-                        </svg>
-                        <span class="chat-name">All Chats</span>
-                    </a>
-                    
-                    <div class="chat-sidebar-header">Recent Chats</div>
-                    
-                    {% for chat in recent_chats %}
-                    <a href="{% url 'chat:private_chat' chat.user_id %}" class="chat-sidebar-item {% if chat.is_current %}active{% endif %}">
-                        {% if chat.photo %}
-                            <img src="{{ chat.photo }}" alt="{{ chat.name }}">
-                        {% else %}
-                            <img src="https://via.placeholder.com/32" alt="{{ chat.name }}">
-                        {% endif %}
-                        <span class="chat-name">{{ chat.name }}</span>
-                    </a>
-                    {% endfor %}
+                    <div class="chat-sidebar-section">
+                        <div class="chat-sidebar-header">Recent Chats</div>
+                        
+                        {% for chat in recent_chats %}
+                        <a href="{% url 'chat:private_chat' chat.user_id %}" class="chat-sidebar-item {% if chat.is_current %}active{% endif %}" data-user-id="{{ chat.user_id }}" onclick="switchChat(event, {{ chat.user_id }}, 'private')">
+                            {% if chat.photo %}
+                                <img src="{{ chat.photo }}" alt="{{ chat.name }}">
+                            {% else %}
+                                <img src="https://ui-avatars.com/api/?name={{ chat.name }}&background=667eea&color=fff" alt="{{ chat.name }}">
+                            {% endif %}
+                            <span class="chat-name">{{ chat.name }}</span>
+                        </a>
+                        {% endfor %}
+                    </div>
                 </div>
             `;
         }
@@ -107,90 +459,127 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
-<div class="container-fluid mt-4">
-    <div class="row h-100">
-        <div class="col-md-8 mx-auto">
-            <div class="card shadow-sm" style="height: 85vh; display: flex; flex-direction: column;">
+<div class="container-fluid mt-4" style="padding: 0 20px; width: 100%; max-width: 100%;">
+    <div class="row h-100" style="width: 100%;">
+        <div class="col-lg-8 mx-auto" style="width: 100%; max-width: 100%;">
+            <div class="modern-chat-container">
                 <!-- Chat Header -->
-                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-                    <div class="d-flex align-items-center">
+                <div class="chat-header-modern">
+                    <div class="chat-header-info">
                         <img src="{{ other_user.profile.profile_photo.url }}" alt="{{ other_user.username }}" 
-                             class="rounded-circle me-3" width="40" height="40"
-                             onerror="this.src='https://via.placeholder.com/40'">
-                        <div>
-                            <h6 class="mb-0">{{ other_user.get_full_name|default:other_user.username }}</h6>
-                            <small class="text-light">@{{ other_user.username }}</small>
+                             onerror="this.src='https://ui-avatars.com/api/?name={{ other_user.username }}&background=667eea&color=fff'">
+                        <div class="chat-header-text">
+                            <h6>{{ other_user.get_full_name|default:other_user.username }}</h6>
+                            <small>@{{ other_user.username }}</small>
                         </div>
                     </div>
                     <a href="{% url 'profile:activityPageTabProfile' other_user.id other_user.username %}" class="btn btn-sm btn-light">
-                        <i class="fas fa-user"></i> View Profile
+                        <i class="fas fa-user"></i> Profile
                     </a>
                 </div>
 
                 <!-- Messages Container -->
-                <div class="card-body flex-grow-1 overflow-y-auto" id="messagesContainer" style="background-color: #f8f9fa;">
+                <div class="messages-container" id="messagesContainer">
                     {% for message in messages %}
-                        <div class="mb-3 {% if message.sender == request.user %}text-end{% endif %}">
-                            <div class="d-inline-block">
+                        <div class="message-group {% if message.sender == request.user %}own{% endif %}">
+                            <div>
                                 {% if message.message_type == 'text' %}
-                                    <div class="alert {% if message.sender == request.user %}alert-primary{% else %}alert-light{% endif %} mb-1" 
-                                         style="max-width: 500px; word-wrap: break-word;">
+                                    <div class="message-bubble {% if message.sender == request.user %}own{% else %}other{% endif %}">
                                         {{ message.content }}
                                     </div>
                                 {% elif message.message_type == 'image' %}
-                                    <div class="mb-1">
-                                        <img src="{{ message.image.url }}" alt="Image" class="img-fluid rounded" style="max-width: 300px;">
+                                    <div class="message-bubble {% if message.sender == request.user %}own{% else %}other{% endif %}" style="padding: 0; border-radius: 12px; overflow: hidden;">
+                                        <img src="{{ message.image.url }}" alt="Image" style="max-width: 300px; display: block;">
                                     </div>
                                 {% elif message.message_type == 'file' %}
-                                    <div class="alert alert-light mb-1">
+                                    <div class="message-bubble {% if message.sender == request.user %}own{% else %}other{% endif %}">
                                         <i class="fas fa-file"></i>
-                                        <a href="{{ message.file.url }}" download>{{ message.content }}</a>
+                                        <a href="{{ message.file.url }}" download style="color: inherit; text-decoration: underline;">{{ message.content }}</a>
                                     </div>
                                 {% elif message.message_type == 'link' %}
-                                    <div class="card mb-1" style="max-width: 400px;">
+                                    <div class="message-bubble {% if message.sender == request.user %}own{% else %}other{% endif %}" style="padding: 0; border-radius: 12px; overflow: hidden; max-width: 400px;">
                                         {% if message.link_image %}
-                                            <img src="{{ message.link_image }}" class="card-img-top" alt="Link preview">
+                                            <img src="{{ message.link_image }}" alt="Link preview" style="width: 100%; display: block;">
                                         {% endif %}
-                                        <div class="card-body">
-                                            <h6 class="card-title">{{ message.link_title }}</h6>
-                                            <p class="card-text text-muted small">{{ message.link_description }}</p>
-                                            <a href="{{ message.link_url }}" target="_blank" class="btn btn-sm btn-primary">
-                                                Open Link
-                                            </a>
+                                        <div style="padding: 10px 14px;">
+                                            <h6 style="margin: 0 0 4px 0; font-size: 13px; font-weight: 600;">{{ message.link_title }}</h6>
+                                            <p style="margin: 0 0 8px 0; font-size: 12px; opacity: 0.8;">{{ message.link_description }}</p>
+                                            <a href="{{ message.link_url }}" target="_blank" style="color: #667eea; text-decoration: none; font-size: 12px; font-weight: 600;">Open Link →</a>
                                         </div>
                                     </div>
                                 {% endif %}
-                                <small class="text-muted d-block">
+                                <div class="message-time">
                                     {{ message.created_at|date:"H:i" }}
                                     {% if message.is_edited %}<em>(edited)</em>{% endif %}
-                                </small>
+                                </div>
                             </div>
                         </div>
                     {% empty %}
-                        <div class="text-center text-muted mt-5">
-                            <i class="fas fa-comments" style="font-size: 3rem; opacity: 0.3;"></i>
-                            <p class="mt-3">No messages yet. Start the conversation!</p>
+                        <div class="empty-chat">
+                            <div class="empty-chat-icon">💬</div>
+                            <p>No messages yet. Start the conversation!</p>
                         </div>
                     {% endfor %}
                 </div>
 
                 <!-- Message Input -->
-                <div class="card-footer bg-light">
-                    <form id="messageForm" class="d-flex gap-2">
-                        <input type="text" id="messageInput" class="form-control" placeholder="Type a message..." required>
-                        <button type="button" class="btn btn-outline-secondary" onclick="sendImage()">
+                <div class="input-container">
+                    <form id="messageForm" style="display: flex; gap: 10px; width: 100%; align-items: flex-end;">
+                        <input type="text" id="messageInput" class="message-input" placeholder="Type a message..." autocomplete="off" required>
+                        <button type="button" class="input-btn" onclick="toggleEmojiPicker()" title="Add Emoji">
+                            <i class="fas fa-smile"></i>
+                        </button>
+                        <button type="button" class="input-btn" onclick="sendImage()" title="Send Image">
                             <i class="fas fa-image"></i>
                         </button>
-                        <button type="button" class="btn btn-outline-secondary" onclick="sendFile()">
+                        <button type="button" class="input-btn" onclick="sendFile()" title="Send File">
                             <i class="fas fa-paperclip"></i>
                         </button>
-                        <button type="button" class="btn btn-outline-secondary" onclick="sendLink()">
+                        <button type="button" class="input-btn" onclick="sendLink()" title="Send Link">
                             <i class="fas fa-link"></i>
                         </button>
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-paper-plane"></i> Send
+                        <button type="submit" class="input-btn send-btn" title="Send Message">
+                            <i class="fas fa-paper-plane"></i>
                         </button>
                     </form>
+                    
+                    <!-- Emoji Picker -->
+                    <div id="emojiPicker" class="emoji-picker" style="display: none;">
+                        <div class="emoji-grid">
+                            <span class="emoji" onclick="insertEmoji('😀')">😀</span>
+                            <span class="emoji" onclick="insertEmoji('�')">😃</span>
+                            <span class="emoji" onclick="insertEmoji('😄')">😄</span>
+                            <span class="emoji" onclick="insertEmoji('😁')">😁</span>
+                            <span class="emoji" onclick="insertEmoji('😆')">😆</span>
+                            <span class="emoji" onclick="insertEmoji('�')">😅</span>
+                            <span class="emoji" onclick="insertEmoji('�')">🤣</span>
+                            <span class="emoji" onclick="insertEmoji('😂')">😂</span>
+                            <span class="emoji" onclick="insertEmoji('�')">🙂</span>
+                            <span class="emoji" onclick="insertEmoji('🙃')">🙃</span>
+                            <span class="emoji" onclick="insertEmoji('�')">😉</span>
+                            <span class="emoji" onclick="insertEmoji('😊')">😊</span>
+                            <span class="emoji" onclick="insertEmoji('�')">😇</span>
+                            <span class="emoji" onclick="insertEmoji('�')">🥰</span>
+                            <span class="emoji" onclick="insertEmoji('😍')">😍</span>
+                            <span class="emoji" onclick="insertEmoji('🤩')">🤩</span>
+                            <span class="emoji" onclick="insertEmoji('👍')">👍</span>
+                            <span class="emoji" onclick="insertEmoji('👎')">👎</span>
+                            <span class="emoji" onclick="insertEmoji('👏')">👏</span>
+                            <span class="emoji" onclick="insertEmoji('🙌')">🙌</span>
+                            <span class="emoji" onclick="insertEmoji('🤝')">🤝</span>
+                            <span class="emoji" onclick="insertEmoji('❤️')">❤️</span>
+                            <span class="emoji" onclick="insertEmoji('💔')">💔</span>
+                            <span class="emoji" onclick="insertEmoji('💪')">💪</span>
+                            <span class="emoji" onclick="insertEmoji('⭐')">⭐</span>
+                            <span class="emoji" onclick="insertEmoji('✨')">✨</span>
+                            <span class="emoji" onclick="insertEmoji('🎉')">🎉</span>
+                            <span class="emoji" onclick="insertEmoji('🎊')">🎊</span>
+                            <span class="emoji" onclick="insertEmoji('🔥')">🔥</span>
+                            <span class="emoji" onclick="insertEmoji('💯')">💯</span>
+                            <span class="emoji" onclick="insertEmoji('🚀')">🚀</span>
+                            <span class="emoji" onclick="insertEmoji('🎯')">🎯</span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -216,6 +605,10 @@ function sendMessage() {
 
     if (!content) return;
 
+    // Add message to UI immediately
+    addMessageToChat(content, 'text', true);
+    input.value = '';
+
     fetch('/chat/send-message/', {
         method: 'POST',
         headers: {
@@ -230,14 +623,46 @@ function sendMessage() {
     })
     .then(response => response.json())
     .then(data => {
-        if (data.success) {
-            input.value = '';
-            location.reload();
-        } else {
+        if (!data.success) {
             alert('Error: ' + data.error);
         }
     })
     .catch(error => console.error('Error:', error));
+}
+
+function addMessageToChat(content, type, isOwn) {
+    const container = document.getElementById('messagesContainer');
+    
+    const messageGroup = document.createElement('div');
+    messageGroup.className = 'message-group' + (isOwn ? ' own' : '');
+    
+    const messageDiv = document.createElement('div');
+    
+    let bubbleHTML = '';
+    if (type === 'text') {
+        bubbleHTML = `<div class="message-bubble ${isOwn ? 'own' : 'other'}">${escapeHtml(content)}</div>`;
+    }
+    
+    const now = new Date();
+    const time = now.getHours().toString().padStart(2, '0') + ':' + 
+                 now.getMinutes().toString().padStart(2, '0');
+    
+    messageDiv.innerHTML = bubbleHTML + `<div class="message-time">${time}</div>`;
+    messageGroup.appendChild(messageDiv);
+    
+    container.appendChild(messageGroup);
+    container.scrollTop = container.scrollHeight;
+}
+
+function escapeHtml(text) {
+    const map = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+    };
+    return text.replace(/[&<>"']/g, m => map[m]);
 }
 
 function sendImage() {
@@ -334,6 +759,87 @@ document.addEventListener('DOMContentLoaded', function() {
     const container = document.getElementById('messagesContainer');
     container.scrollTop = container.scrollHeight;
 });
+
+// Emoji Picker Functions
+function toggleEmojiPicker() {
+    const picker = document.getElementById('emojiPicker');
+    picker.style.display = picker.style.display === 'none' ? 'block' : 'none';
+}
+
+function insertEmoji(emoji) {
+    const input = document.getElementById('messageInput');
+    input.value += emoji;
+    input.focus();
+    document.getElementById('emojiPicker').style.display = 'none';
+}
+
+// Close emoji picker when clicking outside
+document.addEventListener('click', function(event) {
+    const picker = document.getElementById('emojiPicker');
+    const emojiBtn = event.target.closest('[onclick*="toggleEmojiPicker"]');
+    if (!emojiBtn && !picker.contains(event.target)) {
+        picker.style.display = 'none';
+    }
+});
+
+// Smooth chat switching without page refresh
+function switchChat(event, userId, chatType) {
+    event.preventDefault();
+    
+    const container = document.querySelector('.modern-chat-container');
+    if (!container) return;
+    
+    // Add fade out effect
+    container.style.opacity = '0.5';
+    container.style.transition = 'opacity 0.3s ease';
+    
+    // Fetch new chat data
+    fetch(`/chat/${chatType}/${userId}/`, {
+        method: 'GET',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.text())
+    .then(html => {
+        // Parse the response to extract chat content
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+        
+        // Update header
+        const newHeader = doc.querySelector('.chat-header-modern');
+        const oldHeader = document.querySelector('.chat-header-modern');
+        if (newHeader && oldHeader) {
+            oldHeader.innerHTML = newHeader.innerHTML;
+        }
+        
+        // Update messages
+        const newMessages = doc.querySelector('.messages-container');
+        const oldMessages = document.querySelector('.messages-container');
+        if (newMessages && oldMessages) {
+            oldMessages.innerHTML = newMessages.innerHTML;
+            oldMessages.scrollTop = oldMessages.scrollHeight;
+        }
+        
+        // Update active sidebar item
+        document.querySelectorAll('.chat-sidebar-item').forEach(item => {
+            item.classList.remove('active');
+        });
+        event.target.closest('.chat-sidebar-item').classList.add('active');
+        
+        // Update global chat ID
+        window.chatId = userId;
+        
+        // Fade in effect
+        setTimeout(() => {
+            container.style.opacity = '1';
+        }, 100);
+    })
+    .catch(error => {
+        console.error('Error switching chat:', error);
+        container.style.opacity = '1';
+    });
+}
 </script>
 
 <style>
