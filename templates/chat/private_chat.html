@@ -763,72 +763,71 @@ function getCsrfToken() {
                     {{ members.count }} Member{{ members.count|pluralize }}
                 </div>
 
-```
-            <div style="display: flex; flex-direction: column; gap: 12px;">
-                {% for member in members %}
-                    <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px; background: #f8f9fa; border-radius: 12px; transition: all 0.2s;">
-                        <div style="display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0;">
-                            {% if member.profile.profile_photo %}
-                                <img src="{{ member.profile.profile_photo.url }}" 
-                                     alt="{{ member.username }}" 
-                                     style="width: 44px; height: 44px; border-radius: 50%; object-fit: cover; border: 2px solid #e0e0e0; flex-shrink: 0;"
-                                     onerror="this.src='https://ui-avatars.com/api/?name={{ member.username }}&background=667eea&color=fff&size=44'">
-                            {% else %}
-                                <img src="https://ui-avatars.com/api/?name={{ member.username }}&background=667eea&color=fff&size=44" 
-                                     alt="{{ member.username }}" 
-                                     style="width: 44px; height: 44px; border-radius: 50%; border: 2px solid #e0e0e0; flex-shrink: 0;">
-                            {% endif %}
-                            <div style="min-width: 0; flex: 1;">
-                                <div style="font-weight: 600; font-size: 14px; color: #202124; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-                                    {{ member.get_full_name|default:member.username }}
-                                </div>
-                                <div style="font-size: 13px; color: #999; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-                                    @{{ member.username }}
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                    {% for member in members %}
+                        <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px; background: #f8f9fa; border-radius: 12px; transition: all 0.2s;">
+                            <div style="display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0;">
+                                {% if member.profile.profile_photo %}
+                                    <img src="{{ member.profile.profile_photo.url }}" 
+                                         alt="{{ member.username }}" 
+                                         style="width: 44px; height: 44px; border-radius: 50%; object-fit: cover; border: 2px solid #e0e0e0; flex-shrink: 0;"
+                                         onerror="this.src='https://ui-avatars.com/api/?name={{ member.username }}&background=667eea&color=fff&size=44'">
+                                {% else %}
+                                    <img src="https://ui-avatars.com/api/?name={{ member.username }}&background=667eea&color=fff&size=44" 
+                                         alt="{{ member.username }}" 
+                                         style="width: 44px; height: 44px; border-radius: 50%; border: 2px solid #e0e0e0; flex-shrink: 0;">
+                                {% endif %}
+                                <div style="min-width: 0; flex: 1;">
+                                    <div style="font-weight: 600; font-size: 14px; color: #202124; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                        {{ member.get_full_name|default:member.username }}
+                                    </div>
+                                    <div style="font-size: 13px; color: #999; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                        @{{ member.username }}
+                                    </div>
                                 </div>
                             </div>
+                            <div style="flex-shrink: 0;">
+                                {% if member == group.creator %}
+                                    <span style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 4px 12px; border-radius: 12px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Admin</span>
+                                {% elif group.creator == request.user %}
+                                    <button type="button" 
+                                            onclick="removeMember({{ member.id }})"
+                                            style="background: #ff4444; color: white; border: none; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.2s;"
+                                            onmouseover="this.style.background='#cc0000'"
+                                            onmouseout="this.style.background='#ff4444'">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                {% endif %}
+                            </div>
                         </div>
-                        <div style="flex-shrink: 0;">
-                            {% if member == group.creator %}
-                                <span style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 4px 12px; border-radius: 12px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Admin</span>
-                            {% elif group.creator == request.user %}
-                                <button type="button" 
-                                        onclick="removeMember({{ member.id }})"
-                                        style="background: #ff4444; color: white; border: none; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.2s;"
-                                        onmouseover="this.style.background='#cc0000'"
-                                        onmouseout="this.style.background='#ff4444'">
-                                    <i class="fas fa-times"></i>
-                                </button>
-                            {% endif %}
-                        </div>
-                    </div>
-                {% endfor %}
-            </div>
-            
-            <!-- Add Member Button -->
-            <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e0e0e0;">
-                <button type="button" 
-                        onclick="addMemberToGroup()"
-                        style="width: 100%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 12px 20px; border-radius: 12px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px;"
-                        onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(102, 126, 234, 0.4)'"
-                        onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'">
-                    <i class="fas fa-user-plus"></i>
-                    Add Member
-                </button>
+                    {% endfor %}
+                </div>
+                
+                <!-- Add Member Button -->
+                <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e0e0e0;">
+                    <button type="button" 
+                            onclick="addMemberToGroup()"
+                            style="width: 100%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 12px 20px; border-radius: 12px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px;"
+                            onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(102, 126, 234, 0.4)'"
+                            onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'">
+                        <i class="fas fa-user-plus"></i>
+                        Add Member
+                    </button>
+                </div>
             </div>
         </div>
     </div>
 </div>
-```
 
-</div>
 {% endif %}
 
 <input type="file" id="imageInput" accept="image/*" style="display: none;">
 <input type="file" id="fileInput" style="display: none;">
 
 <script>
-const chatId = {% if chat_type == 'private' %}{{ chat.id }}{% elif chat_type == 'group' %}{{ group.id }}{% endif %};
-const chatType = '{{ chat_type }}';
+// Use window object for global variables
+window.chatId = {% if chat_type == 'private' %}{{ chat.id }}{% elif chat_type == 'group' %}{{ group.id }}{% endif %};
+window.chatType = '{{ chat_type }}';
 
 function getCsrfToken() {
     return document.querySelector('[name=csrfmiddlewaretoken]')?.value || 
@@ -855,8 +854,8 @@ function sendMessage() {
             'X-CSRFToken': getCsrfToken()
         },
         body: JSON.stringify({
-            chat_type: chatType,
-            chat_id: chatId,
+            chat_type: window.chatType,
+            chat_id: window.chatId,
             content: content
         })
     })
@@ -915,8 +914,8 @@ document.getElementById('imageInput').addEventListener('change', function() {
     if (!file) return;
 
     const formData = new FormData();
-    formData.append('chat_type', chatType);
-    formData.append('chat_id', chatId);
+    formData.append('chat_type', window.chatType);
+    formData.append('chat_id', window.chatId);
     formData.append('image', file);
 
     fetch('/chat/send-image/', {
@@ -946,8 +945,8 @@ document.getElementById('fileInput').addEventListener('change', function() {
     if (!file) return;
 
     const formData = new FormData();
-    formData.append('chat_type', chatType);
-    formData.append('chat_id', chatId);
+    formData.append('chat_type', window.chatType);
+    formData.append('chat_id', window.chatId);
     formData.append('file', file);
 
     fetch('/chat/send-file/', {
@@ -979,8 +978,8 @@ function sendLink() {
             'X-CSRFToken': getCsrfToken()
         },
         body: JSON.stringify({
-            chat_type: chatType,
-            chat_id: chatId,
+            chat_type: window.chatType,
+            chat_id: window.chatId,
             link_url: url
         })
     })
@@ -1016,7 +1015,7 @@ document.addEventListener('click', function(event) {
     }
 });
 
-// Single, correct switchChat implementation
+// UPDATED: switchChat implementation with modal update
 function switchChat(event, id, type) {
     event.preventDefault();
 
@@ -1045,6 +1044,21 @@ function switchChat(event, id, type) {
             // re-init listeners
             initChatEvents();
         }
+
+        // UPDATE THE MODAL CONTENT FOR GROUP CHATS
+        if (type === 'group') {
+            const newModal = doc.querySelector('#groupInfoModal');
+            const currentModal = document.querySelector('#groupInfoModal');
+            
+            if (newModal && currentModal) {
+                // Replace the entire modal content
+                currentModal.innerHTML = newModal.innerHTML;
+            }
+        }
+
+        // Update the global chatId and chatType variables
+        window.chatId = id;
+        window.chatType = type;
     })
     .catch(error => console.error('Error switching chat:', error));
 }
@@ -1159,7 +1173,7 @@ function closeGroupInfoModal() {
 function removeMember(userId) {
     if (!confirm('Are you sure you want to remove this member?')) return;
 
-    fetch(`/chat/group/${chatId}/remove-member/`, {
+    fetch(`/chat/group/${window.chatId}/remove-member/`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -1178,7 +1192,7 @@ function removeMember(userId) {
     .catch(err => console.error('Error:', err));
 }
 
-function addMember() {
+function addMemberToGroup() {
     alert('Add member functionality - implement based on your backend');
 }
 </script>
