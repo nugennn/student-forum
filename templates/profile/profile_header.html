@@ -1,0 +1,199 @@
+{% load static %}
+{% load humanize %}
+
+<style>
+    /* Profile Header Styling */
+    .profile-header {
+        background: #ffffff;
+        border-bottom: 1px solid #e1e4e8;
+        padding: 20px 0;
+        margin-bottom: 24px;
+    }
+    
+    .profile-header-top {
+        display: flex;
+        align-items: flex-start;
+        gap: 20px;
+    }
+    
+    .profile-avatar {
+        flex-shrink: 0;
+    }
+    
+    .profile-avatar img {
+        width: 96px;
+        height: 96px;
+        border-radius: 8px;
+        border: 2px solid #e1e4e8;
+        object-fit: cover;
+    }
+    
+    .profile-info {
+        flex: 1;
+    }
+    
+    .profile-name {
+        font-size: 28px;
+        font-weight: 700;
+        color: #333;
+        margin: 0 0 4px 0;
+    }
+    
+    .profile-title {
+        font-size: 14px;
+        color: #666;
+        margin: 0 0 12px 0;
+        font-weight: 500;
+    }
+    
+    .profile-meta {
+        display: flex;
+        gap: 16px;
+        margin-bottom: 12px;
+        flex-wrap: wrap;
+    }
+    
+    .meta-item {
+        font-size: 13px;
+        color: #666;
+    }
+    
+    .profile-links {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+    
+    .link-item {
+        font-size: 13px;
+        color: #0a95ff;
+        text-decoration: none;
+        padding: 4px 8px;
+        border-radius: 4px;
+        background: #f0f7ff;
+        transition: all 0.2s ease;
+    }
+    
+    .link-item:hover {
+        background: #e1f0ff;
+        color: #0969da;
+    }
+    
+    .profile-actions {
+        flex-shrink: 0;
+    }
+    
+    .btn-edit {
+        display: inline-block;
+        padding: 10px 18px;
+        background: #0a95ff;
+        color: #ffffff;
+        border-radius: 6px;
+        text-decoration: none;
+        font-size: 14px;
+        font-weight: 600;
+        transition: all 0.2s ease;
+        border: none;
+        cursor: pointer;
+        box-shadow: 0 1px 3px rgba(10, 149, 255, 0.2);
+    }
+    
+    .btn-edit:hover {
+        background: #0969da;
+        box-shadow: 0 2px 6px rgba(9, 105, 218, 0.3);
+    }
+
+    /* Navigation Tabs */
+    .s-navigation {
+        border-bottom: 2px solid #e1e4e8;
+        margin-bottom: 24px;
+        padding-bottom: 12px;
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+    
+    .s-navigation--item {
+        padding: 8px 16px;
+        border-radius: 4px;
+        font-size: 14px;
+        font-weight: 500;
+        color: #666;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        cursor: pointer;
+        border: 1px solid transparent;
+    }
+    
+    .s-navigation--item:hover {
+        background: #f5f5f5;
+        color: #333;
+    }
+    
+    .s-navigation--item.is-selected {
+        background: #0a95ff;
+        color: white;
+        border-color: #0a95ff;
+    }
+
+    /* Tab content fade animation */
+    .tab-content-fade {
+        animation: fadeIn 0.3s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+        }
+        to {
+            opacity: 1;
+        }
+    }
+</style>
+
+
+<!-- Profile Header -->
+<div class="profile-header">
+    <div class="profile-header-top">
+        <div class="profile-avatar">
+            <img src="{% if profileData.profile_photo %}{{ profileData.profile_photo.url }}{% endif %}" alt="{{ profileData.user }}" width="96" height="96">
+        </div>
+        <div class="profile-info">
+            <h1 class="profile-name d-inline-block">{% if profileData.full_name %}{{ profileData.full_name }}{% else %}{{ profileData.user.get_full_name }}{% endif %}</h1>
+            {% if request.user.is_authenticated and request.user != profileData.user %}
+            <a href="{% url 'chat:private_chat' profileData.user.id %}" 
+               role="button" 
+               class="btn btn-outline-primary ms-3 align-middle d-inline-flex align-items-center"
+               style="font-size:1.05rem; padding:.5rem .75rem; gap:.5rem;">
+                <i class="fas fa-comment" style="font-size:1.2rem;"></i>
+                <span class="ms-1 fw-semibold">Chat</span>
+            </a>
+            {% endif %}
+            <p class="profile-title">{{ profileData.title }}</p>
+            <div class="profile-meta">
+                <span class="meta-item">📅 Joined {{ profileData.user.date_joined|naturaltime }}</span>
+                {% if not profileData.is_high_moderator %}
+                <span class="meta-item">👁️ Last seen {{ online_user_activity.last_activity|naturaltime }}</span>
+                {% endif %}
+            </div>
+            <div class="profile-links">
+                {% if profileData.twitter_link %}<a href="{{ profileData.twitter_link }}" class="link-item">Twitter</a>{% endif %}
+                {% if profileData.github_link %}<a href="{{ profileData.github_link }}" class="link-item">GitHub</a>{% endif %}
+                {% if profileData.website_link %}<a href="{{ profileData.website_link }}" class="link-item">Website</a>{% endif %}
+                {% if profileData.location %}<span class="link-item">{{ profileData.location }}</span>{% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Navigation tabs -->
+<div class="d-flex ai-center jc-space-between fw-wrap mb16 js-user-header">
+    <div class="flex--item s-navigation">
+        <a href="{% url 'profile:activityPageTabProfile' profileData.user.id profileData.user.username %}" class="s-navigation--item {% if tab_name == 'profile' %}is-selected{% endif %}" data-shortcut="P">Profile</a>
+        <a href="{% url 'profile:ActivityTabSummary' profileData.user.id profileData.user.username %}" class="s-navigation--item {% if tab_name == 'activity' %}is-selected{% endif %}" data-shortcut="A">Activity</a>
+        {% if request.user == profileData.user %}
+        <a href="{% url 'profile:userProfileEdit_Settings' profileData.user.id %}" class="s-navigation--item {% if tab_name == 'settings' %}is-selected{% endif %}">Edit Profile</a>
+        {% endif %}
+    </div>
+    <div class="flex--item ml-auto"><div class="s-navigation s-navigation__muted ai-center"></div></div>
+</div>
