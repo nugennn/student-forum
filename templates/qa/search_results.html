@@ -155,7 +155,7 @@
               {% endif %}
             </div>
             <div>
-              <a href="{% url 'profile:activityPageTabProfile' user.id user.username %}" class="result-title">{{ user.get_full_name|default:user.username }}</a>
+              <a href="{% url 'profile:activityPageTabProfile' user.id user.username %}" class="result-title">{% if user.profile.full_name %}{{ user.profile.full_name }}{% else %}{{ user.username }}{% endif %}</a>
               <div class="result-body">@{{ user.username }}</div>
             </div>
           </div>

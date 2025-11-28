@@ -58,10 +58,10 @@
 
             <li class="-item">
                 <a href="{% url 'profile:ActivityTabSummary' user.id user.username %}" class="my-profile " >
-                <div class="gravatar-wrapper-24" title="{{request.user.username}}">
-                    <img src="{% if request.user.profile.profile_photo %}{{request.user.profile.profile_photo.url}}{% endif %}" alt="" width="24" height="24" class="bar-sm -avatar js-avatar-me">
+                <div class="gravatar-wrapper-24" title="{% if request.user.profile.full_name %}{{ request.user.profile.full_name }}{% else %}{{ request.user.username }}{% endif %}">
+                    <img src="{% if request.user.profile.profile_photo %}{{request.user.profile.profile_photo.url}}{% else %}{% static 'default.jpg' %}{% endif %}" alt="" width="24" height="24" class="bar-sm -avatar js-avatar-me" style="object-fit: cover; width: 100%; height: 100%;">
                 </div>
-                <span class="v-visible-sr">{{request.user.username}}</span>
+                <span class="v-visible-sr">{% if request.user.profile.full_name %}{{ request.user.profile.full_name }}{% else %}{{ request.user.username }}{% endif %}</span>
 
                         <div class="-rep js-header-rep" title="your reputation: {{request.user|calculate_reputation}}" aria-hidden="true">{{request.user|calculate_reputation}}</div>
                         <span class="v-visible-sr">, {{request.user|calculate_reputation}} reputation</span>
@@ -218,7 +218,7 @@
                             <div class="ai-center d-flex jc-end">
                                     <div class="-right">
                                             <a href="#">all items</a>
-                                            • <a href="{% url 'users:logout_view' %}">Logout</a>
+                                            {% comment %} • <a href="{% url 'users:logout_view' %}">Logout</a> {% endcomment %}
                                     </div>
                             </div>
                         </div>
@@ -289,7 +289,7 @@
                     <div class="header fw-wrap">
                         <h3 class="flex--item">
                             achievements
-                                <small class="utc-clock sm:d-none">utc time <span class="js-utc-time utc-time">Good Time</span></small>
+                                {% comment %} <small class="utc-clock sm:d-none">utc time <span class="js-utc-time utc-time">Good Time</span></small> {% endcomment %}
                         </h3>
                     </div>
 
@@ -807,7 +807,7 @@
     <div class="flex--item">
         <div class="d-flex ai-center fw-wrap gs8 wmx4">
             <div class="flex--item mb12 fs-headline2 lh-xs">
-                {% if profileData.full_name %}{{profileData.full_name}}{% else %}{{profileData.user.get_full_name}}{% endif %}
+                {% if profileData.full_name %}{{ profileData.full_name }}{% else %}{{ profileData.user.username }}{% endif %}
             </div>
             <div class="flex--item">
                 <div class="d-flex ai-center fw-nowrap gs4">
