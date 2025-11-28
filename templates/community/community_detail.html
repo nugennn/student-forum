@@ -303,7 +303,7 @@
                                 {{ member.user.username|first|upper }}
                             </div>
                             <a href="{% url 'profile:activityPageTabProfile' member.user.id member.user.username %}" class="member-name">
-                                {{ member.user.username }}
+                                {% if member.user.profile.full_name %}{{ member.user.profile.full_name }}{% else %}{{ member.user.username }}{% endif %}
                             </a>
                             {% if member.role != 'member' %}
                                 <span class="member-role">{{ member.role|title }}</span>

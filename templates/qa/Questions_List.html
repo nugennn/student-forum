@@ -517,7 +517,7 @@
                                         <a href="{{question.post_owner.profile.get_absolute_url}}"><div class="gravatar-wrapper-32"><img src="{% if question.post_owner.profile.profile_photo %}{{question.post_owner.profile.profile_photo.url}}{% endif %}" alt="" width="32" height="32" class="bar-sm"></div></a>
                                     </div>
                                     <div class="user-details">
-                                        <a href="{{question.post_owner.profile.get_absolute_url}}">{{question.post_owner}}</a>
+                                        <a href="{{question.post_owner.profile.get_absolute_url}}">{% if question.post_owner.profile.full_name %}{{ question.post_owner.profile.full_name }}{% else %}{{ question.post_owner }}{% endif %}</a>
                                         <div class="-flair">
                                             <span class="reputation-score" title="reputation score" dir="ltr">{{question.post_owner|calculate_reputation}}</span>
 

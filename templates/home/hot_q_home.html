@@ -381,7 +381,7 @@
 
                                 <div class="flex--item started ml-auto mt0 as-center d-flex ai-center">
                                     <div class="user-avatar">{{ question.post_owner.username|first|upper }}</div>
-                                    by <a href="#" style="color: var(--text-primary); font-weight: 500;">{{question.post_owner}}</a>
+                                    by <a href="#" style="color: var(--text-primary); font-weight: 500;">{% if question.post_owner.profile.full_name %}{{ question.post_owner.profile.full_name }}{% else %}{{ question.post_owner }}{% endif %}</a>
                                     <span class="reputation-score" dir="ltr">{{question.post_owner|calculate_reputation}}</span>
                                     <a href="{{question.get_absolute_url}}" class="started-link" style="margin-left: 8px;">
                                         <span class="relativetime">{{question.date|naturaltime}}</span>
