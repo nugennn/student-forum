@@ -608,77 +608,79 @@ function getCsrfToken() {
                     {% endif %}
                 </div>
 
-                <!-- Messages Container -->
-                <div class="messages-container" id="messagesContainer">
-                    {% for message in messages %}
-                        <div class="message-group {% if message.sender == request.user %}own{% endif %}">
-                            <div>
-                                {% if chat_type == 'group' and message.sender != request.user %}
-                                    <div class="message-sender-info">
-                                        {% if message.sender.profile.profile_photo %}
-                                            <img src="{{ message.sender.profile.profile_photo.url }}" 
-                                                 alt="{{ message.sender.username }}" 
-                                                 class="message-sender-avatar"
-                                                 onerror="this.src='https://ui-avatars.com/api/?name={{ message.sender.username }}&background=667eea&color=fff&size=24'">
-                                        {% else %}
-                                            <img src="https://ui-avatars.com/api/?name={{ message.sender.username }}&background=667eea&color=fff&size=24" 
-                                                 alt="{{ message.sender.username }}" 
-                                                 class="message-sender-avatar">
-                                        {% endif %}
-                                        <a href="{% url 'profile:activityPageTabProfile' message.sender.id message.sender.username %}" 
-                                           class="message-sender-name">
-                                            {{ message.sender.get_full_name|default:message.sender.username }}
-                                        </a>
-                                    </div>
-                                {% endif %}
+       <!-- Messages Container -->
+<div class="messages-container" id="messagesContainer">
+    {% if messages %}
+        {% for message in messages %}
+            <div class="message-group {% if message.sender == request.user %}own{% endif %}">
+                <div>
+                    {% if chat_type == 'group' and message.sender != request.user %}
+                        <div class="message-sender-info">
+                            {% if message.sender.profile.profile_photo %}
+                                <img src="{{ message.sender.profile.profile_photo.url }}" 
+                                     alt="{{ message.sender.username }}" 
+                                     class="message-sender-avatar"
+                                     onerror="this.src='https://ui-avatars.com/api/?name={{ message.sender.username }}&background=667eea&color=fff&size=24'">
+                            {% else %}
+                                <img src="https://ui-avatars.com/api/?name={{ message.sender.username }}&background=667eea&color=fff&size=24" 
+                                     alt="{{ message.sender.username }}" 
+                                     class="message-sender-avatar">
+                            {% endif %}
+                            <a href="{% url 'profile:activityPageTabProfile' message.sender.id message.sender.username %}" 
+                               class="message-sender-name">
+                                {{ message.sender.get_full_name|default:message.sender.username }}
+                            </a>
+                        </div>
+                    {% endif %}
 
-                                {% if message.message_type == 'text' %}
-                                    <div class="message-bubble {% if message.sender == request.user %}own{% else %}other{% endif %}"
-                                         data-created-at="{{ message.created_at|date:'c' }}"
-                                         data-sender="{% if message.sender == request.user %}own{% else %}other{% endif %}">
-                                        {{ message.content }}
-                                    </div>
-                                {% elif message.message_type == 'image' %}
-                                    <div class="message-bubble {% if message.sender == request.user %}own{% else %}other{% endif %}"
-                                         style="padding: 0; border-radius: 12px; overflow: hidden;"
-                                         data-created-at="{{ message.created_at|date:'c' }}"
-                                         data-sender="{% if message.sender == request.user %}own{% else %}other{% endif %}">
-                                        <img src="{{ message.image.url }}" alt="Image" style="max-width: 300px; display: block;">
-                                    </div>
-                                {% elif message.message_type == 'file' %}
-                                    <div class="message-bubble {% if message.sender == request.user %}own{% else %}other{% endif %}"
-                                         data-created-at="{{ message.created_at|date:'c' }}"
-                                         data-sender="{% if message.sender == request.user %}own{% else %}other{% endif %}">
-                                        <i class="fas fa-file"></i>
-                                        <a href="{{ message.file.url }}" download style="color: inherit; text-decoration: underline;">{{ message.content }}</a>
-                                    </div>
-                                {% elif message.message_type == 'link' %}
-                                    <div class="message-bubble {% if message.sender == request.user %}own{% else %}other{% endif %}"
-                                         style="padding: 0; border-radius: 12px; overflow: hidden; max-width: 400px;"
-                                         data-created-at="{{ message.created_at|date:'c' }}"
-                                         data-sender="{% if message.sender == request.user %}own{% else %}other{% endif %}">
-                                        {% if message.link_image %}
-                                            <img src="{{ message.link_image }}" alt="Link preview" style="width: 100%; display: block;">
-                                        {% endif %}
-                                        <div style="padding: 10px 14px;">
-                                            <h6 style="margin: 0 0 4px 0; font-size: 13px; font-weight: 600;">{{ message.link_title }}</h6>
-                                            <p style="margin: 0 0 8px 0; font-size: 12px; opacity: 0.8;">{{ message.link_description }}</p>
-                                            <a href="{{ message.link_url }}" target="_blank" style="color: #667eea; text-decoration: none; font-size: 12px; font-weight: 600;">Open Link →</a>
-                                        </div>
-                                    </div>
-                                {% endif %}
-                                <div class="message-time">
-                                    {% if message.is_edited %}<em>(edited)</em>{% endif %}
-                                </div>
+                    {% if message.message_type == 'text' %}
+                        <div class="message-bubble {% if message.sender == request.user %}own{% else %}other{% endif %}"
+                             data-created-at="{{ message.created_at|date:'c' }}"
+                             data-sender="{% if message.sender == request.user %}own{% else %}other{% endif %}">
+                            {{ message.content }}
+                        </div>
+                    {% elif message.message_type == 'image' %}
+                        <div class="message-bubble {% if message.sender == request.user %}own{% else %}other{% endif %}"
+                             style="padding: 0; border-radius: 12px; overflow: hidden;"
+                             data-created-at="{{ message.created_at|date:'c' }}"
+                             data-sender="{% if message.sender == request.user %}own{% else %}other{% endif %}">
+                            <img src="{{ message.image.url }}" alt="Image" style="max-width: 300px; display: block;">
+                        </div>
+                    {% elif message.message_type == 'file' %}
+                        <div class="message-bubble {% if message.sender == request.user %}own{% else %}other{% endif %}"
+                             data-created-at="{{ message.created_at|date:'c' }}"
+                             data-sender="{% if message.sender == request.user %}own{% else %}other{% endif %}">
+                            <i class="fas fa-file"></i>
+                            <a href="{{ message.file.url }}" download style="color: inherit; text-decoration: underline;">{{ message.content }}</a>
+                        </div>
+                    {% elif message.message_type == 'link' %}
+                        <div class="message-bubble {% if message.sender == request.user %}own{% else %}other{% endif %}"
+                             style="padding: 0; border-radius: 12px; overflow: hidden; max-width: 400px;"
+                             data-created-at="{{ message.created_at|date:'c' }}"
+                             data-sender="{% if message.sender == request.user %}own{% else %}other{% endif %}">
+                            {% if message.link_image %}
+                                <img src="{{ message.link_image }}" alt="Link preview" style="width: 100%; display: block;">
+                            {% endif %}
+                            <div style="padding: 10px 14px;">
+                                <h6 style="margin: 0 0 4px 0; font-size: 13px; font-weight: 600;">{{ message.link_title }}</h6>
+                                <p style="margin: 0 0 8px 0; font-size: 12px; opacity: 0.8;">{{ message.link_description }}</p>
+                                <a href="{{ message.link_url }}" target="_blank" style="color: #667eea; text-decoration: none; font-size: 12px; font-weight: 600;">Open Link →</a>
                             </div>
                         </div>
-                    {% empty %}
-                        <div class="empty-chat">
-                            <div class="empty-chat-icon">💬</div>
-                            <p>No messages yet. Start the conversation!</p>
-                        </div>
-                    {% endfor %}
+                    {% endif %}
+                    <div class="message-time">
+                        {% if message.is_edited %}<em>(edited)</em>{% endif %}
+                    </div>
                 </div>
+            </div>
+        {% endfor %}
+    {% else %}
+        <div class="empty-chat" id="emptyChat">
+            <div class="empty-chat-icon">💬</div>
+            <p>No messages yet. Start the conversation!</p>
+        </div>
+    {% endif %}
+</div>
 
                 <!-- Message Input -->
                 <div class="input-container">
@@ -871,6 +873,12 @@ function sendMessage() {
 function addMessageToChat(content, type, isOwn) {
     const container = document.getElementById('messagesContainer');
     if (!container) return;
+    
+    // Hide empty chat message if it exists
+    const emptyChat = document.getElementById('emptyChat');
+    if (emptyChat) {
+        emptyChat.remove();
+    }
     
     const messageGroup = document.createElement('div');
     messageGroup.className = 'message-group' + (isOwn ? ' own' : '');
