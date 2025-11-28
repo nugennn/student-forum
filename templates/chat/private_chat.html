@@ -452,6 +452,61 @@
         background: #f0f0f0;
         transform: scale(1.15);
     }
+
+    /* Modal Styles */
+    .modal-backdrop {
+        background-color: rgba(0, 0, 0, 0.5);
+    }
+
+    .modal-content {
+        border-radius: 12px;
+        border: none;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    }
+
+    .modal-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-top-left-radius: 12px;
+        border-top-right-radius: 12px;
+        border-bottom: none;
+        padding: 20px 24px;
+    }
+
+    .modal-header .modal-title {
+        font-weight: 700;
+        font-size: 18px;
+    }
+
+    .modal-header .btn-close {
+        filter: brightness(0) invert(1);
+        opacity: 0.8;
+    }
+
+    .modal-header .btn-close:hover {
+        opacity: 1;
+    }
+
+    .modal-body {
+        padding: 24px;
+    }
+
+    .list-group-item {
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        margin-bottom: 8px;
+        padding: 12px 16px;
+        transition: all 0.2s ease;
+    }
+
+    .list-group-item:hover {
+        background-color: #f8f9fa;
+        transform: translateX(4px);
+    }
+
+    .list-group-item:last-child {
+        margin-bottom: 0;
+    }
 </style>
 
 <script>
@@ -513,6 +568,11 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     applyTimestampGrouping();
 });
+
+function getCsrfToken() {
+    return document.querySelector('[name=csrfmiddlewaretoken]')?.value || 
+           document.cookie.split('; ').find(row => row.startsWith('csrftoken='))?.split('=')[1] || '';
+}
 </script>
 
 <div class="container-fluid mt-4" style="padding: 0 20px; width: 100%; max-width: 100%;">
@@ -542,7 +602,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             <i class="fas fa-user"></i> Profile
                         </a>
                     {% elif chat_type == 'group' %}
-                        <button class="btn btn-sm btn-light" onclick="showGroupInfo()">
+                        <button class="btn btn-sm btn-light" onclick="showGroupInfo()" id="groupInfoBtn">
                             <i class="fas fa-info-circle"></i> Group Info
                         </button>
                     {% endif %}
@@ -623,6 +683,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 <!-- Message Input -->
                 <div class="input-container">
                     <form id="messageForm" style="display: flex; gap: 10px; width: 100%; align-items: flex-end;">
+                        {% csrf_token %}
                         <input type="text" id="messageInput" class="message-input" placeholder="Type a message..." autocomplete="off" required>
                         <button type="button" class="input-btn" onclick="toggleEmojiPicker()" title="Add Emoji">
                             <i class="fas fa-smile"></i>
@@ -685,34 +746,80 @@ document.addEventListener('DOMContentLoaded', function() {
 </div>
 
 {% if chat_type == 'group' %}
-<div class="modal fade" id="groupInfoModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Group Info</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+
+<!-- Group Info Modal -->
+
+<div class="modal fade" id="groupInfoModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius: 16px; border: none;">
+            <div class="modal-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 20px 24px; border-radius: 16px 16px 0 0;">
+                <h5 class="modal-title" style="font-weight: 600; font-size: 18px;">
+                    <i class="fas fa-users" style="margin-right: 8px;"></i>Group Members
+                </h5>
+                <button type="button" class="btn-close btn-close-white" onclick="closeGroupInfoModal()" aria-label="Close" style="opacity: 1; cursor: pointer;"></button>
             </div>
-            <div class="modal-body">
-                <h6>Members ({{ members.count }})</h6>
-                <div class="list-group">
-                    {% for member in members %}
-                        <div class="list-group-item d-flex justify-content-between align-items-center">
-                            <div>
-                                <strong>{{ member.get_full_name|default:member.username }}</strong>
-                                <br>
-                                <small class="text-muted">@{{ member.username }}</small>
+            <div class="modal-body" style="padding: 20px; max-height: 60vh; overflow-y: auto;">
+                <div style="font-size: 12px; color: #999; margin-bottom: 16px; text-transform: uppercase; letter-spacing: 0.5px;">
+                    {{ members.count }} Member{{ members.count|pluralize }}
+                </div>
+
+```
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+                {% for member in members %}
+                    <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px; background: #f8f9fa; border-radius: 12px; transition: all 0.2s;">
+                        <div style="display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0;">
+                            {% if member.profile.profile_photo %}
+                                <img src="{{ member.profile.profile_photo.url }}" 
+                                     alt="{{ member.username }}" 
+                                     style="width: 44px; height: 44px; border-radius: 50%; object-fit: cover; border: 2px solid #e0e0e0; flex-shrink: 0;"
+                                     onerror="this.src='https://ui-avatars.com/api/?name={{ member.username }}&background=667eea&color=fff&size=44'">
+                            {% else %}
+                                <img src="https://ui-avatars.com/api/?name={{ member.username }}&background=667eea&color=fff&size=44" 
+                                     alt="{{ member.username }}" 
+                                     style="width: 44px; height: 44px; border-radius: 50%; border: 2px solid #e0e0e0; flex-shrink: 0;">
+                            {% endif %}
+                            <div style="min-width: 0; flex: 1;">
+                                <div style="font-weight: 600; font-size: 14px; color: #202124; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                    {{ member.get_full_name|default:member.username }}
+                                </div>
+                                <div style="font-size: 13px; color: #999; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                    @{{ member.username }}
+                                </div>
                             </div>
-                            {% if group.creator == request.user and member != group.creator %}
-                                <button type="button" class="btn btn-sm btn-danger" onclick="removeMember({{ member.id }})">
-                                    Remove
+                        </div>
+                        <div style="flex-shrink: 0;">
+                            {% if member == group.creator %}
+                                <span style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 4px 12px; border-radius: 12px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Admin</span>
+                            {% elif group.creator == request.user %}
+                                <button type="button" 
+                                        onclick="removeMember({{ member.id }})"
+                                        style="background: #ff4444; color: white; border: none; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.2s;"
+                                        onmouseover="this.style.background='#cc0000'"
+                                        onmouseout="this.style.background='#ff4444'">
+                                    <i class="fas fa-times"></i>
                                 </button>
                             {% endif %}
                         </div>
-                    {% endfor %}
-                </div>
+                    </div>
+                {% endfor %}
+            </div>
+            
+            <!-- Add Member Button -->
+            <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e0e0e0;">
+                <button type="button" 
+                        onclick="addMemberToGroup()"
+                        style="width: 100%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 12px 20px; border-radius: 12px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px;"
+                        onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(102, 126, 234, 0.4)'"
+                        onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'">
+                    <i class="fas fa-user-plus"></i>
+                    Add Member
+                </button>
             </div>
         </div>
     </div>
+</div>
+```
+
 </div>
 {% endif %}
 
@@ -722,6 +829,11 @@ document.addEventListener('DOMContentLoaded', function() {
 <script>
 const chatId = {% if chat_type == 'private' %}{{ chat.id }}{% elif chat_type == 'group' %}{{ group.id }}{% endif %};
 const chatType = '{{ chat_type }}';
+
+function getCsrfToken() {
+    return document.querySelector('[name=csrfmiddlewaretoken]')?.value || 
+           document.cookie.split('; ').find(row => row.startsWith('csrftoken='))?.split('=')[1] || '';
+}
 
 document.getElementById('messageForm').addEventListener('submit', function(e) {
     e.preventDefault();
@@ -762,7 +874,6 @@ function addMessageToChat(content, type, isOwn) {
     if (!container) return;
     
     const messageGroup = document.createElement('div');
-   
     messageGroup.className = 'message-group' + (isOwn ? ' own' : '');
     const messageDiv = document.createElement('div');
 
@@ -1012,14 +1123,41 @@ function initChatEvents() {
 
 function showGroupInfo() {
     const modal = document.getElementById('groupInfoModal');
-    if (modal && window.bootstrap) {
-        const bsModal = new bootstrap.Modal(modal);
-        bsModal.show();
+    if (modal) {
+        if (window.bootstrap) {
+            const bsModal = new bootstrap.Modal(modal);
+            bsModal.show();
+        } else {
+            // Fallback if Bootstrap JS is not loaded
+            modal.style.display = 'block';
+            modal.classList.add('show');
+            const backdrop = document.createElement('div');
+            backdrop.className = 'modal-backdrop fade show';
+            document.body.appendChild(backdrop);
+        }
     }
 }
 
+// FIXED: Close button for group modal
+function closeGroupInfoModal() {
+    const modal = document.getElementById('groupInfoModal');
+    if (!modal) return;
+
+    if (window.bootstrap && typeof bootstrap.Modal !== 'undefined') {
+        const instance = bootstrap.Modal.getInstance(modal) || new bootstrap.Modal(modal);
+        instance.hide();
+        return;
+    }
+
+    modal.classList.remove('show');
+    modal.style.display = 'none';
+
+    document.querySelectorAll('.modal-backdrop').forEach(backdrop => backdrop.remove());
+    document.body.classList.remove('modal-open');
+}
+
 function removeMember(userId) {
-    if (!confirm('Remove this member?')) return;
+    if (!confirm('Are you sure you want to remove this member?')) return;
 
     fetch(`/chat/group/${chatId}/remove-member/`, {
         method: 'POST',
@@ -1031,10 +1169,17 @@ function removeMember(userId) {
     })
     .then(res => res.json())
     .then(data => {
-        if (data.success) location.reload();
-        else alert('Error: ' + data.error);
+        if (data.success) {
+            location.reload();
+        } else {
+            alert('Error: ' + data.error);
+        }
     })
     .catch(err => console.error('Error:', err));
+}
+
+function addMember() {
+    alert('Add member functionality - implement based on your backend');
 }
 </script>
 
@@ -1060,4 +1205,5 @@ function removeMember(userId) {
     border: 1px solid #dee2e6;
 }
 </style>
+
 {% endblock %}
