@@ -2322,11 +2322,11 @@ def ActivityTabSummary(request, user_id, username):
 
 
 # Question DIVs - START
-    questionsCount = Question.objects.filter(post_owner=profileData.user).exclude(is_deleted=True).count()
-    question_most_votes = Question.objects.filter(post_owner=profileData.user).annotate(countThem=Count('qupvote')).order_by('-countThem')[:5]
-    question_recent_activity = Question.objects.filter(post_owner=profileData.user).order_by('-active_date')[:5]
-    question_newest = Question.objects.filter(post_owner=profileData.user).order_by('-date')[:5]
-    question_most_views = Question.objects.filter(post_owner=profileData.user).annotate(countTheViews=Count('viewers')).order_by('-viewers')[:5]
+    questionsCount = Question.objects.filter(post_owner=profileData.user, is_deleted=False).count()  # Already has it
+    question_most_votes = Question.objects.filter(post_owner=profileData.user, is_deleted=False).annotate(countThem=Count('qupvote')).order_by('-countThem')[:5]  # ADDED
+    question_recent_activity = Question.objects.filter(post_owner=profileData.user, is_deleted=False).order_by('-active_date')[:5]  # ADDED
+    question_newest = Question.objects.filter(post_owner=profileData.user, is_deleted=False).order_by('-date')[:5]  # ADDED
+    question_most_views = Question.objects.filter(post_owner=profileData.user, is_deleted=False).annotate(countTheViews=Count('viewers')).order_by('-viewers')[:5]  # ADDED
 # Question DIVs - END
 
 
@@ -2343,10 +2343,10 @@ def ActivityTabSummary(request, user_id, username):
 
 
 # Bookmark DIVs - START
-    bookmarks_newest = BookmarkQuestion.objects.filter(bookmarked_by=profileData.user).order_by('date')
-    bookmarks_votes = BookmarkQuestion.objects.filter(bookmarked_by=profileData.user).annotate(countVotes=Count('bookmarked_question__qupvote')).order_by('-countVotes')
-    bookmarks_activity = BookmarkQuestion.objects.filter(bookmarked_by=profileData.user).order_by('-bookmarked_question__active_date')
-    bookmarks_views = BookmarkQuestion.objects.filter(bookmarked_by=profileData.user).annotate(countVotes=Count('bookmarked_question__viewers')).order_by('-countVotes')
+    bookmarks_newest = BookmarkQuestion.objects.filter(bookmarked_by=profileData.user, bookmarked_question__is_deleted=False).order_by('date')  # ADDED
+    bookmarks_votes = BookmarkQuestion.objects.filter(bookmarked_by=profileData.user, bookmarked_question__is_deleted=False).annotate(countVotes=Count('bookmarked_question__qupvote')).order_by('-countVotes')  # ADDED
+    bookmarks_activity = BookmarkQuestion.objects.filter(bookmarked_by=profileData.user, bookmarked_question__is_deleted=False).order_by('-bookmarked_question__active_date')  # ADDED
+    bookmarks_views = BookmarkQuestion.objects.filter(bookmarked_by=profileData.user, bookmarked_question__is_deleted=False).annotate(countVotes=Count('bookmarked_question__viewers')).order_by('-countVotes')  # ADDED
     countBookmarks = bookmarks_newest.count()
 # Bookmark DIVs - END
 
@@ -2414,7 +2414,7 @@ def ActivityTabSummary(request, user_id, username):
 
 
     # People Reached
-    getAllTheViewsOfAllTheQuestion = Question.objects.filter(post_owner=profileData.user).annotate(total_views=Count('viewers')).aggregate(Sum('total_views'))
+    getAllTheViewsOfAllTheQuestion = Question.objects.filter(post_owner=profileData.user, is_deleted=False).annotate(total_views=Count('viewers')).aggregate(Sum('total_views'))  # ADDED
 
 
     # Total Votes Cast
@@ -2457,8 +2457,8 @@ def ActivityTabSummary(request, user_id, username):
         civc_duty = True
     else:
         civc_duty = False
-    getVotedOnQ = Question.objects.filter(qupvote__upvote_by_q=profileData.user).count()
-    getVotedOnQ_Down = Question.objects.filter(qdownvote__downvote_by_q=profileData.user).count()
+    getVotedOnQ = Question.objects.filter(qupvote__upvote_by_q=profileData.user, is_deleted=False).count()  # ADDED
+    getVotedOnQ_Down = Question.objects.filter(qdownvote__downvote_by_q=profileData.user, is_deleted=False).count()  # ADDED
     getVotedOn = Answer.objects.filter(a_vote_ups=profileData.user).count()
     getVotedOn_Down = Answer.objects.filter(a_vote_downs=profileData.user).count()
 
