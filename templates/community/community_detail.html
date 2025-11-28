@@ -322,8 +322,12 @@
         {% if is_member and member_role == 'admin' %}
             <div class="sidebar-card">
                 <h3>Admin Options</h3>
-                <a href="#" style="display: block; padding: 8px; color: #0066cc; text-decoration: none; font-size: 13px;">Edit Community</a>
-                <a href="#" style="display: block; padding: 8px; color: #0066cc; text-decoration: none; font-size: 13px;">Manage Members</a>
+                <a href="{% url 'community:edit_community' slug=community.slug %}" style="display: block; padding: 8px; color: #0066cc; text-decoration: none; font-size: 13px;">
+                    <i class="fas fa-edit" style="margin-right: 8px;"></i>Edit Community
+                </a>
+                <a href="{% url 'community:community_members' slug=community.slug %}" style="display: block; padding: 8px; color: #0066cc; text-decoration: none; font-size: 13px;">
+                    <i class="fas fa-users-cog" style="margin-right: 8px;"></i>Manage Members
+                </a>
             </div>
         {% endif %}
     </div>

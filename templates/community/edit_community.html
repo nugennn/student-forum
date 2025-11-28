@@ -1,0 +1,227 @@
+{% extends 'profile/base.html' %}
+{% load static %}
+
+{% block css %}
+<style>
+    .form-container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+    
+    .form-card {
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        padding: 24px;
+        margin-bottom: 24px;
+    }
+    
+    .form-group {
+        margin-bottom: 20px;
+    }
+    
+    .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+        color: #24292e;
+    }
+    
+    .form-control {
+        width: 100%;
+        padding: 8px 12px;
+        font-size: 14px;
+        line-height: 1.5;
+        color: #24292e;
+        background-color: #fff;
+        background-image: none;
+        border: 1px solid #d1d5da;
+        border-radius: 6px;
+        transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    }
+    
+    .form-control:focus {
+        border-color: #2188ff;
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(3, 102, 214, 0.3);
+    }
+    
+    textarea.form-control {
+        min-height: 200px;
+        resize: vertical;
+    }
+    
+    .btn {
+        display: inline-block;
+        font-weight: 500;
+        text-align: center;
+        white-space: nowrap;
+        vertical-align: middle;
+        user-select: none;
+        border: 1px solid transparent;
+        padding: 8px 16px;
+        font-size: 14px;
+        line-height: 20px;
+        border-radius: 6px;
+        transition: all 0.2s;
+        cursor: pointer;
+    }
+    
+    .btn-primary {
+        color: #fff;
+        background-color: #2b6cb0;
+        border-color: #2b6cb0;
+    }
+    
+    .btn-primary:hover {
+        background-color: #2c5282;
+        border-color: #2b6cb0;
+    }
+    
+    .btn-outline {
+        color: #2b6cb0;
+        background-color: transparent;
+        border: 1px solid #2b6cb0;
+    }
+    
+    .btn-outline:hover {
+        background-color: #ebf8ff;
+    }
+    
+    .preview-image {
+        max-width: 200px;
+        max-height: 200px;
+        margin-top: 10px;
+        border-radius: 6px;
+        border: 1px solid #e1e4e8;
+    }
+    
+    .form-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        margin-top: 20px;
+        padding-top: 20px;
+        border-top: 1px solid #e1e4e8;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <div class="form-card">
+        <h1 style="margin-top: 0; margin-bottom: 24px;">Edit Community</h1>
+        
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <label for="{{ form.name.id_for_label }}">Community Name</label>
+                <input type="text" name="{{ form.name.name }}" id="{{ form.name.id_for_label }}" 
+                       class="form-control" value="{{ form.name.value|default:'' }}" required>
+                {% if form.name.errors %}
+                    <div class="error">{{ form.name.errors }}</div>
+                {% endif %}
+            </div>
+            
+            <div class="form-group">
+                <label for="{{ form.description.id_for_label }}">Description</label>
+                <textarea name="{{ form.description.name }}" id="{{ form.description.id_for_label }}" 
+                          class="form-control" rows="6" required>{{ form.description.value|default:'' }}</textarea>
+                {% if form.description.errors %}
+                    <div class="error">{{ form.description.errors }}</div>
+                {% endif %}
+            </div>
+            
+            <div class="form-group">
+                <label for="{{ form.icon.id_for_label }}">Community Icon</label>
+                {% if community.icon %}
+                    <div>
+                        <img src="{{ community.icon.url }}" alt="Current icon" class="preview-image">
+                    </div>
+                {% endif %}
+                <input type="file" name="{{ form.icon.name }}" id="{{ form.icon.id_for_label }}" 
+                       class="form-control" accept="image/*">
+                <p class="help-text">Square image, at least 200x200 pixels. Will be cropped to a circle.</p>
+                {% if form.icon.errors %}
+                    <div class="error">{{ form.icon.errors }}</div>
+                {% endif %}
+            </div>
+            
+            <div class="form-group">
+                <label for="{{ form.banner.id_for_label }}">Community Banner</label>
+                {% if community.banner %}
+                    <div>
+                        <img src="{{ community.banner.url }}" alt="Current banner" class="preview-image">
+                    </div>
+                {% endif %}
+                <input type="file" name="{{ form.banner.name }}" id="{{ form.banner.id_for_label }}" 
+                       class="form-control" accept="image/*">
+                <p class="help-text">Recommended size: 1200x300 pixels</p>
+                {% if form.banner.errors %}
+                    <div class="error">{{ form.banner.errors }}</div>
+                {% endif %}
+            </div>
+            
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" name="{{ form.is_private.name }}" id="{{ form.is_private.id_for_label }}" 
+                           {% if form.is_private.value %}checked{% endif %}>
+                    Private Community
+                </label>
+                <p class="help-text">Private communities require approval for new members to join.</p>
+                {% if form.is_private.errors %}
+                    <div class="error">{{ form.is_private.errors }}</div>
+                {% endif %}
+            </div>
+            
+            <div class="form-actions">
+                <a href="{% url 'community:community_detail' slug=community.slug %}" class="btn btn-outline">Cancel</a>
+                <button type="submit" class="btn btn-primary">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Preview image before upload
+function readURL(input, previewId) {
+    if (input.files && input.files[0]) {
+        var reader = new FileReader();
+        
+        reader.onload = function(e) {
+            var preview = document.getElementById(previewId);
+            if (!preview) {
+                preview = document.createElement('img');
+                preview.id = previewId;
+                preview.className = 'preview-image';
+                input.parentNode.insertBefore(preview, input.nextSibling);
+            }
+            preview.src = e.target.result;
+        }
+        
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Set up image previews
+    var iconInput = document.getElementById('{{ form.icon.id_for_label }}');
+    if (iconInput) {
+        iconInput.addEventListener('change', function() {
+            readURL(this, 'icon-preview');
+        });
+    }
+    
+    var bannerInput = document.getElementById('{{ form.banner.id_for_label }}');
+    if (bannerInput) {
+        bannerInput.addEventListener('change', function() {
+            readURL(this, 'banner-preview');
+        });
+    }
+});
+</script>
+{% endblock %}

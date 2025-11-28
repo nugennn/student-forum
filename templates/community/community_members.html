@@ -6,6 +6,9 @@
     .page-header {
         margin-bottom: 24px;
         padding: 0 16px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
     }
 
     .page-title {
@@ -48,42 +51,57 @@
         align-items: center;
         padding: 16px 0;
         border-bottom: 1px solid #e1e4e8;
-        gap: 12px;
-    }
-
-    .member-row:last-child {
-        border-bottom: none;
     }
 
     .member-avatar {
         width: 48px;
         height: 48px;
         border-radius: 50%;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        overflow: hidden;
+        background: #f0f2f5;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 18px;
-        font-weight: 600;
-        color: white;
         flex-shrink: 0;
+        margin-right: 16px;
+    }
+
+    .member-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .member-avatar {
+        position: relative;
+        overflow: hidden;
+        border: 2px solid #f0f2f5;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .member-avatar img {
+        transition: transform 0.3s ease;
+    }
+    
+    .member-avatar:hover img {
+        transform: scale(1.05);
     }
 
     .member-info {
         flex: 1;
+        min-width: 0;
     }
 
     .member-name {
-        font-size: 14px;
         font-weight: 600;
-        color: #0066cc;
+        color: #24292e;
         text-decoration: none;
         display: block;
         margin-bottom: 4px;
     }
 
     .member-name:hover {
-        text-decoration: underline;
+        color: #0366d6;
     }
 
     .member-meta {
@@ -94,51 +112,122 @@
     .member-role {
         display: inline-block;
         background: #f6f8fa;
-        color: #0066cc;
-        padding: 4px 8px;
-        border-radius: 3px;
-        font-size: 11px;
-        font-weight: 600;
+        color: #24292e;
+        padding: 2px 6px;
+        border-radius: 4px;
         margin-left: 8px;
+        font-size: 11px;
+        font-weight: 500;
+        text-transform: capitalize;
+    }
+
+    .member-actions {
+        margin-top: 8px;
+        display: flex;
+        gap: 8px;
+    }
+
+    .remove-member-btn {
+        background: #ffebee;
+        color: #d32f2f;
+        border: none;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .remove-member-btn:hover {
+        background: #ffcdd2;
+    }
+
+    .member-count {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-left: 64px; /* Align with member list content */
+        margin-top: 28px;  /* Match the title's top margin */
+    }
+
+    .badge {
+        display: inline-block;
+        padding: 4px 8px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 500;
+    }
+
+    .badge.bg-primary {
+        background-color: #0366d6;
+        color: white;
+        font-weight: 600;
+        padding: 6px 10px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    .badge.bg-secondary {
+        background-color: #6f42c1;
+        color: white;
+        font-weight: 600;
+        padding: 6px 10px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    .member-row:last-child {
+        border-bottom: none;
+    }
+
+    .no-members {
+        text-align: center;
+        padding: 40px 0;
+        color: #6a737d;
     }
 
     .pagination {
         display: flex;
         justify-content: center;
+        padding: 20px 0;
         gap: 8px;
-        margin-top: 24px;
-        padding: 16px 0;
     }
 
-    .pagination a, .pagination span {
-        padding: 8px 12px;
-        border: 1px solid #d1d5da;
-        border-radius: 4px;
+    .pagination a, .pagination .current {
+        padding: 6px 12px;
+        border: 1px solid #e1e4e8;
+        border-radius: 6px;
         text-decoration: none;
-        color: #0066cc;
+        color: #0366d6;
     }
 
     .pagination .current {
-        background: #0066cc;
+        background: #0366d6;
         color: white;
-        border-color: #0066cc;
+        border-color: #0366d6;
     }
 
-    .no-members {
-        text-align: center;
-        padding: 40px 16px;
-        color: #6a737d;
+    .pagination a:hover {
+        background: #f6f8fa;
     }
 </style>
 {% endblock css %}
 
 {% block content %}
 <div class="page-header">
-    <h1 class="page-title">{{ community.name }} - Members</h1>
-    <div class="breadcrumb">
-        <a href="{% url 'community:community_list' %}">Communities</a> /
-        <a href="{% url 'community:community_detail' community.slug %}">{{ community.name }}</a> /
-        Members
+    <div>
+        <h1 class="page-title">{{ community.name }} - Members</h1>
+        <div class="breadcrumb">
+            <a href="{% url 'community:community_list' %}">Communities</a> /
+            <a href="{% url 'community:community_detail' community.slug %}">{{ community.name }}</a> /
+            Members
+        </div>
+    </div>
+    <div class="member-count">
+        <span class="badge bg-primary">{{ page_obj.paginator.count }} members</span>
+        {% if community.is_private %}
+            <span class="badge bg-secondary">Private</span>
+        {% endif %}
     </div>
 </div>
 
@@ -148,48 +237,98 @@
             {% for member in members %}
                 <li class="member-row">
                     <div class="member-avatar">
-                        {{ member.user.username|first|upper }}
+                        {% if member.user.profile %}
+                            {% if member.user.profile.profile_photo %}
+                                <img src="{{ member.user.profile.profile_photo.url }}" 
+                                     alt="{{ member.user.username }}'s profile picture"
+                                     style="width: 100%; height: 100%; object-fit: cover;"
+                                     onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'initials\' style=\'display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; font-weight: 600; font-size: 18px;\'>{{ member.user.first_name|first|default:member.user.username|first|upper }}</div>'">
+                            {% else %}
+                                <div class="initials" style="display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; font-weight: 600; font-size: 18px;">
+                                    {{ member.user.first_name|first|default:member.user.username|first|upper }}
+                                </div>
+                            {% endif %}
+                        {% else %}
+                            <div class="initials" style="display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; font-weight: 600; font-size: 18px;">
+                                {{ member.user.first_name|first|default:member.user.username|first|upper }}
+                            </div>
+                        {% endif %}
                     </div>
                     <div class="member-info">
-                        <a href="{% url 'profile:userProfile' member.user.id member.user.username %}" class="member-name">
-                            {{ member.user.username }}
+                        <a href="{% url 'profile:activityPageTabProfile' member.user.id member.user.username %}" 
+                           class="member-name">
+                            {% if member.user.first_name and member.user.last_name %}
+                                {{ member.user.get_full_name }}
+                            {% else %}
+                                {{ member.user.username }}
+                            {% endif %}
                         </a>
                         <div class="member-meta">
-                            Joined {{ member.joined_at|date:"M d, Y" }}
+                            <span>Joined {{ member.joined_at|date:"M d, Y" }}</span>
                             {% if member.role != 'member' %}
                                 <span class="member-role">{{ member.role|title }}</span>
                             {% endif %}
+                            {% if member.user == community.creator %}
+                                <span class="member-role">Creator</span>
+                            {% endif %}
                         </div>
+                        {% if is_admin_or_creator and member.user != request.user and member.user != community.creator %}
+                            <div class="member-actions">
+                                <form method="post" 
+                                      action="{% url 'community:remove_member' slug=community.slug user_id=member.user.id %}" 
+                                      class="d-inline">
+                                    {% csrf_token %}
+                                    <button type="submit" 
+                                            class="remove-member-btn"
+                                            onclick="return confirm('Are you sure you want to remove this member?')">
+                                        <i class="fas fa-user-minus"></i> Remove
+                                    </button>
+                                </form>
+                                {% if member.role != 'admin' and is_admin_or_creator %}
+                                    <form method="post" 
+                                          action="{% url 'community:change_member_role' slug=community.slug user_id=member.user.id %}"
+                                          class="d-inline">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="role" value="admin">
+                                        <button type="submit" 
+                                                class="btn btn-sm btn-outline-primary"
+                                                onclick="return confirm('Make this member an admin?')">
+                                            Make Admin
+                                        </button>
+                                    </form>
+                                {% endif %}
+                            </div>
+                        {% endif %}
                     </div>
                 </li>
             {% endfor %}
         </ul>
-    </div>
 
-    {% if page_obj.has_other_pages %}
-        <div class="pagination">
-            {% if page_obj.has_previous %}
-                <a href="?page=1">First</a>
-                <a href="?page={{ page_obj.previous_page_number }}">Previous</a>
-            {% endif %}
-
-            {% for num in page_obj.paginator.page_range %}
-                {% if page_obj.number == num %}
-                    <span class="current">{{ num }}</span>
-                {% else %}
-                    <a href="?page={{ num }}">{{ num }}</a>
+        {% if page_obj.has_other_pages %}
+            <div class="pagination">
+                {% if page_obj.has_previous %}
+                    <a href="?page=1">First</a>
+                    <a href="?page={{ page_obj.previous_page_number }}">Previous</a>
                 {% endif %}
-            {% endfor %}
 
-            {% if page_obj.has_next %}
-                <a href="?page={{ page_obj.next_page_number }}">Next</a>
-                <a href="?page={{ page_obj.paginator.num_pages }}">Last</a>
-            {% endif %}
-        </div>
-    {% endif %}
+                {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                        <span class="current">{{ num }}</span>
+                    {% else %}
+                        <a href="?page={{ num }}">{{ num }}</a>
+                    {% endif %}
+                {% endfor %}
+
+                {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}">Next</a>
+                    <a href="?page={{ page_obj.paginator.num_pages }}">Last</a>
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
 {% else %}
     <div class="no-members">
-        <p>No members in this community yet.</p>
+        <p>No members found in this community.</p>
     </div>
 {% endif %}
 {% endblock content %}

@@ -291,11 +291,39 @@
     /* Communities Grid */
     .communities-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        grid-template-columns: repeat(3, 1fr);
         gap: 24px;
-        padding: 0 16px;
+        max-width: 1200px;
         margin: 0 auto;
-        max-width: 1400px;
+        padding: 0 24px;
+    }
+    
+    /* First two cards in the first row */
+    .communities-grid .community-card:nth-child(1),
+    .communities-grid .community-card:nth-child(2) {
+        grid-column: span 1.5;
+    }
+    
+    /* Reset for mobile */
+    @media (max-width: 768px) {
+        .communities-grid {
+            grid-template-columns: 1fr;
+        }
+        .communities-grid .community-card:nth-child(1),
+        .communities-grid .community-card:nth-child(2) {
+            grid-column: auto;
+        }
+    }
+
+    @media (min-width: 769px) and (max-width: 1024px) {
+       .communities-grid {
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+        .communities-grid .community-card:nth-child(1),
+        .communities-grid .community-card:nth-child(2) {
+            grid-column: span 1;
+        }
     }
 
     /* No Communities State */
