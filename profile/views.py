@@ -47,6 +47,51 @@ Also replaced is_ajax method with this is_ajax function.
 def is_ajax(request):
     return request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest'
 
+@login_required(login_url='users:login_request')
+def setup_profile_first_time(request):
+    """View for first-time profile setup after password change"""
+    profileData = request.user.profile
+    
+    # This page should only be accessible right after password change
+    # If user already completed setup, redirect to home
+    # (This check is optional - users can revisit this page if they want)
+    
+    if request.method == 'POST':
+        # Handle profile photo upload
+        if 'profile_photo' in request.FILES:
+            profileData.profile_photo = request.FILES['profile_photo']
+        
+        # Update other fields
+        profileData.title = request.POST.get('title', '')
+        profileData.location = request.POST.get('location', '')
+        profileData.about_me = request.POST.get('about_me', '')
+        profileData.website_link = request.POST.get('website_link', '')
+        profileData.github_link = request.POST.get('github_link', '')
+        profileData.twitter_link = request.POST.get('twitter_link', '')
+        
+        profileData.save()
+        
+        # Award Autobiographer badge if about_me is filled
+        if profileData.about_me and profileData.about_me.strip():
+            TagBadge.objects.get_or_create(
+                awarded_to_user=request.user,
+                badge_type="Bronze",
+                tag_name="Autobiographer",
+                bade_position="BADGE"
+            )
+            PrivRepNotification.objects.get_or_create(
+                for_user=request.user,
+                type_of_PrivNotify="BADGE_EARNED"
+            )
+        
+        messages.success(request, "Profile setup completed! Welcome to KHEC Forum.")
+        return redirect('profile:home')
+    
+    context = {
+        'profileData': profileData,
+    }
+    return render(request, 'profile/EditProfile_FirstTime.html', context)
+
 def Ajax_searchTag(request):
     from tagbadge.tag_descriptions import get_tag_metadata
     from django.db.models import Count

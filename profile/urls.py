@@ -8,6 +8,8 @@ app_name = 'profile'
 
 urlpatterns = [
 
+	path('setup-profile/', views.setup_profile_first_time, name='setup_profile_first_time'),
+
 	path('', views.home, name='home'),
 
 	path('activityPageTabProfile/<int:user_id>/<str:username>/', views.activityPageTabProfile, name='activityPageTabProfile'),

@@ -102,7 +102,7 @@ def force_password_change(request):
     """View to force password change on first login"""
     # Check if password change is required
     if not request.user.profile.password_change_required:
-        return redirect('profile:home')
+        return redirect('profile:setup_profile_first_time')
     
     if request.method == 'POST':
         form = ForcePasswordChangeForm(request.user, request.POST)
@@ -113,8 +113,8 @@ def force_password_change(request):
             user.profile.save()
             # Keep user logged in after password change
             update_session_auth_hash(request, user)
-            messages.success(request, "Password changed successfully. You can now access the forum.")
-            return redirect('profile:home')
+            messages.success(request, "Password changed successfully. Now let's complete your profile.")
+            return redirect('profile:setup_profile_first_time')
     else:
         form = ForcePasswordChangeForm(request.user)
     

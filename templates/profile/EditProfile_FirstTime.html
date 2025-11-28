@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Complete Your Profile - KHEC Forum</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            padding: 20px;
+        }
+
+        .setup-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            max-width: 600px;
+            width: 100%;
+            padding: 40px;
+        }
+
+        .setup-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .setup-header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            color: #202124;
+            margin-bottom: 10px;
+        }
+
+        .setup-header p {
+            color: #667eea;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .progress-bar-custom {
+            height: 4px;
+            background: #e0e0e0;
+            border-radius: 2px;
+            margin-bottom: 30px;
+            overflow: hidden;
+        }
+
+        .progress-bar-custom .progress {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            width: 100%;
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            color: #202124;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: inherit;
+            transition: all 0.2s ease;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .profile-photo-section {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 2px dashed #e0e0e0;
+            transition: all 0.2s ease;
+        }
+
+        .profile-photo-section:hover {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.05);
+        }
+
+        .profile-photo-preview {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            margin: 0 auto 15px;
+            object-fit: cover;
+            border: 3px solid #667eea;
+        }
+
+        .profile-photo-input {
+            display: none;
+        }
+
+        .photo-upload-btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.2s ease;
+        }
+
+        .photo-upload-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 30px;
+        }
+
+        .btn-primary-custom {
+            flex: 1;
+            padding: 14px 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-primary-custom:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-secondary-custom {
+            flex: 1;
+            padding: 14px 24px;
+            background: #f0f0f0;
+            color: #202124;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-secondary-custom:hover {
+            background: #e8e8e8;
+        }
+
+        .skip-text {
+            text-align: center;
+            margin-top: 15px;
+            font-size: 13px;
+            color: #667eea;
+        }
+
+        .skip-text a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .skip-text a:hover {
+            text-decoration: underline;
+        }
+
+        .form-hint {
+            font-size: 12px;
+            color: #999;
+            margin-top: 4px;
+        }
+
+        .error-message {
+            color: #d32f2f;
+            font-size: 12px;
+            margin-top: 4px;
+        }
+
+        @media (max-width: 600px) {
+            .setup-container {
+                padding: 24px;
+            }
+
+            .setup-header h1 {
+                font-size: 24px;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="setup-container">
+        <div class="setup-header">
+            <h1>Welcome to KHEC Forum! 👋</h1>
+            <p>Let's complete your profile</p>
+        </div>
+
+        <div class="progress-bar-custom">
+            <div class="progress"></div>
+        </div>
+
+        <form method="POST" enctype="multipart/form-data" id="profileForm">
+            {% csrf_token %}
+
+            <!-- Profile Photo -->
+            <div class="profile-photo-section">
+                <img id="photoPreview" src="{{ request.user.profile.profile_photo.url }}" alt="Profile Photo" class="profile-photo-preview">
+                <div>
+                    <label for="profilePhotoInput" class="photo-upload-btn">
+                        <i class="fas fa-camera"></i> Upload Photo
+                    </label>
+                    <input type="file" id="profilePhotoInput" name="profile_photo" class="profile-photo-input" accept="image/*">
+                </div>
+                <p class="form-hint">JPG, PNG or GIF (Max 5MB)</p>
+            </div>
+
+            <!-- Full Name (Read-only) -->
+            <div class="form-group">
+                <label>Full Name</label>
+                <input type="text" value="{% if request.user.first_name and request.user.last_name %}{{ request.user.first_name }} {{ request.user.last_name }}{% else %}{{ request.user.get_full_name }}{% endif %}" readonly style="background: #f5f5f5; cursor: not-allowed;">
+                <p class="form-hint">Your registered full name</p>
+            </div>
+
+            <!-- Title/Position -->
+            <div class="form-group">
+                <label for="title">Title / Position</label>
+                <input type="text" id="title" name="title" value="{{ profileData.title }}" placeholder="e.g., Student, Developer, Designer">
+                <p class="form-hint">What's your role or position?</p>
+            </div>
+
+            <!-- Location -->
+            <div class="form-group">
+                <label for="location">Location</label>
+                <input type="text" id="location" name="location" value="{{ profileData.location }}" placeholder="e.g., Kathmandu, Nepal">
+                <p class="form-hint">Where are you based?</p>
+            </div>
+
+            <!-- About Me -->
+            <div class="form-group">
+                <label for="about_me">About Me</label>
+                <textarea id="about_me" name="about_me" placeholder="Tell us about yourself... (Min 10 characters)">{{ profileData.about_me }}</textarea>
+                <p class="form-hint">Share your interests, skills, and experience</p>
+            </div>
+
+            <!-- Website Link -->
+            <div class="form-group">
+                <label for="website_link">Website / Portfolio</label>
+                <input type="url" id="website_link" name="website_link" value="{{ profileData.website_link }}" placeholder="https://example.com">
+                <p class="form-hint">Optional: Link to your personal website</p>
+            </div>
+
+            <!-- GitHub Link -->
+            <div class="form-group">
+                <label for="github_link">GitHub Profile</label>
+                <input type="url" id="github_link" name="github_link" value="{{ profileData.github_link }}" placeholder="https://github.com/username">
+                <p class="form-hint">Optional: Link to your GitHub profile</p>
+            </div>
+
+            <!-- Twitter Link -->
+            <div class="form-group">
+                <label for="twitter_link">Twitter / X</label>
+                <input type="url" id="twitter_link" name="twitter_link" value="{{ profileData.twitter_link }}" placeholder="https://twitter.com/username">
+                <p class="form-hint">Optional: Link to your Twitter profile</p>
+            </div>
+
+            <!-- Buttons -->
+            <div class="button-group">
+                <button type="submit" class="btn-primary-custom">
+                    <i class="fas fa-check"></i> Complete Setup
+                </button>
+                <button type="button" class="btn-secondary-custom" onclick="skipSetup()">
+                    <i class="fas fa-arrow-right"></i> Skip for Now
+                </button>
+            </div>
+
+            <div class="skip-text">
+                You can edit your profile anytime from your profile settings
+            </div>
+        </form>
+    </div>
+
+    <script>
+        // Photo preview
+        document.getElementById('profilePhotoInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    document.getElementById('photoPreview').src = event.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Skip setup and go to homepage
+        function skipSetup() {
+            window.location.href = '/';
+        }
+
+        // Form validation
+        document.getElementById('profileForm').addEventListener('submit', function(e) {
+            const aboutMe = document.getElementById('about_me').value.trim();
+            
+            // Optional: Require at least 10 characters in about_me if filled
+            if (aboutMe && aboutMe.length < 10) {
+                e.preventDefault();
+                alert('About Me must be at least 10 characters if provided.');
+                return false;
+            }
+        });
+    </script>
+</body>
+</html>
