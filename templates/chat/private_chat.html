@@ -242,6 +242,40 @@
     .message-group.own > div {
         align-items: flex-end;
     }
+
+    /* Group chat sender info */
+    .message-sender-info {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 4px;
+        padding-left: 4px;
+    }
+
+    .message-group.own .message-sender-info {
+        display: none;
+    }
+
+    .message-sender-avatar {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 1px solid #e0e0e0;
+    }
+
+    .message-sender-name {
+        font-size: 12px;
+        font-weight: 600;
+        color: #667eea;
+        cursor: pointer;
+        text-decoration: none;
+    }
+
+    .message-sender-name:hover {
+        text-decoration: underline;
+        color: #764ba2;
+    }
     
     .message-bubble {
         padding: 10px 14px;
@@ -507,6 +541,10 @@ document.addEventListener('DOMContentLoaded', function() {
                         <a href="{% url 'profile:activityPageTabProfile' other_user.id other_user.username %}" class="btn btn-sm btn-light">
                             <i class="fas fa-user"></i> Profile
                         </a>
+                    {% elif chat_type == 'group' %}
+                        <button class="btn btn-sm btn-light" onclick="showGroupInfo()">
+                            <i class="fas fa-info-circle"></i> Group Info
+                        </button>
                     {% endif %}
                 </div>
 
@@ -515,6 +553,25 @@ document.addEventListener('DOMContentLoaded', function() {
                     {% for message in messages %}
                         <div class="message-group {% if message.sender == request.user %}own{% endif %}">
                             <div>
+                                {% if chat_type == 'group' and message.sender != request.user %}
+                                    <div class="message-sender-info">
+                                        {% if message.sender.profile.profile_photo %}
+                                            <img src="{{ message.sender.profile.profile_photo.url }}" 
+                                                 alt="{{ message.sender.username }}" 
+                                                 class="message-sender-avatar"
+                                                 onerror="this.src='https://ui-avatars.com/api/?name={{ message.sender.username }}&background=667eea&color=fff&size=24'">
+                                        {% else %}
+                                            <img src="https://ui-avatars.com/api/?name={{ message.sender.username }}&background=667eea&color=fff&size=24" 
+                                                 alt="{{ message.sender.username }}" 
+                                                 class="message-sender-avatar">
+                                        {% endif %}
+                                        <a href="{% url 'profile:activityPageTabProfile' message.sender.id message.sender.username %}" 
+                                           class="message-sender-name">
+                                            {{ message.sender.get_full_name|default:message.sender.username }}
+                                        </a>
+                                    </div>
+                                {% endif %}
+
                                 {% if message.message_type == 'text' %}
                                     <div class="message-bubble {% if message.sender == request.user %}own{% else %}other{% endif %}"
                                          data-created-at="{{ message.created_at|date:'c' }}"
@@ -705,6 +762,7 @@ function addMessageToChat(content, type, isOwn) {
     if (!container) return;
     
     const messageGroup = document.createElement('div');
+   
     messageGroup.className = 'message-group' + (isOwn ? ' own' : '');
     const messageDiv = document.createElement('div');
 
