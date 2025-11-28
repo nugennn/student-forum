@@ -278,16 +278,35 @@
         border-radius: 18px 18px 18px 4px;
     }
     
-    .message-time {
+    /* NEW: center-aligned timestamp divider */
+    .message-time-divider {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 8px 0;
         font-size: 11px;
-        opacity: 0.65;
-        margin-top: 4px;
-        text-align: right;
-        color: #888;
+        color: #adb5bd;
+    }
+    .message-time-divider::before,
+    .message-time-divider::after {
+        content: "";
+        flex: 1;
+        height: 1px;
+        background: rgba(0, 0, 0, 0.06);
+        margin: 0 8px;
+    }
+    .message-time-divider span {
+        white-space: nowrap;
     }
     
-    .message-group.own .message-time {
-        color: rgba(255, 255, 255, 0.75);
+    /* old per-bubble time hidden (we keep element but empty) */
+    .message-time {
+        font-size: 11px;
+        color: #adb5bd;
+        margin-top: 4px;
+        text-align: right;
+        display: none;
     }
     
     .empty-chat {
@@ -484,20 +503,30 @@ document.addEventListener('DOMContentLoaded', function() {
                         <div class="message-group {% if message.sender == request.user %}own{% endif %}">
                             <div>
                                 {% if message.message_type == 'text' %}
-                                    <div class="message-bubble {% if message.sender == request.user %}own{% else %}other{% endif %}">
+                                    <div class="message-bubble {% if message.sender == request.user %}own{% else %}other{% endif %}"
+                                         data-created-at="{{ message.created_at|date:'c' }}"
+                                         data-sender="{% if message.sender == request.user %}own{% else %}other{% endif %}">
                                         {{ message.content }}
                                     </div>
                                 {% elif message.message_type == 'image' %}
-                                    <div class="message-bubble {% if message.sender == request.user %}own{% else %}other{% endif %}" style="padding: 0; border-radius: 12px; overflow: hidden;">
+                                    <div class="message-bubble {% if message.sender == request.user %}own{% else %}other{% endif %}"
+                                         style="padding: 0; border-radius: 12px; overflow: hidden;"
+                                         data-created-at="{{ message.created_at|date:'c' }}"
+                                         data-sender="{% if message.sender == request.user %}own{% else %}other{% endif %}">
                                         <img src="{{ message.image.url }}" alt="Image" style="max-width: 300px; display: block;">
                                     </div>
                                 {% elif message.message_type == 'file' %}
-                                    <div class="message-bubble {% if message.sender == request.user %}own{% else %}other{% endif %}">
+                                    <div class="message-bubble {% if message.sender == request.user %}own{% else %}other{% endif %}"
+                                         data-created-at="{{ message.created_at|date:'c' }}"
+                                         data-sender="{% if message.sender == request.user %}own{% else %}other{% endif %}">
                                         <i class="fas fa-file"></i>
                                         <a href="{{ message.file.url }}" download style="color: inherit; text-decoration: underline;">{{ message.content }}</a>
                                     </div>
                                 {% elif message.message_type == 'link' %}
-                                    <div class="message-bubble {% if message.sender == request.user %}own{% else %}other{% endif %}" style="padding: 0; border-radius: 12px; overflow: hidden; max-width: 400px;">
+                                    <div class="message-bubble {% if message.sender == request.user %}own{% else %}other{% endif %}"
+                                         style="padding: 0; border-radius: 12px; overflow: hidden; max-width: 400px;"
+                                         data-created-at="{{ message.created_at|date:'c' }}"
+                                         data-sender="{% if message.sender == request.user %}own{% else %}other{% endif %}">
                                         {% if message.link_image %}
                                             <img src="{{ message.link_image }}" alt="Link preview" style="width: 100%; display: block;">
                                         {% endif %}
@@ -509,7 +538,6 @@ document.addEventListener('DOMContentLoaded', function() {
                                     </div>
                                 {% endif %}
                                 <div class="message-time">
-                                    {{ message.created_at|date:"H:i" }}
                                     {% if message.is_edited %}<em>(edited)</em>{% endif %}
                                 </div>
                             </div>
@@ -547,19 +575,19 @@ document.addEventListener('DOMContentLoaded', function() {
                     <div id="emojiPicker" class="emoji-picker" style="display: none;">
                         <div class="emoji-grid">
                             <span class="emoji" onclick="insertEmoji('😀')">😀</span>
-                            <span class="emoji" onclick="insertEmoji('�')">😃</span>
+                            <span class="emoji" onclick="insertEmoji('😃')">😃</span>
                             <span class="emoji" onclick="insertEmoji('😄')">😄</span>
                             <span class="emoji" onclick="insertEmoji('😁')">😁</span>
                             <span class="emoji" onclick="insertEmoji('😆')">😆</span>
-                            <span class="emoji" onclick="insertEmoji('�')">😅</span>
-                            <span class="emoji" onclick="insertEmoji('�')">🤣</span>
+                            <span class="emoji" onclick="insertEmoji('😅')">😅</span>
+                            <span class="emoji" onclick="insertEmoji('🤣')">🤣</span>
                             <span class="emoji" onclick="insertEmoji('😂')">😂</span>
-                            <span class="emoji" onclick="insertEmoji('�')">🙂</span>
+                            <span class="emoji" onclick="insertEmoji('🙂')">🙂</span>
                             <span class="emoji" onclick="insertEmoji('🙃')">🙃</span>
-                            <span class="emoji" onclick="insertEmoji('�')">😉</span>
+                            <span class="emoji" onclick="insertEmoji('😉')">😉</span>
                             <span class="emoji" onclick="insertEmoji('😊')">😊</span>
-                            <span class="emoji" onclick="insertEmoji('�')">😇</span>
-                            <span class="emoji" onclick="insertEmoji('�')">🥰</span>
+                            <span class="emoji" onclick="insertEmoji('😇')">😇</span>
+                            <span class="emoji" onclick="insertEmoji('🥰')">🥰</span>
                             <span class="emoji" onclick="insertEmoji('😍')">😍</span>
                             <span class="emoji" onclick="insertEmoji('🤩')">🤩</span>
                             <span class="emoji" onclick="insertEmoji('👍')">👍</span>
@@ -639,19 +667,22 @@ function addMessageToChat(content, type, isOwn) {
     const messageDiv = document.createElement('div');
     
     let bubbleHTML = '';
+    const now = new Date();
+    const iso = now.toISOString();
+
     if (type === 'text') {
-        bubbleHTML = `<div class="message-bubble ${isOwn ? 'own' : 'other'}">${escapeHtml(content)}</div>`;
+        bubbleHTML = `<div class="message-bubble ${isOwn ? 'own' : 'other'}"
+                            data-created-at="${iso}"
+                            data-sender="${isOwn ? 'own' : 'other'}">${escapeHtml(content)}</div>`;
     }
     
-    const now = new Date();
-    const time = now.getHours().toString().padStart(2, '0') + ':' + 
-                 now.getMinutes().toString().padStart(2, '0');
-    
-    messageDiv.innerHTML = bubbleHTML + `<div class="message-time">${time}</div>`;
+    messageDiv.innerHTML = bubbleHTML + `<div class="message-time"></div>`;
     messageGroup.appendChild(messageDiv);
     
     container.appendChild(messageGroup);
     container.scrollTop = container.scrollHeight;
+
+    applyTimestampGrouping();
 }
 
 function escapeHtml(text) {
@@ -660,7 +691,7 @@ function escapeHtml(text) {
         '<': '&lt;',
         '>': '&gt;',
         '"': '&quot;',
-        "'": '&#039;'
+        "'": '&#39;'
     };
     return text.replace(/[&<>"']/g, m => map[m]);
 }
@@ -754,10 +785,11 @@ function sendLink() {
     .catch(error => console.error('Error:', error));
 }
 
-// Auto-scroll to bottom
+// Auto-scroll + apply timestamp grouping on load
 document.addEventListener('DOMContentLoaded', function() {
     const container = document.getElementById('messagesContainer');
     container.scrollTop = container.scrollHeight;
+    applyTimestampGrouping();
 });
 
 // Emoji Picker Functions
@@ -777,7 +809,7 @@ function insertEmoji(emoji) {
 document.addEventListener('click', function(event) {
     const picker = document.getElementById('emojiPicker');
     const emojiBtn = event.target.closest('[onclick*="toggleEmojiPicker"]');
-    if (!emojiBtn && !picker.contains(event.target)) {
+    if (!emojiBtn && picker && !picker.contains(event.target)) {
         picker.style.display = 'none';
     }
 });
@@ -789,11 +821,9 @@ function switchChat(event, userId, chatType) {
     const container = document.querySelector('.modern-chat-container');
     if (!container) return;
     
-    // Add fade out effect
     container.style.opacity = '0.5';
     container.style.transition = 'opacity 0.3s ease';
     
-    // Fetch new chat data
     fetch(`/chat/${chatType}/${userId}/`, {
         method: 'GET',
         headers: {
@@ -802,35 +832,30 @@ function switchChat(event, userId, chatType) {
     })
     .then(response => response.text())
     .then(html => {
-        // Parse the response to extract chat content
         const parser = new DOMParser();
         const doc = parser.parseFromString(html, 'text/html');
         
-        // Update header
         const newHeader = doc.querySelector('.chat-header-modern');
         const oldHeader = document.querySelector('.chat-header-modern');
         if (newHeader && oldHeader) {
             oldHeader.innerHTML = newHeader.innerHTML;
         }
         
-        // Update messages
         const newMessages = doc.querySelector('.messages-container');
         const oldMessages = document.querySelector('.messages-container');
         if (newMessages && oldMessages) {
             oldMessages.innerHTML = newMessages.innerHTML;
             oldMessages.scrollTop = oldMessages.scrollHeight;
+            applyTimestampGrouping();
         }
         
-        // Update active sidebar item
         document.querySelectorAll('.chat-sidebar-item').forEach(item => {
             item.classList.remove('active');
         });
         event.target.closest('.chat-sidebar-item').classList.add('active');
         
-        // Update global chat ID
         window.chatId = userId;
         
-        // Fade in effect
         setTimeout(() => {
             container.style.opacity = '1';
         }, 100);
@@ -838,6 +863,64 @@ function switchChat(event, userId, chatType) {
     .catch(error => {
         console.error('Error switching chat:', error);
         container.style.opacity = '1';
+    });
+}
+
+/* Messenger-style center timestamp divider logic */
+function applyTimestampGrouping() {
+    const container = document.getElementById('messagesContainer');
+    if (!container) return;
+
+    // Remove old dividers
+    container.querySelectorAll('.message-time-divider').forEach(div => div.remove());
+
+    const groups = Array.from(container.querySelectorAll('.message-group'));
+    if (!groups.length) return;
+
+    const GAP_MINUTES = 5;
+
+    function parseTs(bubble) {
+        const ts = bubble.getAttribute('data-created-at');
+        return ts ? new Date(ts) : null;
+    }
+
+    function diffMinutes(a, b) {
+        return Math.abs(a - b) / 60000;
+    }
+
+    let prevTime = null;
+    let prevSender = null;
+
+    groups.forEach(group => {
+        const bubble = group.querySelector('.message-bubble');
+        if (!bubble) return;
+
+        const currentTime = parseTs(bubble);
+        const currentSender = bubble.getAttribute('data-sender');
+
+        if (!currentTime) return;
+
+        let show = false;
+
+        if (!prevTime) {
+            show = true;
+        } else {
+            const minutes = diffMinutes(currentTime, prevTime);
+            if (minutes >= GAP_MINUTES || currentTime.getHours() !== prevTime.getHours() || currentSender !== prevSender) {
+                show = true;
+            }
+        }
+
+        if (show) {
+            const divider = document.createElement('div');
+            divider.className = 'message-time-divider';
+            const options = { hour: 'numeric', minute: '2-digit' };
+            divider.innerHTML = `<span>${currentTime.toLocaleTimeString([], options)}</span>`;
+            container.insertBefore(divider, group);
+        }
+
+        prevTime = currentTime;
+        prevSender = currentSender;
     });
 }
 </script>
