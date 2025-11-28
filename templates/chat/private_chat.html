@@ -88,10 +88,6 @@
         line-height: 1.4;
     }
     
-    .chat-sidebar-item .chat-name:hover::after {
-        display: none;
-    }
-    
     .chat-sidebar-header {
         padding: 12px 12px 8px 12px;
         font-size: 10px;
@@ -107,7 +103,6 @@
         margin-top: 0;
     }
     
-    /* Top Navigation Icons */
     .chat-sidebar-nav {
         display: flex;
         gap: 8px;
@@ -144,7 +139,6 @@
         font-size: 18px;
     }
     
-    /* Modern Chat Container */
     .modern-chat-container {
         height: 85vh;
         display: flex;
@@ -278,7 +272,6 @@
         border-radius: 18px 18px 18px 4px;
     }
     
-    /* NEW: center-aligned timestamp divider */
     .message-time-divider {
         width: 100%;
         display: flex;
@@ -300,7 +293,6 @@
         white-space: nowrap;
     }
     
-    /* old per-bubble time hidden (we keep element but empty) */
     .message-time {
         font-size: 11px;
         color: #adb5bd;
@@ -385,7 +377,6 @@
         transform: translateY(-2px);
     }
     
-    /* Emoji Picker Styles */
     .emoji-picker {
         position: absolute;
         bottom: 60px;
@@ -405,11 +396,6 @@
         grid-template-columns: repeat(8, 1fr);
         gap: 6px;
         width: 280px;
-    }
-    
-    .emoji-group {
-        position: relative;
-        display: inline-block;
     }
     
     .emoji {
@@ -436,7 +422,6 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    /* ... */
     const sidebar = document.getElementById('left-sidebar');
     if (sidebar) {
         const navLinks = sidebar.querySelector('.nav-links');
@@ -461,20 +446,38 @@ document.addEventListener('DOMContentLoaded', function() {
                         <div class="chat-sidebar-header">Recent Chats</div>
                         
                         {% for chat in recent_chats %}
-                        <a href="{% url 'chat:private_chat' chat.user_id %}" class="chat-sidebar-item {% if chat.is_current %}active{% endif %}" data-user-id="{{ chat.user_id }}" onclick="switchChat(event, {{ chat.user_id }}, 'private')">
-                            {% if chat.photo %}
-                                <img src="{{ chat.photo }}" alt="{{ chat.name }}">
-                            {% else %}
-                                <img src="https://ui-avatars.com/api/?name={{ chat.name }}&background=667eea&color=fff" alt="{{ chat.name }}">
+                            {% if chat.type == 'private' %}
+                            <a href="#" class="chat-sidebar-item {% if chat.is_current %}active{% endif %}" data-chat-type="private" data-chat-id="{{ chat.user_id }}" onclick="switchChat(event, {{ chat.user_id }}, 'private')">
+                                {% if chat.photo %}
+                                    <img src="{{ chat.photo }}" alt="{{ chat.name }}">
+                                {% else %}
+                                    <img src="https://ui-avatars.com/api/?name={{ chat.name }}&background=667eea&color=fff" alt="{{ chat.name }}">
+                                {% endif %}
+                                <span class="chat-name">{{ chat.name }}</span>
+                            </a>
+                            {% elif chat.type == 'group' %}
+                            <a href="#" class="chat-sidebar-item {% if chat.is_current %}active{% endif %}" data-chat-type="group" data-chat-id="{{ chat.group_id }}" onclick="switchChat(event, {{ chat.group_id }}, 'group')">
+                                {% if chat.photo %}
+                                    <img src="{{ chat.photo }}" alt="{{ chat.name }}">
+                                {% else %}
+                                    <img src="https://ui-avatars.com/api/?name={{ chat.name }}&background=667eea&color=fff" alt="{{ chat.name }}">
+                                {% endif %}
+                                <span class="chat-name">{{ chat.name }}</span>
+                            </a>
                             {% endif %}
-                            <span class="chat-name">{{ chat.name }}</span>
-                        </a>
                         {% endfor %}
                     </div>
                 </div>
             `;
         }
     }
+
+    // initial scroll + timestamps
+    const container = document.getElementById('messagesContainer');
+    if (container) {
+        container.scrollTop = container.scrollHeight;
+    }
+    applyTimestampGrouping();
 });
 </script>
 
@@ -485,16 +488,26 @@ document.addEventListener('DOMContentLoaded', function() {
                 <!-- Chat Header -->
                 <div class="chat-header-modern">
                     <div class="chat-header-info">
-                        <img src="{{ other_user.profile.profile_photo.url }}" alt="{{ other_user.username }}" 
-                             onerror="this.src='https://ui-avatars.com/api/?name={{ other_user.username }}&background=667eea&color=fff'">
+                        {% if chat_photo %}
+                            <img src="{{ chat_photo }}" alt="{{ chat_name }}" 
+                                 onerror="this.src='https://ui-avatars.com/api/?name={{ chat_name }}&background=667eea&color=fff'">
+                        {% else %}
+                            <img src="https://ui-avatars.com/api/?name={{ chat_name }}&background=667eea&color=fff" alt="{{ chat_name }}">
+                        {% endif %}
                         <div class="chat-header-text">
-                            <h6>{{ other_user.get_full_name|default:other_user.username }}</h6>
-                            <small>@{{ other_user.username }}</small>
+                            <h6>{{ chat_name }}</h6>
+                            {% if chat_type == 'private' %}
+                                <small>@{{ other_user.username }}</small>
+                            {% elif chat_type == 'group' %}
+                                <small>{{ members.count }} members</small>
+                            {% endif %}
                         </div>
                     </div>
-                    <a href="{% url 'profile:activityPageTabProfile' other_user.id other_user.username %}" class="btn btn-sm btn-light">
-                        <i class="fas fa-user"></i> Profile
-                    </a>
+                    {% if chat_type == 'private' %}
+                        <a href="{% url 'profile:activityPageTabProfile' other_user.id other_user.username %}" class="btn btn-sm btn-light">
+                            <i class="fas fa-user"></i> Profile
+                        </a>
+                    {% endif %}
                 </div>
 
                 <!-- Messages Container -->
@@ -614,13 +627,44 @@ document.addEventListener('DOMContentLoaded', function() {
     </div>
 </div>
 
-<!-- Hidden file inputs -->
+{% if chat_type == 'group' %}
+<div class="modal fade" id="groupInfoModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Group Info</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <h6>Members ({{ members.count }})</h6>
+                <div class="list-group">
+                    {% for member in members %}
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>{{ member.get_full_name|default:member.username }}</strong>
+                                <br>
+                                <small class="text-muted">@{{ member.username }}</small>
+                            </div>
+                            {% if group.creator == request.user and member != group.creator %}
+                                <button type="button" class="btn btn-sm btn-danger" onclick="removeMember({{ member.id }})">
+                                    Remove
+                                </button>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
 <input type="file" id="imageInput" accept="image/*" style="display: none;">
 <input type="file" id="fileInput" style="display: none;">
 
 <script>
-const chatId = {{ chat.id }};
-const chatType = 'private';
+const chatId = {% if chat_type == 'private' %}{{ chat.id }}{% elif chat_type == 'group' %}{{ group.id }}{% endif %};
+const chatType = '{{ chat_type }}';
 
 document.getElementById('messageForm').addEventListener('submit', function(e) {
     e.preventDefault();
@@ -630,10 +674,8 @@ document.getElementById('messageForm').addEventListener('submit', function(e) {
 function sendMessage() {
     const input = document.getElementById('messageInput');
     const content = input.value.trim();
-
     if (!content) return;
 
-    // Add message to UI immediately
     addMessageToChat(content, 'text', true);
     input.value = '';
 
@@ -660,25 +702,24 @@ function sendMessage() {
 
 function addMessageToChat(content, type, isOwn) {
     const container = document.getElementById('messagesContainer');
+    if (!container) return;
     
     const messageGroup = document.createElement('div');
     messageGroup.className = 'message-group' + (isOwn ? ' own' : '');
-    
     const messageDiv = document.createElement('div');
-    
-    let bubbleHTML = '';
+
     const now = new Date();
     const iso = now.toISOString();
+    let bubbleHTML = '';
 
     if (type === 'text') {
         bubbleHTML = `<div class="message-bubble ${isOwn ? 'own' : 'other'}"
                             data-created-at="${iso}"
                             data-sender="${isOwn ? 'own' : 'other'}">${escapeHtml(content)}</div>`;
     }
-    
+
     messageDiv.innerHTML = bubbleHTML + `<div class="message-time"></div>`;
     messageGroup.appendChild(messageDiv);
-    
     container.appendChild(messageGroup);
     container.scrollTop = container.scrollHeight;
 
@@ -785,13 +826,6 @@ function sendLink() {
     .catch(error => console.error('Error:', error));
 }
 
-// Auto-scroll + apply timestamp grouping on load
-document.addEventListener('DOMContentLoaded', function() {
-    const container = document.getElementById('messagesContainer');
-    container.scrollTop = container.scrollHeight;
-    applyTimestampGrouping();
-});
-
 // Emoji Picker Functions
 function toggleEmojiPicker() {
     const picker = document.getElementById('emojiPicker');
@@ -805,7 +839,6 @@ function insertEmoji(emoji) {
     document.getElementById('emojiPicker').style.display = 'none';
 }
 
-// Close emoji picker when clicking outside
 document.addEventListener('click', function(event) {
     const picker = document.getElementById('emojiPicker');
     const emojiBtn = event.target.closest('[onclick*="toggleEmojiPicker"]');
@@ -814,18 +847,13 @@ document.addEventListener('click', function(event) {
     }
 });
 
-// Smooth chat switching without page refresh
-function switchChat(event, userId, chatType) {
+// Single, correct switchChat implementation
+function switchChat(event, id, type) {
     event.preventDefault();
-    
-    const container = document.querySelector('.modern-chat-container');
-    if (!container) return;
-    
-    container.style.opacity = '0.5';
-    container.style.transition = 'opacity 0.3s ease';
-    
-    fetch(`/chat/${chatType}/${userId}/`, {
-        method: 'GET',
+
+    const url = type === 'private' ? `/chat/private/${id}/` : `/chat/group/${id}/`;
+
+    fetch(url, {
         headers: {
             'X-Requested-With': 'XMLHttpRequest'
         }
@@ -834,44 +862,29 @@ function switchChat(event, userId, chatType) {
     .then(html => {
         const parser = new DOMParser();
         const doc = parser.parseFromString(html, 'text/html');
-        
-        const newHeader = doc.querySelector('.chat-header-modern');
-        const oldHeader = document.querySelector('.chat-header-modern');
-        if (newHeader && oldHeader) {
-            oldHeader.innerHTML = newHeader.innerHTML;
+
+        const newContainer = doc.querySelector('.modern-chat-container');
+        const currentContainer = document.querySelector('.modern-chat-container');
+
+        if (newContainer && currentContainer) {
+            currentContainer.innerHTML = newContainer.innerHTML;
+
+            // update active in sidebar
+            document.querySelectorAll('.chat-sidebar-item').forEach(item => item.classList.remove('active'));
+            event.target.closest('.chat-sidebar-item').classList.add('active');
+
+            // re-init listeners
+            initChatEvents();
         }
-        
-        const newMessages = doc.querySelector('.messages-container');
-        const oldMessages = document.querySelector('.messages-container');
-        if (newMessages && oldMessages) {
-            oldMessages.innerHTML = newMessages.innerHTML;
-            oldMessages.scrollTop = oldMessages.scrollHeight;
-            applyTimestampGrouping();
-        }
-        
-        document.querySelectorAll('.chat-sidebar-item').forEach(item => {
-            item.classList.remove('active');
-        });
-        event.target.closest('.chat-sidebar-item').classList.add('active');
-        
-        window.chatId = userId;
-        
-        setTimeout(() => {
-            container.style.opacity = '1';
-        }, 100);
     })
-    .catch(error => {
-        console.error('Error switching chat:', error);
-        container.style.opacity = '1';
-    });
+    .catch(error => console.error('Error switching chat:', error));
 }
 
-/* Messenger-style center timestamp divider logic */
+// center timestamp divider logic
 function applyTimestampGrouping() {
     const container = document.getElementById('messagesContainer');
     if (!container) return;
 
-    // Remove old dividers
     container.querySelectorAll('.message-time-divider').forEach(div => div.remove());
 
     const groups = Array.from(container.querySelectorAll('.message-group'));
@@ -897,7 +910,6 @@ function applyTimestampGrouping() {
 
         const currentTime = parseTs(bubble);
         const currentSender = bubble.getAttribute('data-sender');
-
         if (!currentTime) return;
 
         let show = false;
@@ -922,6 +934,49 @@ function applyTimestampGrouping() {
         prevTime = currentTime;
         prevSender = currentSender;
     });
+}
+
+// re-init events after AJAX replace
+function initChatEvents() {
+    const form = document.getElementById('messageForm');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            sendMessage();
+        });
+    }
+    const container = document.getElementById('messagesContainer');
+    if (container) {
+        container.scrollTop = container.scrollHeight;
+    }
+    applyTimestampGrouping();
+}
+
+function showGroupInfo() {
+    const modal = document.getElementById('groupInfoModal');
+    if (modal && window.bootstrap) {
+        const bsModal = new bootstrap.Modal(modal);
+        bsModal.show();
+    }
+}
+
+function removeMember(userId) {
+    if (!confirm('Remove this member?')) return;
+
+    fetch(`/chat/group/${chatId}/remove-member/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCsrfToken()
+        },
+        body: JSON.stringify({ user_id: userId })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) location.reload();
+        else alert('Error: ' + data.error);
+    })
+    .catch(err => console.error('Error:', err));
 }
 </script>
 

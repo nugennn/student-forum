@@ -16,6 +16,7 @@ urlpatterns = [
     path('send-link/', views.send_link, name='send_link'),
     
     # Group operations
+    path('create-group-page/', views.create_group_page, name='create_group_page'),
     path('create-group/', views.create_group_chat, name='create_group'),
     path('group/<int:group_id>/add-member/', views.add_group_member, name='add_member'),
     path('group/<int:group_id>/remove-member/', views.remove_group_member, name='remove_member'),
@@ -26,4 +27,7 @@ urlpatterns = [
     
     # Notifications
     path('unread-count/', views.get_unread_count, name='unread_count'),
+    
+    # Users
+    path('get-users/', views.get_users, name='get_users'),
 ]

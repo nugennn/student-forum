@@ -473,14 +473,25 @@ document.addEventListener('DOMContentLoaded', function() {
                         <div class="chat-sidebar-header">Recent Chats</div>
                         
                         {% for chat in recent_chats %}
-                        <a href="{% url 'chat:private_chat' chat.user_id %}" class="chat-sidebar-item">
-                            {% if chat.photo %}
-                                <img src="{{ chat.photo }}" alt="{{ chat.name }}">
-                            {% else %}
-                                <img src="https://ui-avatars.com/api/?name={{ chat.name }}&background=667eea&color=fff" alt="{{ chat.name }}">
+                            {% if chat.type == 'private' %}
+                            <a href="#" class="chat-sidebar-item {% if chat.is_current %}active{% endif %}" data-user-id="{{ chat.user_id }}" onclick="switchChat(event, {{ chat.user_id }}, 'private')">
+                                {% if chat.photo %}
+                                    <img src="{{ chat.photo }}" alt="{{ chat.name }}">
+                                {% else %}
+                                    <img src="https://ui-avatars.com/api/?name={{ chat.name }}&background=667eea&color=fff" alt="{{ chat.name }}">
+                                {% endif %}
+                                <span class="chat-name">{{ chat.name }}</span>
+                            </a>
+                            {% elif chat.type == 'group' %}
+                            <a href="#" class="chat-sidebar-item {% if chat.is_current %}active{% endif %}" data-group-id="{{ chat.group_id }}" onclick="switchChat(event, {{ chat.group_id }}, 'group')">
+                                {% if chat.photo %}
+                                    <img src="{{ chat.photo }}" alt="{{ chat.name }}">
+                                {% else %}
+                                    <img src="https://ui-avatars.com/api/?name={{ chat.name }}&background=667eea&color=fff" alt="{{ chat.name }}">
+                                {% endif %}
+                                <span class="chat-name">{{ chat.name }}</span>
+                            </a>
                             {% endif %}
-                            <span class="chat-name">{{ chat.name }}</span>
-                        </a>
                         {% endfor %}
                     </div>
                 </div>
@@ -504,7 +515,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             <small>{{ members.count }} members</small>
                         </div>
                     </div>
-                    <button class="btn btn-sm btn-light" data-bs-toggle="modal" data-bs-target="#groupInfoModal">
+                    <button type="button" class="btn btn-sm btn-light" id="infoBtn" data-bs-toggle="modal" data-bs-target="#groupInfoModal" onclick="showGroupInfo()">
                         <i class="fas fa-info-circle"></i> Info
                     </button>
                 </div>
@@ -870,6 +881,75 @@ document.addEventListener('click', function(event) {
         picker.style.display = 'none';
     }
 });
+
+// Show group info modal
+function showGroupInfo() {
+    const modal = document.getElementById('groupInfoModal');
+    if (modal) {
+        const bsModal = new bootstrap.Modal(modal);
+        bsModal.show();
+    }
+}
+
+// Switch between chats seamlessly
+function switchChat(event, chatId, chatType) {
+    event.preventDefault();
+    
+    const url = chatType === 'private' 
+        ? `/chat/private/${chatId}/` 
+        : `/chat/group/${chatId}/`;
+    
+    // Fetch the new chat content
+    fetch(url, {
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.text())
+    .then(html => {
+        // Parse the response
+        const parser = new DOMParser();
+        const newDoc = parser.parseFromString(html, 'text/html');
+        
+        // Update the main chat container
+        const newContainer = newDoc.querySelector('.modern-chat-container');
+        const currentContainer = document.querySelector('.modern-chat-container');
+        
+        if (newContainer && currentContainer) {
+            currentContainer.innerHTML = newContainer.innerHTML;
+            
+            // Update active state in sidebar
+            document.querySelectorAll('.chat-sidebar-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            event.target.closest('.chat-sidebar-item').classList.add('active');
+            
+            // Re-initialize event listeners for the new content
+            initializeChatListeners();
+            
+            // Scroll to bottom
+            const messagesContainer = document.getElementById('messagesContainer');
+            if (messagesContainer) {
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            }
+        }
+    })
+    .catch(error => console.error('Error switching chat:', error));
+}
+
+// Initialize chat event listeners
+function initializeChatListeners() {
+    const messageForm = document.getElementById('messageForm');
+    if (messageForm) {
+        messageForm.removeEventListener('submit', handleMessageSubmit);
+        messageForm.addEventListener('submit', handleMessageSubmit);
+    }
+}
+
+function handleMessageSubmit(e) {
+    e.preventDefault();
+    sendMessage();
+}
 </script>
 
 <style>

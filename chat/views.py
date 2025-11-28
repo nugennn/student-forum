@@ -247,16 +247,19 @@ def private_chat(request, user_id):
     page_number = request.GET.get('page', 1)
     page_obj = paginator.get_page(page_number)
     
-    # Get recent chats for sidebar
-    private_chats = PrivateChat.objects.filter(participants=user).prefetch_related('participants')[:10]
+    # Get recent chats for sidebar (both private and group)
+    private_chats = PrivateChat.objects.filter(participants=user).prefetch_related('participants')
+    group_chats = GroupChat.objects.filter(members=user)
     recent_chats = []
     
+    # Add private chats with their latest message time
     for pc in private_chats:
         other = pc.get_other_user(user)
         if not other:
             continue
         # Only include private chats that already have messages
-        if not pc.get_latest_message():
+        latest_msg = pc.get_latest_message()
+        if not latest_msg:
             continue
 
         display_name = other.get_full_name() or other.username
@@ -265,12 +268,37 @@ def private_chat(request, user_id):
             photo_url = other.profile.profile_photo.url
         
         recent_chats.append({
+            'type': 'private',
             'user_id': other.id,
+            'group_id': None,
             'name': display_name,
             'username': other.username,
             'photo': photo_url,
             'is_current': other.id == other_user.id,
+            'last_message_time': latest_msg.created_at,
         })
+    
+    # Add group chats with their latest message time
+    for gc in group_chats:
+        latest_msg = gc.get_latest_message()
+        recent_chats.append({
+            'type': 'group',
+            'user_id': None,
+            'group_id': gc.id,
+            'name': gc.name,
+            'username': None,
+            'photo': gc.profile_photo.url if gc.profile_photo else None,
+            'is_current': False,
+            'last_message_time': latest_msg.created_at if latest_msg else gc.created_at,
+        })
+    
+    # Sort by most recent message first
+    recent_chats.sort(key=lambda x: x['last_message_time'], reverse=True)
+    
+    # Get other user's photo
+    other_photo = None
+    if hasattr(other_user, 'profile') and other_user.profile and other_user.profile.profile_photo:
+        other_photo = other_user.profile.profile_photo.url
     
     context = {
         'chat': chat,
@@ -278,6 +306,9 @@ def private_chat(request, user_id):
         'messages': page_obj,
         'chat_type': 'private',
         'recent_chats': recent_chats,
+        'chat_name': other_user.get_full_name() or other_user.username,
+        'chat_photo': other_photo,
+        'members': None,  # No members for private chat
     }
     
     return render(request, 'chat/private_chat.html', context)
@@ -310,16 +341,19 @@ def group_chat(request, group_id):
     page_number = request.GET.get('page', 1)
     page_obj = paginator.get_page(page_number)
     
-    # Get recent chats for sidebar
-    private_chats = PrivateChat.objects.filter(participants=user).prefetch_related('participants')[:10]
+    # Get recent chats for sidebar (both private and group)
+    private_chats = PrivateChat.objects.filter(participants=user).prefetch_related('participants')
+    group_chats = GroupChat.objects.filter(members=user)
     recent_chats = []
     
+    # Add private chats with their latest message time
     for pc in private_chats:
         other = pc.get_other_user(user)
         if not other:
             continue
         # Only include private chats that already have messages
-        if not pc.get_latest_message():
+        latest_msg = pc.get_latest_message()
+        if not latest_msg:
             continue
 
         display_name = other.get_full_name() or other.username
@@ -328,12 +362,32 @@ def group_chat(request, group_id):
             photo_url = other.profile.profile_photo.url
         
         recent_chats.append({
+            'type': 'private',
             'user_id': other.id,
+            'group_id': None,
             'name': display_name,
             'username': other.username,
             'photo': photo_url,
             'is_current': False,
+            'last_message_time': latest_msg.created_at,
         })
+    
+    # Add group chats with their latest message time
+    for gc in group_chats:
+        latest_msg = gc.get_latest_message()
+        recent_chats.append({
+            'type': 'group',
+            'user_id': None,
+            'group_id': gc.id,
+            'name': gc.name,
+            'username': None,
+            'photo': gc.profile_photo.url if gc.profile_photo else None,
+            'is_current': gc.id == group_id,  # Mark current group
+            'last_message_time': latest_msg.created_at if latest_msg else gc.created_at,
+        })
+    
+    # Sort by most recent message first
+    recent_chats.sort(key=lambda x: x['last_message_time'], reverse=True)
     
     context = {
         'group': group,
@@ -341,9 +395,11 @@ def group_chat(request, group_id):
         'chat_type': 'group',
         'members': group.members.all(),
         'recent_chats': recent_chats,
+        'chat_name': group.name,
+        'chat_photo': group.profile_photo.url if group.profile_photo else None,
     }
     
-    return render(request, 'chat/group_chat.html', context)
+    return render(request, 'chat/private_chat.html', context)
 
 
 @login_required
@@ -598,6 +654,37 @@ def send_link(request):
 
 
 @login_required
+@require_http_methods(["GET"])
+def create_group_page(request):
+    """Display group creation page"""
+    try:
+        users = User.objects.exclude(id=request.user.id).values('id', 'username')
+        users_list = []
+        for user in users:
+            try:
+                profile = user.profile if hasattr(user, 'profile') else None
+                full_name = profile.full_name if profile else None
+            except:
+                full_name = None
+            
+            users_list.append({
+                'id': user['id'],
+                'username': user['username'],
+                'full_name': full_name or user['username']
+            })
+        
+        context = {
+            'users': users_list,
+        }
+        return render(request, 'chat/create_group.html', context)
+    except Exception as e:
+        logger = logging.getLogger(__name__)
+        logger.error(f"Error loading create group page: {str(e)}")
+        messages.error(request, 'Error loading group creation page')
+        return redirect('chat:chat_list')
+
+
+@login_required
 @require_http_methods(["POST"])
 def create_group_chat(request):
     """Create a new group chat"""
@@ -611,6 +698,12 @@ def create_group_chat(request):
         
         if not member_ids:
             return JsonResponse({'error': 'At least one member is required'}, status=400)
+        
+        # Convert member_ids to integers
+        try:
+            member_ids = [int(mid) for mid in member_ids]
+        except (ValueError, TypeError):
+            return JsonResponse({'error': 'Invalid member IDs'}, status=400)
         
         # Create group
         group = GroupChat.objects.create(
@@ -635,6 +728,8 @@ def create_group_chat(request):
         })
     
     except Exception as e:
+        logger = logging.getLogger(__name__)
+        logger.error(f"Error creating group: {str(e)}")
         return JsonResponse({'error': str(e)}, status=400)
 
 
@@ -768,3 +863,30 @@ def get_unread_count(request):
         logger = logging.getLogger(__name__)
         logger.error(f"Error getting unread count for user {request.user.id}: {str(e)}")
         return JsonResponse({'unread_count': 0}, status=200)
+
+
+@login_required
+@require_http_methods(["GET"])
+def get_users(request):
+    """Get list of all users except current user for group creation"""
+    try:
+        users = User.objects.exclude(id=request.user.id).values('id', 'username')
+        users_list = []
+        for user in users:
+            try:
+                profile = user.profile if hasattr(user, 'profile') else None
+                full_name = profile.full_name if profile else None
+            except:
+                full_name = None
+            
+            users_list.append({
+                'id': user['id'],
+                'username': user['username'],
+                'full_name': full_name or user['username']
+            })
+        
+        return JsonResponse({'users': users_list})
+    except Exception as e:
+        logger = logging.getLogger(__name__)
+        logger.error(f"Error getting users: {str(e)}")
+        return JsonResponse({'error': str(e)}, status=400)
