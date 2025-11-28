@@ -255,7 +255,11 @@
         {% endif %}
     </div>
     <div class="community-info">
-        <h1 class="community-name">{{ community.name }}</h1>
+        <h1 class="community-name">{{ community.name }}
+            {% if community.is_private %}
+                <span class="badge bg-danger" style="font-size:14px; margin-left:10px; vertical-align:middle;">Private</span>
+            {% endif %}
+        </h1>
         <div class="community-meta">
             Created by <strong>{{ community.creator.username }}</strong> • {{ community.member_count }} members
         </div>

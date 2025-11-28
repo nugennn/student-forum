@@ -181,34 +181,73 @@
 </div>
 
 {% if communities %}
-    <div class="communities-grid">
-        {% for community in communities %}
-            <div class="community-card">
-                <div class="community-card-banner" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-                    {% if community.banner %}
-                        <img src="{{ community.banner.url }}" style="width: 100%; height: 100%; object-fit: cover;">
-                    {% endif %}
-                    <div class="community-card-icon">
-                        {% if community.icon %}
-                            <img src="{{ community.icon.url }}" alt="{{ community.name }}">
-                        {% else %}
-                            <i class="fas fa-users"></i>
+    {% with private_communities=communities|dictsort:"is_private" %}
+    <div class="communities-section">
+        <h2 style="margin-top:2rem;">Private Communities</h2>
+        <div class="communities-grid">
+            {% for community in communities %}
+                {% if community.is_private %}
+                <div class="community-card">
+                    <div class="community-card-banner" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                        {% if community.banner %}
+                            <img src="{{ community.banner.url }}" style="width: 100%; height: 100%; object-fit: cover;">
                         {% endif %}
+                        <div class="community-card-icon">
+                            {% if community.icon %}
+                                <img src="{{ community.icon.url }}" alt="{{ community.name }}">
+                            {% else %}
+                                <i class="fas fa-users"></i>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="community-card-content">
+                        <h3 class="community-card-name">{{ community.name }}</h3>
+                        <span class="badge bg-danger" style="font-size:12px; margin-bottom:4px;">Private</span>
+                        <p class="community-card-desc">{{ community.description|truncatewords:15 }}</p>
+                        <div class="community-card-meta">
+                            {{ community.member_count }} member{{ community.member_count|pluralize }}
+                        </div>
+                        <div class="community-card-actions">
+                            <a href="{% url 'community:community_detail' community.slug %}">View</a>
+                        </div>
                     </div>
                 </div>
-                <div class="community-card-content">
-                    <h3 class="community-card-name">{{ community.name }}</h3>
-                    <p class="community-card-desc">{{ community.description|truncatewords:15 }}</p>
-                    <div class="community-card-meta">
-                        {{ community.member_count }} member{{ community.member_count|pluralize }}
+                {% endif %}
+            {% endfor %}
+        </div>
+        <h2 style="margin-top:2rem;">Other Communities</h2>
+        <div class="communities-grid">
+            {% for community in communities %}
+                {% if not community.is_private %}
+                <div class="community-card">
+                    <div class="community-card-banner" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                        {% if community.banner %}
+                            <img src="{{ community.banner.url }}" style="width: 100%; height: 100%; object-fit: cover;">
+                        {% endif %}
+                        <div class="community-card-icon">
+                            {% if community.icon %}
+                                <img src="{{ community.icon.url }}" alt="{{ community.name }}">
+                            {% else %}
+                                <i class="fas fa-users"></i>
+                            {% endif %}
+                        </div>
                     </div>
-                    <div class="community-card-actions">
-                        <a href="{% url 'community:community_detail' community.slug %}">View</a>
+                    <div class="community-card-content">
+                        <h3 class="community-card-name">{{ community.name }}</h3>
+                        <p class="community-card-desc">{{ community.description|truncatewords:15 }}</p>
+                        <div class="community-card-meta">
+                            {{ community.member_count }} member{{ community.member_count|pluralize }}
+                        </div>
+                        <div class="community-card-actions">
+                            <a href="{% url 'community:community_detail' community.slug %}">View</a>
+                        </div>
                     </div>
                 </div>
-            </div>
-        {% endfor %}
+                {% endif %}
+            {% endfor %}
+        </div>
     </div>
+    {% endwith %}
 
     {% if page_obj.has_other_pages %}
         <div class="pagination">
