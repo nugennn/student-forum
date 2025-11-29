@@ -441,18 +441,16 @@
                                 <a class="s-btn s-btn__muted s-btn__outlined s-btn__sm d-flex is-selected" data-nav-value="Newest" href="{% url 'qa:questions' %}" data-shortcut="N">
                                     <div class="flex--item">Newest</div>
                                 </a>
-                                {% if query %}
-                                <a class="s-btn s-btn__muted s-btn__outlined s-btn__sm d-flex" data-nav-value="Active" href="{% url 'qa:activeQuestions' query %}" data-shortcut="A">
+                                <a class="s-btn s-btn__muted s-btn__outlined s-btn__sm d-flex" data-nav-value="Active" href="{% url 'qa:activeQuestions' query|default:'None' %}" data-shortcut="A">
                                     <div class="flex--item">Active</div>
                                 </a>
-                                <a class="s-btn s-btn__muted s-btn__outlined s-btn__sm d-flex uql-nav--expanded-item" data-nav-value="Bounties" href="{% url 'qa:BountiedQuestions' query %}" data-shortcut="E">
+                                <a class="s-btn s-btn__muted s-btn__outlined s-btn__sm d-flex uql-nav--expanded-item" data-nav-value="Bounties" href="{% url 'qa:BountiedQuestions' query|default:'None' %}" data-shortcut="E">
                                     <div class="flex--item">Bountied</div>
-                                        <div class="s-badge s-badge__bounty s-badge__bounty s-badge__sm lh-xs ml4 px4 flex--item">{{count_bounty}}</div>
+                                    <div class="s-badge s-badge__bounty s-badge__bounty s-badge__sm lh-xs ml4 px4 flex--item">{{count_bounty}}</div>
                                 </a>
-                                <a class="s-btn s-btn__muted s-btn__outlined s-btn__sm d-flex uql-nav--expanded-item" data-nav-value="Unanswered" href="{% url 'qa:unansweredQuestions' query %}">
+                                <a class="s-btn s-btn__muted s-btn__outlined s-btn__sm d-flex uql-nav--expanded-item" data-nav-value="Unanswered" href="{% url 'qa:unansweredQuestions' query|default:'None' %}">
                                     <div class="flex--item">Unanswered</div>
                                 </a>
-                                {% endif %}
                         </div>
                     </div>
                 </div>

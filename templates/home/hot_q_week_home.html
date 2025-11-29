@@ -374,7 +374,11 @@
                         <div class="summary">
                             <h3><a href="{{question.get_absolute_url}}" class="question-hyperlink">{{question.title}}</a></h3>
                             <div class="tags d-flex gs4 fw-wrap mt2 float-none lh-unset">
-
+                                {% if question.community %}
+                                <span class="post-tag flex--item" style="background: #f0fdf4 !important; color: #15803d !important; border-color: #bbf7d0 !important; font-weight: 600;" title="Community: {{question.community.name}}">
+                                    📍 {{question.community.name}}
+                                </span>
+                                {% endif %}
                                 {% for tag in question.tags.all %}
                                 <a href="{% url 'tagbadge:taggedItemsFrom_All' tag.id %}" class="post-tag flex--item" rel="tag">{{tag}}</a>
                                 {% endfor %}
