@@ -507,30 +507,55 @@
             {% endif %}
         </div>
 
-    </div>
+        </div>
 
     <div id="sidebar">
 
         <div class="s-sidebarwidget s-anchors mb16">
-            <div class="s-sidebarwidget--header">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M19 20L14 15M14 15L20 9 20 4 4 4 4 9 10 15 10 20 14 15Z"/>
-                    <line x1="4" y1="4" x2="10" y2="10"/>
-                    <line x1="14" y1="10" x2="20" y2="4"/>
-                </svg>
-                Campus Updates
+            <div class="s-sidebarwidget--header" style="display: flex; justify-content: space-between; align-items: center;">
+                <a href="{% url 'campus_updates:updates_list' %}" style="display: flex; align-items: center; gap: 8px; text-decoration: none; color: inherit; flex: 1;">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M19 20L14 15M14 15L20 9 20 4 4 4 4 9 10 15 10 20 14 15Z"/>
+                        <line x1="4" y1="4" x2="10" y2="10"/>
+                        <line x1="14" y1="10" x2="20" y2="4"/>
+                    </svg>
+                    Campus Updates
+                </a>
+                <div style="display: flex; gap: 6px;">
+                    {% if request.user.is_staff or request.user.is_superuser or request.user.profile.is_teacher %}
+                        <a href="{% url 'campus_updates:create_update' %}" title="Add Campus Update" style="display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; background: #28a745; color: white; border-radius: 4px; text-decoration: none; font-size: 14px; transition: background 0.2s;" onmouseover="this.style.background='#218838'" onmouseout="this.style.background='#28a745'">
+                            <i class="fas fa-plus"></i>
+                        </a>
+                    {% endif %}
+                </div>
             </div>
             <ul class="d-block p0 m0">
-                <li class="s-sidebarwidget--item d-flex">
-                    <div class="flex--item wmn0 ow-break-word">
-                        <a href="#">Study tips for final exam preparation</a>
-                    </div>
-                </li>
-                <li class="s-sidebarwidget--item d-flex">
-                    <div class="flex--item wmn0 ow-break-word">
-                        <a href="#">Best practices for group projects</a>
-                    </div>
-                </li>
+                {% if campus_updates %}
+                    {% for update in campus_updates %}
+                        <li class="s-sidebarwidget--item d-flex">
+                            <div class="flex--item wmn0 ow-break-word">
+                                <a href="{% url 'campus_updates:update_detail' update.pk %}" style="color: #0074cc; text-decoration: none; font-weight: 500;">
+                                    {{ update.title|truncatewords:8 }}
+                                </a>
+                                <div style="font-size: 12px; color: #6a737d; margin-top: 4px;">
+                                    <span class="update-priority-badge" style="display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; color: white; background: {% if update.priority == 'urgent' %}#dc3545{% elif update.priority == 'high' %}#fd7e14{% elif update.priority == 'medium' %}#ffc107{% else %}#28a745{% endif %};">
+                                        {{ update.get_priority_display }}
+                                    </span>
+                                </div>
+                            </div>
+                        </li>
+                    {% endfor %}
+                    <li class="s-sidebarwidget--item d-flex" style="justify-content: center; padding-top: 8px;">
+                        <a href="{% url 'campus_updates:updates_list' %}" style="color: #0074cc; text-decoration: none; font-weight: 500; font-size: 13px;">View All Updates →</a>
+                    </li>
+                {% else %}
+                    <li class="s-sidebarwidget--item d-flex" style="justify-content: center; padding: 16px 8px;">
+                        <div style="text-align: center; color: #6a737d; font-size: 13px;">
+                            <p style="margin: 0;">No campus updates yet</p>
+                            <a href="{% url 'campus_updates:updates_list' %}" style="color: #0074cc; text-decoration: none; font-weight: 500; font-size: 13px;">View All Updates →</a>
+                        </div>
+                    </li>
+                {% endif %}
             </ul>
         </div>
 
@@ -538,6 +563,9 @@
         <div class="s-sidebarwidget s-anchors mb16">
             <div class="s-sidebarwidget--header">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M19 20L14 15M14 15L20 9 20 4 4 4 4 9 10 15 10 20 14 15Z"/>
+                    <line x1="4" y1="4" x2="10" y2="10"/>
+                    <line x1="14" y1="10" x2="20" y2="4"/>
                     <path d="M10.2,3.2C10.6,2.8,11,2.7,11.5,2.7C12.6,2.7,13.5,3.6,13.5,4.8C13.5,5.2,13.4,5.6,13.2,6L10.2,3.2z"/>
                     <path d="M13.8,20.8C13.4,21.2,13,21.3,12.5,21.3C11.4,21.3,10.5,20.4,10.5,19.2C10.5,18.8,10.6,18.4,10.8,18L13.8,20.8z"/>
                     <path d="M5.2,5.2C4.8,5.6,4.7,6.1,4.7,6.6C4.7,7.7,5.6,8.6,6.8,8.6C7.2,8.6,7.6,8.5,8,8.2L5.2,5.2z"/>

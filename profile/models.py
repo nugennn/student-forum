@@ -72,6 +72,8 @@ class Profile(models.Model):
     password_change_required = models.BooleanField(default=True)  # Force password change on first login
     user_type = models.CharField(max_length=20, choices=USER_TYPE_CHOICES, default='Student')
     is_verified = models.BooleanField(default=False)  # Auto-verified for teachers
+    is_teacher = models.BooleanField(default=False)  # Auto-set to True for @khwopa.edu.np emails
+    is_student = models.BooleanField(default=False)  # Auto-set to True for @khec.edu.np emails
 
     voting_flags = models.IntegerField(default=0)
     helpful_close_votes = models.IntegerField(default=0)
@@ -126,7 +128,19 @@ class Profile(models.Model):
 @receiver(post_save, sender=User)  # add this
 def create_user_profile(sender, instance, created, **kwargs):
     if created:
-        Profile.objects.create(user=instance)
+        profile = Profile.objects.create(user=instance)
+        # Auto-mark users with @khwopa.edu.np email as teachers
+        if instance.email.endswith('@khwopa.edu.np'):
+            profile.is_teacher = True
+            profile.user_type = 'Teacher'
+            profile.is_verified = True
+            profile.save()
+        # Auto-mark users with @khec.edu.np email as students
+        elif instance.email.endswith('@khec.edu.np'):
+            profile.is_student = True
+            profile.user_type = 'Student'
+            profile.is_verified = True
+            profile.save()
 
 @receiver(post_save, sender=User)  # add this
 def save_user_profile(sender, instance, **kwargs):

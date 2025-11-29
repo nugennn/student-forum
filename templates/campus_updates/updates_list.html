@@ -1,0 +1,363 @@
+{% extends 'profile/base.html' %}
+{% load static %}
+
+{% block css %}
+<style>
+    .update-card {
+        background: white;
+        border: 1px solid #e1e4e8;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 16px;
+        transition: all 0.2s ease;
+        display: flex;
+        gap: 16px;
+    }
+
+    .update-card:hover {
+        box-shadow: 0 3px 12px rgba(0, 0, 0, 0.1);
+        border-color: #d0d7de;
+    }
+
+    .update-priority-badge {
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        color: white;
+    }
+
+    .priority-urgent {
+        background: #dc3545;
+    }
+
+    .priority-high {
+        background: #fd7e14;
+    }
+
+    .priority-medium {
+        background: #ffc107;
+        color: #333;
+    }
+
+    .priority-low {
+        background: #28a745;
+    }
+
+    .update-category {
+        display: inline-block;
+        background: #f0f2f5;
+        color: #0c0d0e;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        margin-left: 8px;
+    }
+
+    .update-image {
+        width: 120px;
+        height: 120px;
+        border-radius: 6px;
+        object-fit: cover;
+        flex-shrink: 0;
+    }
+
+    .update-content {
+        flex: 1;
+    }
+
+    .update-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: #0c0d0e;
+        margin: 0 0 8px;
+        text-decoration: none;
+    }
+
+    .update-title:hover {
+        color: #0074cc;
+    }
+
+    .update-meta {
+        font-size: 13px;
+        color: #6a737d;
+        margin-bottom: 12px;
+    }
+
+    .update-excerpt {
+        color: #3c3f44;
+        line-height: 1.5;
+        margin-bottom: 12px;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .update-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 13px;
+    }
+
+    .update-author {
+        color: #0074cc;
+        text-decoration: none;
+        font-weight: 500;
+    }
+
+    .update-author:hover {
+        text-decoration: underline;
+    }
+
+    .filter-section {
+        background: white;
+        padding: 16px;
+        border-radius: 8px;
+        border: 1px solid #e1e4e8;
+        margin-bottom: 24px;
+    }
+
+    .filter-group {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        align-items: center;
+    }
+
+    .filter-group label {
+        font-weight: 600;
+        color: #0c0d0e;
+        margin: 0;
+    }
+
+    .filter-group select,
+    .filter-group input {
+        padding: 8px 12px;
+        border: 1px solid #d0d7de;
+        border-radius: 6px;
+        font-size: 14px;
+    }
+
+    .btn-filter {
+        background: #0074cc;
+        color: white;
+        padding: 8px 16px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 500;
+        transition: background 0.2s;
+    }
+
+    .btn-filter:hover {
+        background: #0059b3;
+    }
+
+    .btn-create {
+        background: #28a745;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-block;
+        margin-bottom: 20px;
+        transition: background 0.2s;
+    }
+
+    .btn-create:hover {
+        background: #218838;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: #6a737d;
+    }
+
+    .empty-state i {
+        font-size: 48px;
+        color: #d0d7de;
+        margin-bottom: 16px;
+    }
+
+    .expired-notice {
+        opacity: 0.6;
+        border-left: 4px solid #dc3545;
+    }
+    
+    .btn-edit-small {
+        background: #0074cc;
+        color: white;
+        padding: 6px 12px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-weight: 500;
+        text-decoration: none;
+        display: inline-block;
+        font-size: 12px;
+        transition: background 0.2s;
+    }
+    
+    .btn-edit-small:hover {
+        background: #0059b3;
+    }
+</style>
+{% endblock css %}
+
+{% block content %}
+<div class="container" style="max-width: 900px; margin-top: 30px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+        <h1 style="margin: 0; font-size: 28px; font-weight: 700;">Campus Updates</h1>
+        {% if request.user.is_staff or request.user.is_superuser or request.user.profile.is_teacher %}
+            <div>
+                <a href="{% url 'campus_updates:create_update' %}" class="btn-create">
+                    <i class="fas fa-plus"></i> Post Notice
+                </a>
+                <a href="{% url 'campus_updates:manage_updates' %}" class="btn-create" style="background: #6c757d; margin-left: 8px;">
+                    <i class="fas fa-cog"></i> Manage
+                </a>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Filters -->
+    <div class="filter-section">
+        <form method="get" class="filter-group">
+            <input type="text" name="search" placeholder="Search notices..." value="{{ search_query }}" style="flex: 1; min-width: 200px;">
+            
+            <select name="category">
+                <option value="">All Categories</option>
+                <option value="academic" {% if selected_category == 'academic' %}selected{% endif %}>Academic</option>
+                <option value="event" {% if selected_category == 'event' %}selected{% endif %}>Event</option>
+                <option value="maintenance" {% if selected_category == 'maintenance' %}selected{% endif %}>Maintenance</option>
+                <option value="holiday" {% if selected_category == 'holiday' %}selected{% endif %}>Holiday</option>
+                <option value="announcement" {% if selected_category == 'announcement' %}selected{% endif %}>Announcement</option>
+            </select>
+
+            <select name="priority">
+                <option value="">All Priorities</option>
+                <option value="urgent" {% if selected_priority == 'urgent' %}selected{% endif %}>Urgent</option>
+                <option value="high" {% if selected_priority == 'high' %}selected{% endif %}>High</option>
+                <option value="medium" {% if selected_priority == 'medium' %}selected{% endif %}>Medium</option>
+                <option value="low" {% if selected_priority == 'low' %}selected{% endif %}>Low</option>
+            </select>
+
+            <button type="submit" class="btn-filter">Filter</button>
+        </form>
+    </div>
+
+    <!-- Updates List -->
+    {% if updates %}
+        <div class="updates-list">
+            {% for update in updates %}
+                <div class="update-card">
+                    {% if update.image %}
+                        <img src="{{ update.image.url }}" alt="{{ update.title }}" class="update-image">
+                    {% else %}
+                        <div class="update-image" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; color: white; font-size: 32px;">
+                            <i class="fas fa-bullhorn"></i>
+                        </div>
+                    {% endif %}
+
+                    <div class="update-content">
+                        <a href="{% url 'campus_updates:update_detail' update.pk %}" class="update-title">
+                            {{ update.title }}
+                        </a>
+
+                        <div class="update-meta">
+                            <span class="update-priority-badge priority-{{ update.priority }}">
+                                {{ update.get_priority_display }}
+                            </span>
+                            <span class="update-category">{{ update.get_category_display }}</span>
+                            {% if update.is_expired %}
+                                <span style="color: #dc3545; font-weight: 600; margin-left: 8px;">
+                                    <i class="fas fa-exclamation-circle"></i> Expired
+                                </span>
+                            {% endif %}
+                        </div>
+
+                        <p class="update-excerpt">{{ update.content|truncatewords:30 }}</p>
+
+                        <div class="update-footer">
+                            <div>
+                                <span style="color: #6a737d;">By</span>
+                                <a href="#" class="update-author">
+                                    {% if update.author.profile.full_name %}
+                                        {{ update.author.profile.full_name }}
+                                    {% else %}
+                                        {{ update.author.username }}
+                                    {% endif %}
+                                </a>
+                                <span style="color: #6a737d;">•</span>
+                                <span style="color: #6a737d;" title="{{ update.created_at }}">
+                                    {{ update.created_at|timesince }} ago
+                                </span>
+                            </div>
+                            <div style="display: flex; gap: 8px; align-items: center;">
+                                {% if request.user == update.author or request.user.is_superuser %}
+                                    <a href="{% url 'campus_updates:edit_update' update.pk %}" class="btn-edit-small">
+                                        <i class="fas fa-edit"></i> Edit
+                                    </a>
+                                {% endif %}
+                                <a href="{% url 'campus_updates:update_detail' update.pk %}" style="color: #0074cc; text-decoration: none; font-weight: 500;">
+                                    Read More →
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+        <!-- Pagination -->
+        {% if page_obj.has_other_pages %}
+            <nav style="margin-top: 32px; text-align: center;">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}">First</a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}">Previous</a>
+                        </li>
+                    {% endif %}
+
+                    {% for num in page_obj.paginator.page_range %}
+                        {% if page_obj.number == num %}
+                            <li class="page-item active">
+                                <span class="page-link">{{ num }}</span>
+                            </li>
+                        {% else %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}">{{ num }}</a>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}">Next</a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}">Last</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        {% endif %}
+    {% else %}
+        <div class="empty-state">
+            <i class="fas fa-inbox"></i>
+            <h3>No notices available</h3>
+            <p>There are no campus updates at the moment. Check back later!</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock content %}

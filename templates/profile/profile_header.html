@@ -79,6 +79,32 @@
         color: #0969da;
     }
     
+    .teacher-badge {
+        display: inline-block;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 6px 14px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        margin-left: 8px;
+        box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+        vertical-align: middle;
+    }
+    
+    .student-badge {
+        display: inline-block;
+        background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+        color: white;
+        padding: 6px 14px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        margin-left: 8px;
+        box-shadow: 0 2px 8px rgba(6, 182, 212, 0.3);
+        vertical-align: middle;
+    }
+    
     .profile-actions {
         flex-shrink: 0;
     }
@@ -159,7 +185,7 @@
             <img src="{% if profileData.profile_photo %}{{ profileData.profile_photo.url }}{% endif %}" alt="{{ profileData.user }}" width="96" height="96">
         </div>
         <div class="profile-info">
-            <h1 class="profile-name d-inline-block">{% if profileData.full_name %}{{ profileData.full_name }}{% else %}{{ profileData.user.get_full_name }}{% endif %}</h1>
+            <h1 class="profile-name d-inline-block">{% if profileData.full_name %}{{ profileData.full_name }}{% else %}{{ profileData.user.get_full_name }}{% endif %}{% if profileData.is_teacher %}<span class="teacher-badge"><i class="fas fa-chalkboard-user"></i> Teacher</span>{% elif profileData.is_student %}<span class="student-badge"><i class="fas fa-graduation-cap"></i> Student</span>{% endif %}</h1>
             {% if request.user.is_authenticated and request.user != profileData.user %}
             <a href="{% url 'chat:private_chat' profileData.user.id %}" 
                role="button" 

@@ -1866,6 +1866,8 @@ def Votes_castActivity(request, user_id, username):
 
 @login_required
 def home(request):
+    from campus_updates.models import CampusUpdate
+    
     # Get latest 3 posts within 1 week with highest reputation (votes)
     last_week = timezone.now() - timedelta(days=7)
     hot_topics = Question.objects.filter(
@@ -1881,6 +1883,11 @@ def home(request):
     # Count bounties (only non-deleted)
     count_bounty = Question.objects.filter(is_deleted=False, is_bountied=True).count()
     
+    # Get latest campus updates (published and not expired)
+    campus_updates = CampusUpdate.objects.filter(is_published=True).order_by('-created_at')[:5]
+    # Filter out expired notices
+    campus_updates = [u for u in campus_updates if not u.is_expired()]
+    
     # Pagination
     page = request.GET.get('page', 1)
     paginator = Paginator(questionsHome_all, 5)
@@ -1895,6 +1902,7 @@ def home(request):
         'hot_topics': hot_topics,
         'questionsHome': questionsHome,
         'count_bounty': count_bounty,  # Added this for your template
+        'campus_updates': campus_updates,  # Add campus updates to context
     }
     return render(request, 'profile/home.html', context)
 

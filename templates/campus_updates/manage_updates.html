@@ -1,0 +1,372 @@
+{% extends 'profile/base.html' %}
+{% load static %}
+
+{% block css %}
+<style>
+    .manage-container {
+        max-width: 1000px;
+        margin: 30px auto;
+    }
+
+    .manage-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+    }
+
+    .manage-title {
+        font-size: 28px;
+        font-weight: 700;
+        color: #0c0d0e;
+        margin: 0;
+    }
+
+    .btn-create {
+        background: #28a745;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-block;
+        transition: background 0.2s;
+    }
+
+    .btn-create:hover {
+        background: #218838;
+    }
+
+    .search-section {
+        background: white;
+        padding: 16px;
+        border-radius: 8px;
+        border: 1px solid #e1e4e8;
+        margin-bottom: 24px;
+        display: flex;
+        gap: 12px;
+    }
+
+    .search-section input {
+        flex: 1;
+        padding: 8px 12px;
+        border: 1px solid #d0d7de;
+        border-radius: 6px;
+        font-size: 14px;
+    }
+
+    .search-section button {
+        background: #0074cc;
+        color: white;
+        padding: 8px 16px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 500;
+    }
+
+    .search-section button:hover {
+        background: #0059b3;
+    }
+
+    .updates-table {
+        width: 100%;
+        border-collapse: collapse;
+        background: white;
+        border: 1px solid #e1e4e8;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+
+    .updates-table thead {
+        background: #f6f8fa;
+        border-bottom: 1px solid #e1e4e8;
+    }
+
+    .updates-table th {
+        padding: 16px;
+        text-align: left;
+        font-weight: 600;
+        color: #0c0d0e;
+        font-size: 14px;
+    }
+
+    .updates-table td {
+        padding: 16px;
+        border-bottom: 1px solid #e1e4e8;
+        font-size: 14px;
+    }
+
+    .updates-table tbody tr:hover {
+        background: #f6f8fa;
+    }
+
+    .updates-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    .notice-title {
+        font-weight: 600;
+        color: #0074cc;
+        text-decoration: none;
+        display: block;
+        margin-bottom: 4px;
+    }
+
+    .notice-title:hover {
+        text-decoration: underline;
+    }
+
+    .notice-excerpt {
+        font-size: 12px;
+        color: #6a737d;
+        display: -webkit-box;
+        -webkit-line-clamp: 1;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .status-badge {
+        display: inline-block;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .status-published {
+        background: #d4edda;
+        color: #155724;
+    }
+
+    .status-draft {
+        background: #e2e3e5;
+        color: #383d41;
+    }
+
+    .priority-badge {
+        display: inline-block;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 600;
+        color: white;
+    }
+
+    .priority-urgent {
+        background: #dc3545;
+    }
+
+    .priority-high {
+        background: #fd7e14;
+    }
+
+    .priority-medium {
+        background: #ffc107;
+        color: #333;
+    }
+
+    .priority-low {
+        background: #28a745;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 8px;
+    }
+
+    .btn-edit {
+        background: #0074cc;
+        color: white;
+        padding: 6px 12px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 12px;
+        text-decoration: none;
+        display: inline-block;
+        transition: background 0.2s;
+    }
+
+    .btn-edit:hover {
+        background: #0059b3;
+    }
+
+    .btn-view {
+        background: #6c757d;
+        color: white;
+        padding: 6px 12px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 12px;
+        text-decoration: none;
+        display: inline-block;
+        transition: background 0.2s;
+    }
+
+    .btn-view:hover {
+        background: #5a6268;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        background: white;
+        border: 1px solid #e1e4e8;
+        border-radius: 8px;
+        color: #6a737d;
+    }
+
+    .empty-state i {
+        font-size: 48px;
+        color: #d0d7de;
+        margin-bottom: 16px;
+    }
+
+    .pagination {
+        margin-top: 24px;
+        text-align: center;
+    }
+
+    .pagination a,
+    .pagination span {
+        display: inline-block;
+        padding: 8px 12px;
+        margin: 0 4px;
+        border: 1px solid #d0d7de;
+        border-radius: 4px;
+        text-decoration: none;
+        color: #0074cc;
+    }
+
+    .pagination a:hover {
+        background: #f6f8fa;
+    }
+
+    .pagination .active {
+        background: #0074cc;
+        color: white;
+        border-color: #0074cc;
+    }
+</style>
+{% endblock css %}
+
+{% block content %}
+<div class="manage-container">
+    <div class="manage-header">
+        <h1 class="manage-title">Manage Notices</h1>
+        <a href="{% url 'campus_updates:create_update' %}" class="btn-create">
+            <i class="fas fa-plus"></i> Post New Notice
+        </a>
+    </div>
+
+    <!-- Search -->
+    <div class="search-section">
+        <form method="get" style="display: flex; gap: 12px; width: 100%;">
+            <input type="text" name="search" placeholder="Search your notices..." value="{{ search_query }}" style="flex: 1;">
+            <button type="submit">
+                <i class="fas fa-search"></i> Search
+            </button>
+        </form>
+    </div>
+
+    <!-- Updates Table -->
+    {% if updates %}
+        <table class="updates-table">
+            <thead>
+                <tr>
+                    <th style="width: 40%;">Title</th>
+                    <th style="width: 15%;">Status</th>
+                    <th style="width: 12%;">Priority</th>
+                    <th style="width: 15%;">Date</th>
+                    <th style="width: 18%;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for update in updates %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'campus_updates:update_detail' update.pk %}" class="notice-title">
+                                {{ update.title }}
+                            </a>
+                            <div class="notice-excerpt">{{ update.content|truncatewords:15 }}</div>
+                        </td>
+                        <td>
+                            {% if update.is_published %}
+                                <span class="status-badge status-published">
+                                    <i class="fas fa-check-circle"></i> Published
+                                </span>
+                            {% else %}
+                                <span class="status-badge status-draft">
+                                    <i class="fas fa-file"></i> Draft
+                                </span>
+                            {% endif %}
+                            {% if update.is_expired %}
+                                <div style="margin-top: 4px; font-size: 11px; color: #dc3545;">
+                                    <i class="fas fa-exclamation-circle"></i> Expired
+                                </div>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="priority-badge priority-{{ update.priority }}">
+                                {{ update.get_priority_display }}
+                            </span>
+                        </td>
+                        <td>
+                            <div style="font-size: 12px;">
+                                <div>{{ update.created_at|date:"M d, Y" }}</div>
+                                <div style="color: #6a737d; font-size: 11px;">{{ update.created_at|time:"H:i" }}</div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="action-buttons">
+                                <a href="{% url 'campus_updates:update_detail' update.pk %}" class="btn-view">
+                                    <i class="fas fa-eye"></i> View
+                                </a>
+                                <a href="{% url 'campus_updates:edit_update' update.pk %}" class="btn-edit">
+                                    <i class="fas fa-edit"></i> Edit
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <!-- Pagination -->
+        {% if page_obj.has_other_pages %}
+            <div class="pagination">
+                {% if page_obj.has_previous %}
+                    <a href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}">First</a>
+                    <a href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}">Previous</a>
+                {% endif %}
+
+                {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                        <span class="active">{{ num }}</span>
+                    {% else %}
+                        <a href="?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}">{{ num }}</a>
+                    {% endif %}
+                {% endfor %}
+
+                {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}">Next</a>
+                    <a href="?page={{ page_obj.paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}">Last</a>
+                {% endif %}
+            </div>
+        {% endif %}
+    {% else %}
+        <div class="empty-state">
+            <i class="fas fa-inbox"></i>
+            <h3>No notices yet</h3>
+            <p>You haven't posted any notices yet. Start by creating one!</p>
+            <a href="{% url 'campus_updates:create_update' %}" class="btn-create" style="margin-top: 16px;">
+                <i class="fas fa-plus"></i> Post Your First Notice
+            </a>
+        </div>
+    {% endif %}
+</div>
+{% endblock content %}

@@ -43,6 +43,8 @@ INSTALLED_APPS = [
     'chat',
     # Community App
     'community',
+    # Campus Updates App
+    'campus_updates',
     'taggit',
     'crispy_forms',
     'crispy_bootstrap4',

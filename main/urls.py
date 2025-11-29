@@ -37,6 +37,7 @@ urlpatterns = [
     path('martor/', include('martor.urls')),
     path('chat/', include('chat.urls', namespace='chat')),
     path('community/', include('community.urls')),
+    path('campus-updates/', include('campus_updates.urls')),
     # path('__debug__/', include(debug_toolbar.urls)),
 
 ]
