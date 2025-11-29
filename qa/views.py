@@ -2395,6 +2395,43 @@ def new_question(request):
         if form.is_valid():
             new_post = form.save(commit=False)
             new_post.post_owner = request.user
+            
+            # Process uploaded files
+            uploaded_files = request.FILES.getlist('media_files')
+            if uploaded_files:
+                from django.core.files.storage import default_storage
+                
+                for uploaded_file in uploaded_files:
+                    # Create unique filename
+                    filename = f"martor_uploads/{timezone.now().strftime('%Y%m%d_%H%M%S')}_{uploaded_file.name}"
+                    path = default_storage.save(filename, uploaded_file)
+                    
+                    # Get the full URL
+                    file_url = request.build_absolute_uri(settings.MEDIA_URL + path)
+                    
+                    # Check if it's an image
+                    if uploaded_file.name.lower().endswith(('.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp', '.svg')):
+                        new_post.body += f'\n\n![Image]({file_url})\n\n'
+                        print(f"DEBUG: Added uploaded image: {file_url}")
+                    else:
+                        new_post.body += f'\n\n[📎 {uploaded_file.name}]({file_url})\n\n'
+                        print(f"DEBUG: Added uploaded file: {file_url}")
+            
+            # Process media URLs from textarea (one URL per line)
+            media_urls = request.POST.get('media_urls', '')
+            if media_urls:
+                # Split by newlines and filter empty lines
+                urls = [url.strip() for url in media_urls.split('\n') if url.strip()]
+                
+                for url in urls:
+                    # Check if it's an image
+                    if url.lower().endswith(('.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp', '.svg')):
+                        new_post.body += f'\n\n![Image]({url})\n\n'
+                        print(f"DEBUG: Added image URL: {url}")
+                    else:
+                        new_post.body += f'\n\n[📎 Attachment]({url})\n\n'
+                        print(f"DEBUG: Added attachment URL: {url}")
+            
             new_post.save()
             form.save_m2m()
             return redirect('qa:questions')

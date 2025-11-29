@@ -79,50 +79,59 @@
               </div>
       </div>
 
-      <!-- Media Upload Section -->
-      <div class="ps-relative mt16" id="media-editor">
+      <!-- Media Upload Section (Simple, No JavaScript Required) -->
+      <div class="ps-relative mt16">
             <div class="ps-relative">
                 <div class="form-item p0 js-stacks-validation">
                     <div class="d-flex ai-center jc-space-between">
                         <label class="s-label mb4 d-block flex--item fl1">
-                            Add Media
-                            <div class="s-description mt2">Upload images or add media links to your question</div>
+                            Add Media (Optional)
+                            <div class="s-description mt2">
+                                Upload images or files from your computer. They will be automatically added to your question.
+                            </div>
                         </label>
                     </div>
                     <div class="ps-relative">
-                        <div style="display: flex; gap: 10px; margin-bottom: 12px;">
-                            <!-- File Upload Button -->
-                            <div>
-                                <input type="file" id="media-file-input" accept="image/*,.pdf,.doc,.docx" style="display: none;">
-                                <button type="button" class="btn btn-secondary" id="upload-media-btn" style="padding: 8px 16px; border: 1px solid #d1d5da; border-radius: 4px; background: #f6f8fa; cursor: pointer; color: black;">
-                                    <i class="fa fa-upload"></i> Upload File
-                                </button>
-                            </div>
+                        <input 
+                            type="file" 
+                            name="media_files" 
+                            id="media_files" 
+                            multiple
+                            accept="image/*,.pdf,.doc,.docx"
+                            style="width: 100%; padding: 8px 10px; border: 1px solid #d1d5da; border-radius: 4px; font-size: 14px;"
+                        />
+                        <div class="s-description mt2" style="font-size: 12px; color: #6c757d;">
+                            You can select multiple files. Supported: Images (JPG, PNG, GIF, etc.), PDF, DOC, DOCX
                         </div>
-                        
-                        <!-- Media URL Input -->
-                        <div style="margin-bottom: 12px;">
-                            <input type="text" id="media-url-input" placeholder="Or paste media URL here" style="width: 100%; padding: 8px 10px; border: 1px solid #d1d5da; border-radius: 4px; font-size: 14px;">
-                        </div>
-                        
-                        <!-- Add Media Button -->
-                        <button type="button" id="add-media-btn" class="btn btn-primary" style="padding: 8px 16px;">
-                            Add Media to Question
-                        </button>
-                        
-                        <!-- Media Preview -->
-                        <div id="media-preview" style="margin-top: 12px; display: none;">
-                            <div style="padding: 12px; background: #f1f5f9; border-radius: 4px; border: 1px solid #e2e8f0;">
-                                <strong>Added Media:</strong>
-                                <div id="media-list" style="margin-top: 8px;"></div>
-                            </div>
-                        </div>
-                        
-                        <div class="error_message_of_media"></div><br>
                     </div>
                 </div>
             </div>
-      </div>
+        </div>
+        
+        <!-- OR paste URLs -->
+        <div class="ps-relative mt16">
+            <div class="ps-relative">
+                <div class="form-item p0 js-stacks-validation">
+                    <div class="d-flex ai-center jc-space-between">
+                        <label class="s-label mb4 d-block flex--item fl1" for="media_urls">
+                            Or Paste Image URLs
+                            <div class="s-description mt2">
+                                Paste image URLs here (one per line) if you prefer.
+                            </div>
+                        </label>
+                    </div>
+                    <div class="ps-relative">
+                        <textarea 
+                            name="media_urls" 
+                            id="media_urls" 
+                            rows="2" 
+                            placeholder="https://example.com/image1.jpg&#10;https://example.com/image2.png"
+                            style="width: 100%; padding: 8px 10px; border: 1px solid #d1d5da; border-radius: 4px; font-size: 14px; font-family: monospace;"
+                        ></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
 
 
 
