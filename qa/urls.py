@@ -94,8 +94,6 @@ urlpatterns = [
 
 	path('answer_edit_history/<int:answer_id>/', views.answer_edit_history, name='answer_edit_history'),
 
-	path('getQuestionEditHistory/<int:question_id>/', views.getQuestionEditHistory, name='getQuestionEditHistory'),
-
 	path('delete_answer/<int:answer_id>/', views.delete_answer, name='delete_answer'),
 
 	path('undelete_answer/<int:answer_id>/', views.undelete_answer, name='undelete_answer'),
