@@ -190,10 +190,6 @@
 <header class="top-bar js-top-bar top-bar__network">
     <div class="wmx12 mx-auto d-flex ai-center h100" role="menubar">
         <div class="-main flex--item">
-            <a href="#" class="left-sidebar-toggle p0 ai-center jc-center {% if request.path == '/' %}d-none{% endif %}" role="menuitem" aria-haspopup="true" aria-controls="left-sidebar" aria-expanded="false"><span class="ps-relative"></span></a>
-            <div class="topbar-dialog leftnav-dialog js-leftnav-dialog dno">
-                <div class="left-sidebar js-unpinned-left-sidebar" data-can-be="left-sidebar" data-is-here-when="sm"></div>
-            </div>
             <a href="{% url 'profile:home' %}" class="-logo">
                 <i class="fas fa-graduation-cap fa-3x" style="color: #6366f1;"></i><div class="logo-name">KhEC <b>FORUM</b></div>
             </a>
@@ -247,7 +243,6 @@
                 <a class="-link myInboxSVGLink readNotification" data-pk="{{ data.id }}" onClick="openInbox();" style="display: flex; align-items: center; justify-content: center; padding: 8px; cursor: pointer; position: relative;">
                     {% if showAlert %}<span class="button__badge" style="position: absolute; top: 2px; right: 2px; background: #d1383d; color: white; border-radius: 50%; min-width: 16px; height: 16px; font-size: 10px; display: flex; align-items: center; justify-content: center; padding: 2px;">{{countUnreadNotifications}}</span>{% endif %}
                     <i class="fa fa-bell fa-lg iconInbox myInboxSVG" aria-hidden="true" style="font-size: 18px;"></i>
-                    <span class="indicator-badge js-unread-count _important d-none">0</span>
                 </a>
             </li>
 
@@ -341,10 +336,6 @@
 <header class="top-bar js-top-bar top-bar__network">
     <div class="wmx12 mx-auto d-flex ai-center h100" role="menubar">
         <div class="-main flex--item">
-            <a href="#" class="left-sidebar-toggle p0 ai-center jc-center {% if request.path == '/' %}d-none{% endif %}" role="menuitem" aria-haspopup="true" aria-controls="left-sidebar" aria-expanded="false"><span class="ps-relative"></span></a>
-            <div class="topbar-dialog leftnav-dialog js-leftnav-dialog dno">
-                <div class="left-sidebar js-unpinned-left-sidebar" data-can-be="left-sidebar" data-is-here-when="sm"></div>
-            </div>
             <a href="{% url 'profile:home' %}" class="-logo">
                 <i class="fas fa-graduation-cap fa-3x" style="color: #6366f1;"></i><div class="logo-name">KhEC <b>FORUM</b></div>
             </a>
