@@ -509,44 +509,60 @@
                                 </div>
                             </div>
                             <div class="flex--item ml-auto fl-shrink0 started mt0">
-                                <div class="user-info">
-                                    <div class="user-action-time">
-                                        <a href="{{question.get_absolute_url}}" class="started-link">{{question.lastActiveFor}}<span title="{{question.q_edited_time}}" class="relativetime">{{question.q_edited_time|naturaltime}}</span></a>
-                                    </div>
-                                    <div class="user-gravatar32" style="width: 32px; height: 32px; border-radius: 50%; overflow: hidden; margin-right: 8px;">
+                                <div class="user-info d-flex ai-center">
+                                    <div class="user-gravatar32" style="width: 24px; height: 24px; border-radius: 50%; overflow: hidden; margin-right: 8px;">
                                         <a href="{{question.post_owner.profile.get_absolute_url}}">
-                                            <img src="{% if question.post_owner.profile.profile_photo %}{{question.post_owner.profile.profile_photo.url}}{% else %}{% static 'default.jpg' %}{% endif %}" alt="" width="32" height="32" style="object-fit: cover; width: 100%; height: 100%;">
+                                            <img src="{% if question.post_owner.profile.profile_photo %}{{question.post_owner.profile.profile_photo.url}}{% else %}{% static 'default.jpg' %}{% endif %}" 
+                                                 alt="" 
+                                                 width="24" 
+                                                 height="24" 
+                                                 style="object-fit: cover; width: 100%; height: 100%;"
+                                                 onerror="this.onerror=null; this.src='{% static 'default.jpg' %}'">
                                         </a>
                                     </div>
                                     <div class="user-details">
-                                        <a href="{{question.post_owner.profile.get_absolute_url}}" style="font-weight: 500;">
-                                            {% if question.post_owner.profile.full_name %}
-                                                {{ question.post_owner.profile.full_name }}
-                                            {% else %}
-                                                {{ question.post_owner }}
-                                            {% endif %}
-                                        </a>
-                                        <div class="-flair">
-                                            <span class="reputation-score" title="reputation score" dir="ltr">{{question.post_owner|calculate_reputation}}</span>
-
+                                        <div class="d-flex ai-center" style="gap: 4px; flex-wrap: wrap; font-size: 13px; line-height: 1.2;">
+                                            <a href="{{question.post_owner.profile.get_absolute_url}}" 
+                                               style="color: #000000ff; font-weight: 500; text-decoration: none;">
+                                                {% if question.post_owner.profile.full_name %}
+                                                    {{ question.post_owner.profile.full_name }}
+                                                {% else %}
+                                                    {{ question.post_owner }}
+                                                {% endif %}
+                                            </a>
+                                            <span style="color: #6c757d; white-space: nowrap;">
+                                                asked <time title="{{question.q_edited_time}}" 
+                                                          class="relativetime" 
+                                                          style="font-weight: 500;">
+                                                    {{question.q_edited_time|naturaltime}}
+                                                </time>
+                                            </span>
+                                        </div>
+                                        <div class="d-flex ai-center" style="gap: 4px; margin-top: 2px; flex-wrap: wrap;">
+                                            <span class="reputation-score" 
+                                                  title="reputation score" 
+                                                  style="font-weight: 600; color: #525960; font-size: 11px;">
+                                                {{question.post_owner|calculate_reputation}}
+                                            </span>
                                             {% if question.post_owner|calculateGoldBadges %}
-                                                <span title="{{question.post_owner|calculateGoldBadges}} gold badges" aria-hidden="true">
-                                                    <span class="badge1"></span>
-                                                    <span class="badgecount">{{question.post_owner|calculateGoldBadges}}</span>
+                                                <span title="{{question.post_owner|calculateGoldBadges}} gold badge{{ question.post_owner|calculateGoldBadges|pluralize }}" 
+                                                      style="color: #FFCC01; font-size: 11px; display: inline-flex; align-items: center;">
+                                                    <i class="fas fa-medal"></i>
+                                                    <span style="margin-left: 1px;">{{question.post_owner|calculateGoldBadges}}</span>
                                                 </span>
                                             {% endif %}
-
                                             {% if question.post_owner|calculatSilvereBadges %}
-                                                <span title="{{question.post_owner|calculatSilvereBadges}} silver badges" aria-hidden="true">
-                                                    <span class="badge2"></span>
-                                                    <span class="badgecount">{{question.post_owner|calculatSilvereBadges}}</span>
+                                                <span title="{{question.post_owner|calculatSilvereBadges}} silver badge{{ question.post_owner|calculatSilvereBadges|pluralize }}" 
+                                                      style="color: #C0C0C0; font-size: 11px; display: inline-flex; align-items: center;">
+                                                    <i class="fas fa-medal"></i>
+                                                    <span style="margin-left: 1px;">{{question.post_owner|calculatSilvereBadges}}</span>
                                                 </span>
                                             {% endif %}
-
                                             {% if question.post_owner|calculateBronzeBadges %}
-                                                <span title="{{question.post_owner|calculateBronzeBadges}} bronze badges" aria-hidden="true">
-                                                    <span class="badge3"></span>
-                                                    <span class="badgecount">{{question.post_owner|calculateBronzeBadges}}</span>
+                                                <span title="{{question.post_owner|calculateBronzeBadges}} bronze badge{{ question.post_owner|calculateBronzeBadges|pluralize }}" 
+                                                      style="color: #CD7F32; font-size: 11px; display: inline-flex; align-items: center;">
+                                                    <i class="fas fa-medal"></i>
+                                                    <span style="margin-left: 1px;">{{question.post_owner|calculateBronzeBadges}}</span>
                                                 </span>
                                             {% endif %}
                                         </div>
