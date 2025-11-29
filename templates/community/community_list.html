@@ -38,19 +38,19 @@
     }
     .community-card-actions {
         display: flex;
-        gap: 16px;
-        margin-top: auto;
+        gap: 8px;
+        margin-top: 16px;
         width: 100%;
-        justify-content: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
     }
-    .view-btn, .join-btn, .joined-btn {
-        flex: 0 1 160px;
-        min-width: 65px;
-        max-width: 100px;
-        padding: 10px 0;
+    .view-btn, .join-btn, .joined-btn, .requested-btn {
+        flex: 1 1 0;
+        min-width: 0;
+        padding: 8px 6px;
         border-radius: 8px;
         font-size: 12px;
-        font-weight: 300;
+        font-weight: 500;
         text-align: center;
         cursor: pointer;
         transition: all 0.2s ease;
@@ -59,12 +59,17 @@
         align-items: center;
         justify-content: center;
         gap: 4px;
-        width: 65%;
         box-sizing: border-box;
         border: none;
-        background: #f3f4f6;
-        color: #374151;
-        box-shadow: 0 2px 8px rgba(99,102,241,0.06);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .requested-btn {
+        flex: 0 1 160px;
+        min-width: 80px;
+        max-width: 100px;
     }
     .view-btn {
         background: linear-gradient(90deg, #6366f1 0%, #60a5fa 100%);
@@ -90,14 +95,25 @@
         border: none;
         font-weight: 700;
     }
+    .requested-btn {
+        background: #e0e7ff;
+        color: #4f46e5;
+        cursor: default;
+    }
+    .requested-btn i {
+        color: #6366f1;
+    }
     @media (max-width: 480px) {
         .community-card-actions {
-            flex-direction: column;
+            flex-direction: row;
             gap: 6px;
+            flex-wrap: wrap;
         }
-        .view-btn, .join-btn, .joined-btn {
-            width: 100%;
-            font-size: 15px;
+        .view-btn, .join-btn, .joined-btn, .requested-btn {
+            min-width: calc(50% - 3px);
+            max-width: calc(50% - 3px);
+            font-size: 11px;
+            padding: 8px 4px;
         }
     }
 </style>
@@ -113,12 +129,14 @@
         flex-direction: column;
         height: 100%;
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        max-width: 100%;
+        box-sizing: border-box;
+        width: 100%;
     }
 
     .community-card:hover {
         transform: translateY(-4px);
         box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
-        border-color: #e1e4e8;
     }
 
     .community-card-banner {
@@ -170,10 +188,11 @@
     }
 
     .community-card-content {
-        padding: 48px 20px 20px;
+        padding: 48px 16px 16px;
         flex: 1;
         display: flex;
         flex-direction: column;
+        min-width: 0; /* Prevents flex items from overflowing */
     }
 
     .community-card-name {
@@ -225,22 +244,6 @@
         margin-top: auto;
     }
 
-    .view-btn, .join-btn, .joined-btn {
-        flex: 1;
-        padding: 10px 12px;
-        border-radius: 8px;
-        font-size: 13px;
-        font-weight: 600;
-        text-align: center;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        text-decoration: none;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 6px;
-    }
-
     .header-content {
         display: flex;
         align-items: center;
@@ -255,7 +258,7 @@
 
     .search-container {
         flex: 2;
-        min-width: 300px;
+        min-width: 260px;
         margin: 0;
         padding: 0;
             justify-content: space-between;
@@ -354,38 +357,40 @@
     /* Communities Grid */
     .communities-grid {
         display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 24px;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
         max-width: 1200px;
         margin: 0 auto;
-        padding: 0 24px;
+        padding: 0 20px;
+        box-sizing: border-box;
     }
     
     /* First two cards in the first row */
     .communities-grid .community-card:nth-child(1),
     .communities-grid .community-card:nth-child(2) {
-        grid-column: span 1.5;
+        grid-column: span 1;
     }
     
     /* Reset for mobile */
     @media (max-width: 768px) {
         .communities-grid {
             grid-template-columns: 1fr;
+            padding: 0 16px;
+            max-width: 100%;
         }
         .communities-grid .community-card:nth-child(1),
         .communities-grid .community-card:nth-child(2) {
             grid-column: auto;
         }
+        .header-content {
+            padding: 0 12px;
+        }
     }
 
-    @media (min-width: 769px) and (max-width: 1024px) {
-       .communities-grid {
-            grid-template-columns: 1fr 1fr;
-            gap: 16px;
-        }
-        .communities-grid .community-card:nth-child(1),
-        .communities-grid .community-card:nth-child(2) {
-            grid-column: span 1;
+    @media (min-width: 1025px) {
+        .communities-grid {
+            gap: 24px;
+            padding: 0 32px;
         }
     }
 
@@ -489,12 +494,25 @@
     @media (max-width: 480px) {
         .community-card-actions {
             flex-direction: column;
+            gap: 8px;
         }
         
         .community-card-actions .view-btn,
         .community-card-actions .join-btn,
-        .community-card-actions .joined-btn {
+        .community-card-actions .joined-btn,
+        .community-card-actions .requested-btn {
             width: 100%;
+            max-width: 100%;
+            padding: 8px 12px;
+            font-size: 13px;
+        }
+        
+        .header-content {
+            gap: 16px;
+        }
+        
+        .search-container {
+            min-width: 100%;
         }
     }
 </style>
@@ -565,7 +583,7 @@
                                         <span>Joined</span>
                                     </button>
                                 {% elif community.id in pending_requests %}
-                                    <button class="joined-btn" disabled>
+                                    <button class="requested-btn" disabled>
                                         <i class="fas fa-clock"></i>
                                         <span>Requested</span>
                                     </button>
@@ -620,7 +638,7 @@
                                         <span>Joined</span>
                                     </button>
                                 {% elif community.id in pending_requests %}
-                                    <button class="joined-btn" disabled>
+                                    <button class="requested-btn" disabled>
                                         <i class="fas fa-clock"></i>
                                         <span>Requested</span>
                                     </button>

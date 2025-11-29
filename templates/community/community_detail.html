@@ -180,10 +180,26 @@
     }
 
     .community-description h2 {
-        font-size: 18px;
+        font-size: 1.25rem;
         font-weight: 600;
-        margin: 0 0 16px;
+        margin: 1.5rem 0 1rem;
         color: #0c0d0e;
+    }
+    
+    .community-description p {
+        margin-bottom: 1.25rem;
+        line-height: 1.7;
+        color: #3c3f44;
+    }
+    
+    .community-description ul,
+    .community-description ol {
+        margin-bottom: 1.25rem;
+        padding-left: 1.5rem;
+    }
+    
+    .community-description li {
+        margin-bottom: 0.5rem;
     }
 
     .community-description-text {
@@ -320,69 +336,94 @@
 {% endblock css %}
 
 {% block content %}
-<div class="community-header" style="margin-bottom: 32px;">
-    <div class="community-icon-large">
-        {% if community.icon %}
-            <img src="{{ community.icon.url }}" alt="{{ community.name }}">
-        {% else %}
-            <i class="fas fa-users"></i>
-        {% endif %}
-    </div>
-    <div class="community-info">
-        <h1 class="community-name">{{ community.name }}
-            {% if community.is_private %}
-                <span class="badge bg-danger" style="font-size:14px; margin-left:10px; vertical-align:middle;">Private</span>
-            {% endif %}
-        </h1>
-        <div class="community-meta">
-    Created by 
-    <a href="{% url 'profile:activityPageTabProfile' community.creator.id community.creator.username %}" 
-       class="text-decoration-none" 
-       style="color: #f9f1f1ff; font-weight: 500;">
-        {% if community.creator.profile.full_name %}{{ community.creator.profile.full_name }}{% else %}{{ community.creator.username }}{% endif %}
-    </a> 
-    - {{ community.member_count }} members
-</div>
-        <div class="community-actions">
-            {% if is_member %}
-                <button class="btn btn-secondary" onclick="leaveCommunity('{{ community.slug }}')">Leave Community</button>
-            {% elif has_pending_request %}
-                <button class="btn btn-warning" disabled style="cursor: not-allowed;">
-                    <i class="fas fa-clock"></i> Request Pending
-                </button>
-            {% else %}
-                <button class="btn btn-primary" onclick="joinCommunity('{{ community.slug }}')">Join Community</button>
-            {% endif %}
-            
-            {% if community.is_private and user == community.creator or is_admin %}
-                <a href="{% url 'community:pending_join_requests' community.slug %}" class="btn btn-warning ms-2">
-                    <i class="fas fa-user-clock"></i> Pending Requests
-                    {% if pending_requests_count > 0 %}
-                        <span class="badge bg-danger">{{ pending_requests_count }}</span>
+<div class="container">
+    <!-- Community Header -->
+    <div class="community-header card mb-4 border-0 shadow-sm">
+        <div class="card-body">
+            <div class="d-flex align-items-center">
+                <div class="community-icon-large me-4">
+                    {% if community.icon %}
+                        <img src="{{ community.icon.url }}" alt="{{ community.name }}" class="img-fluid rounded-circle">
+                    {% else %}
+                        <i class="fas fa-users text-primary"></i>
                     {% endif %}
-                </a>
-            {% endif %}
-            
-            {% if user == community.creator %}
-                <button class="btn btn-danger ms-2" onclick="deleteCommunity('{{ community.slug }}', '{{ community.name }}')">
-                    <i class="fas fa-trash"></i> Delete Community
-                </button>
-            {% endif %}
-        </div>
-    </div>
-</div>
-
-<div class="community-content" style="margin-top: 32px;">
-    <div>
-        <div class="community-description" style="margin-bottom: 40px;">
-            <h2>About</h2>
-            <div class="community-description-text">
-                {{ community.description|safe }}
+                </div>
+                <div class="flex-grow-1">
+                    <div class="d-flex align-items-center mb-2">
+                        <h1 class="community-name mb-0">{{ community.name }}</h1>
+                        {% if community.is_private %}
+                            <span class="badge bg-danger ms-2">Private</span>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="community-meta text-secondary mb-3">
+                        <span class="text-muted">Created by</span> 
+                        <a href="{% url 'profile:activityPageTabProfile' community.creator.id community.creator.username %}" 
+                           class="text-decoration-none fw-medium text-dark">
+                            {% if community.creator.profile.full_name %}
+                                {{ community.creator.profile.full_name }}
+                            {% else %}
+                                {{ community.creator.username }}
+                            {% endif %}
+                        </a> 
+                        <span class="text-muted">•</span> 
+                        <span class="text-dark">{{ community.member_count }} member{{ community.member_count|pluralize }}</span>
+                    </div>
+                    
+                    <div class="community-actions">
+                        {% if is_member %}
+                            {% if request.user != community.creator %}
+                                <button class="btn btn-outline-secondary" onclick="leaveCommunity('{{ community.slug }}')">
+                                    <i class="fas fa-sign-out-alt me-1"></i> Leave Community
+                                </button>
+                            {% endif %}
+                        {% else %}
+                            {% if has_pending_request %}
+                                <button class="btn btn-secondary" disabled>
+                                    <i class="fas fa-clock me-1"></i> Request Pending
+                                </button>
+                            {% else %}
+                                <button class="btn btn-primary" onclick="joinCommunity('{{ community.slug }}')">
+                                    <i class="fas fa-user-plus me-1"></i> Join Community
+                                </button>
+                            {% endif %}
+                        {% endif %}
+                        
+                        {% if community.is_private and is_admin %}
+                            <a href="{% url 'community:pending_join_requests' community.slug %}" class="btn btn-warning ms-2">
+                                <i class="fas fa-user-clock me-1"></i> Pending Requests
+                                {% if pending_requests_count > 0 %}
+                                    <span class="badge bg-danger ms-1">{{ pending_requests_count }}</span>
+                                {% endif %}
+                            </a>
+                        {% endif %}
+                        
+                        {% if request.user == community.creator %}
+                            <button class="btn btn-outline-danger ms-2" onclick="deleteCommunity('{{ community.slug }}', '{{ community.name }}')">
+                                <i class="fas fa-trash-alt me-1"></i> Delete Community
+                            </button>
+                        {% endif %}
+                    </div>
+                </div>
             </div>
         </div>
+    </div>
 
-        <!-- Questions Section -->
-        <div class="community-questions" style="margin-top: 40px;">
+    <div class="row g-4">
+        <!-- Main Content -->
+        <div class="col-lg-8">
+            <!-- Community Description Card -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h2 class="card-title h4 mb-4">About</h2>
+                    <div class="card-text community-description">
+                        {{ community.description|safe }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Questions Section -->
+            <div class="community-questions">
             {% if is_restricted %}
                 <div style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); padding: 50px 30px; text-align: center; border-radius: 12px; margin-top: 30px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
                     <div style="background: white; width: 80px; height: 80px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
@@ -414,30 +455,32 @@
                 {% if questions %}
                     <div class="question-list">
                         {% for question in questions %}
-                        <div class="question-summary mb-3 p-3 border rounded">
-                            <div class="d-flex">
+                        <div class="question-summary mb-3 p-3 border rounded position-relative" style="min-height: 180px;">
+                            <div class="d-flex h-100">
                                 <div class="text-center me-3" style="min-width: 60px;">
                                     <div class="text-muted small">
                                         <div class="fs-5">{{ question.calculate_UpVote_DownVote|default:0 }}</div>
                                         <div class="text-nowrap">vote{{ question.calculate_UpVote_DownVote|pluralize }}</div>
                                     </div>
                                     <div class="text-muted small mt-2">
-                                        <div class="fs-5">{{ question.count_answers }}</div>
-                                        <div class="text-nowrap">answer{{ question.count_answers|pluralize }}</div>
+                                        <div class="fs-5">{{ question.count_answers|default:0 }}</div>
+                                        <div class="text-nowrap">answer{{ question.count_answers|default:0|pluralize }}</div>
                                     </div>
                                     <div class="text-muted small mt-2">
                                         <div class="fs-5">{{ question.calculate_viewers|default:0 }}</div>
-                                        <div class="text-nowrap">view{{ question.calculate_viewers|pluralize }}</div>
+                                        <div class="text-nowrap">view{{ question.calculate_viewers|default:0|pluralize }}</div>
                                     </div>
                                 </div>
-                                <div class="flex-grow-1">
-                                    <h3 class="h5 mb-2">
-                                        <a href="{{ question.get_absolute_url }}" class="text-decoration-none">{{ question.title|truncatewords:15 }}</a>
-                                    </h3>
-                                    <div class="mb-2">
-                                        {{ question.body|striptags|truncatewords:30 }}
+                                <div class="flex-grow-1 d-flex flex-column">
+                                    <div>
+                                        <h3 class="h5 mb-2">
+                                            <a href="{{ question.get_absolute_url }}" class="text-decoration-none">{{ question.title|truncatewords:15 }}</a>
+                                        </h3>
+                                        <div class="mb-3">
+                                            {{ question.body|striptags|truncatewords:30 }}
+                                        </div>
                                     </div>
-                                    <div class="d-flex flex-wrap align-items-center justify-content-between">
+                                    <div class="mt-auto">
                                         <div class="tags mb-2">
                                             {% for tag in question.tags.all|slice:":5" %}
                                                 <a href="{% url 'tagbadge:taggedItemsFrom_All' tag.id %}" class="badge bg-light text-dark me-1 mb-1">{{ tag.name }}</a>
@@ -446,32 +489,36 @@
                                                 <span class="text-muted">+{{ question.tags.count|add:"-5" }} more</span>
                                             {% endif %}
                                         </div>
-                                        <div class="user-info d-flex align-items-center">
-                                            <div class="user-gravatar32 me-2" style="width: 24px; height: 24px; border-radius: 50%; overflow: hidden;">
-                                                <a href="{{ question.post_owner.profile.get_absolute_url }}">
-                                                    <img src="{% if question.post_owner.profile.profile_photo %}{{ question.post_owner.profile.profile_photo.url }}{% else %}{% static 'default.jpg' %}{% endif %}" 
-                                                         alt="" width="24" height="24" style="object-fit: cover; width: 100%; height: 100%;">
-                                                </a>
-                                            </div>
-                                            <div class="user-details">
-                                                <div class="d-flex align-items-center" style="font-size: 12px;">
-                                                    <a href="{{ question.post_owner.profile.get_absolute_url }}" class="fw-medium text-decoration-none">
-                                                        {% if question.post_owner.profile.full_name %}
-                                                            {{ question.post_owner.profile.full_name }}
-                                                        {% else %}
-                                                            {{ question.post_owner.username }}
-                                                        {% endif %}
-                                                    </a>
-                                                    <span class="reputation-score ms-1" title="reputation score">
-                                                        {{ question.post_owner|calculate_reputation }}
-                                                    </span>
-                                                </div>
-                                                <div class="text-muted" style="font-size: 11px;">
-                                                    asked <span title="{{ question.date }}">{{ question.date|timesince }} ago</span>
-                                                </div>
-                                            </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="position-absolute" style="bottom: 15px; right: 15px;">
+                                <div class="d-flex align-items-center bg-white p-1 rounded">
+                                    <div class="text-end me-2">
+                                        <div class="d-flex align-items-center justify-content-end" style="font-size: 12px;">
+                                            <a href="{{ question.post_owner.profile.get_absolute_url }}" class="fw-medium text-decoration-none text-nowrap">
+                                                {% if question.post_owner.profile.full_name %}
+                                                    {{ question.post_owner.profile.full_name }}
+                                                {% else %}
+                                                    {{ question.post_owner.username }}
+                                                {% endif %}
+                                            </a>
+                                            <span class="reputation-score ms-1" title="reputation score">
+                                                {{ question.post_owner|calculate_reputation }}
+                                            </span>
+                                        </div>
+                                        <div class="text-muted text-nowrap" style="font-size: 11px;">
+                                            asked <span title="{{ question.date }}">{{ question.date|timesince }} ago</span>
                                         </div>
                                     </div>
+                                    <div class="user-gravatar32" style="width: 32px; height: 32px; border-radius: 50%; overflow: hidden; border: 2px solid #fff; box-shadow: 0 1px 2px rgba(0,0,0,0.1);">
+                                        <a href="{{ question.post_owner.profile.get_absolute_url }}">
+                                            <img src="{% if question.post_owner.profile.profile_photo %}{{ question.post_owner.profile.profile_photo.url }}{% else %}{% static 'default.jpg' %}{% endif %}" 
+                                                 alt="" width="32" height="32" style="object-fit: cover; width: 100%; height: 100%;">
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
                                 </div>
                             </div>
                         </div>
@@ -530,11 +577,13 @@
                         {% endif %}
                     </div>
                 {% endif %}
-            {% endif %}
-        </div>
-    </div>
+                {% endif %}
+            </div> <!-- Close community-questions -->
+        </div> <!-- Close col-lg-8 -->
 
-    <div class="community-sidebar">
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <div class="community-sidebar">
         <div class="sidebar-card">
             <div class="stats">
                 <div class="stat">
