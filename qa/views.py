@@ -208,52 +208,48 @@ def allActiveThreads(request):
 
 def deleteQuestion(request, question_id):
     """
-    view to delete question and award badges if user is eligible
+    view to delete question permanently
     """
     question = get_object_or_404(Question, pk=question_id)
-    question.deleted_time = timezone.now()
-    question.save()
-    if question.qupvote_set.all().count() >= 3:
-        TagBadge.objects.get_or_create(
-            awarded_to_user=question.post_owner,
-            badge_type="BRONZE",
-            tag_name="Disciplined",
-            bade_position="BADGE",
-            questionIf_TagOf_Q=question
-        )
-        PrivRepNotification.objects.get_or_create(
-            for_user=request.user,
-            url="#",
-            type_of_PrivNotify="BADGE_EARNED",
-            for_if="Disciplined",
-            description="Delete own post with score of 3 or higher"
-        )
-
-    getUpvotes = question.qupvote_set.all().count()
-    getDownVotes = question.qupvote_set.all().count()
-
-    if question.calculate_UpVote_DownVote >= -3:
-        TagBadge.objects.get_or_create(awarded_to_user=question.post_owner,
-                                       badge_type="BRONZE",
-                                       tag_name="Peer Pressure",
-                                       bade_position="BADGE",
-                                       questionIf_TagOf_Q=question
-                                       )
-        PrivRepNotification.objects.get_or_create(
-            for_user=request.user,
-            url="#",
-            type_of_PrivNotify="BADGE_EARNED",
-            for_if="Peer Pressure",
-            description="Delete own post with score of -3 or lower"
-        )
-
+    
     if request.user == question.post_owner:
-        question.is_deleted = True
-        question.save()
-        return redirect('qa:questionDetailView', pk=question_id)
+        # Award badges before deletion
+        if question.qupvote_set.all().count() >= 3:
+            TagBadge.objects.get_or_create(
+                awarded_to_user=question.post_owner,
+                badge_type="BRONZE",
+                tag_name="Disciplined",
+                bade_position="BADGE"
+            )
+            PrivRepNotification.objects.get_or_create(
+                for_user=request.user,
+                url="#",
+                type_of_PrivNotify="BADGE_EARNED",
+                for_if="Disciplined",
+                description="Delete own post with score of 3 or higher"
+            )
+
+        if question.calculate_UpVote_DownVote >= -3:
+            TagBadge.objects.get_or_create(
+                awarded_to_user=question.post_owner,
+                badge_type="BRONZE",
+                tag_name="Peer Pressure",
+                bade_position="BADGE"
+            )
+            PrivRepNotification.objects.get_or_create(
+                for_user=request.user,
+                url="#",
+                type_of_PrivNotify="BADGE_EARNED",
+                for_if="Peer Pressure",
+                description="Delete own post with score of -3 or lower"
+            )
+        
+        # Permanently delete the question
+        question.delete()
+        messages.success(request, 'Question deleted successfully')
+        return redirect('qa:questions')
     else:
         messages.error(request, 'You are not the Post Owner')
-        # return JsonResponse({'action':'notPostOwner'})
         return redirect('qa:questionDetailView', pk=question_id)
 
 
@@ -273,14 +269,15 @@ def undeleteQuestion(request, question_id):
 
 def delete_answer(request, answer_id):
     """
-    view to delete Answer
+    view to delete Answer permanently
     """
     answer = get_object_or_404(Answer, pk=answer_id)
     if request.user == answer.answer_owner:
-        answer.is_deleted = True
-        answer.deleted_time = timezone.now()
-        answer.save()
-        return redirect('qa:questionDetailView', pk=answer.questionans.id)
+        question_id = answer.questionans.id
+        # Permanently delete the answer
+        answer.delete()
+        messages.success(request, 'Answer deleted successfully')
+        return redirect('qa:questionDetailView', pk=question_id)
     else:
         messages.error(request, 'You are not post owner')
         return redirect('qa:questionDetailView', pk=answer.questionans.id)
