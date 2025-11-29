@@ -1875,11 +1875,21 @@ def home(request):
         vote_count=Count('qupvote') - Count('qdownvote')
     ).order_by('-vote_count')[:3]
     
-    # Get trending questions for the main feed
-    questionsHome = Question.objects.filter(is_deleted=False).order_by('-date')[:20]  # Added filter
+    # Get trending questions for the main feed with pagination
+    questionsHome_all = Question.objects.filter(is_deleted=False).order_by('-date')
     
     # Count bounties (only non-deleted)
     count_bounty = Question.objects.filter(is_deleted=False, is_bountied=True).count()
+    
+    # Pagination
+    page = request.GET.get('page', 1)
+    paginator = Paginator(questionsHome_all, 5)
+    try:
+        questionsHome = paginator.page(page)
+    except PageNotAnInteger:
+        questionsHome = paginator.page(1)
+    except EmptyPage:
+        questionsHome = paginator.page(paginator.num_pages)
     
     context = {
         'hot_topics': hot_topics,

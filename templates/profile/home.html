@@ -391,7 +391,6 @@
                         <div class="summary">
                             <h3><a href="{{question.get_absolute_url}}" class="question-hyperlink">{{question.title}}</a></h3>
                             <div class="tags d-flex gs4 fw-wrap mt2 float-none lh-unset">
-
                                 {% if question.community %}
                                 <span class="post-tag flex--item" style="background: #f0fdf4 !important; color: #15803d !important; border-color: #bbf7d0 !important; font-weight: 600;" title="Community: {{question.community.name}}">
                                     📍 {{question.community.name}}
@@ -419,19 +418,94 @@
                                 </div>
                             </div>
                         </div>
-
                     </div>
                 </div>
             </div>
             {% endfor %}
         </div>
 
-        <br class="cbt"/>
-        <h2 class="bottom-notice" data-loc="2">
-            Looking for more? Browse the <a href="{% url 'qa:questions' %}">complete list of questions</a>, 
-            or explore <a href="{% url 'profile:tagsPage' %}">popular topics</a>. 
-            Help fellow members by answering <a href="{% url 'qa:unansweredQuestions' query=None %}">unanswered questions</a>.
-        </h2>
+        <!-- Pagination Controls -->
+        <style>
+            .s-pagination { 
+                display: flex; 
+                justify-content: flex-start; 
+                gap: 4px; 
+                margin-top: 24px; 
+            }
+
+            .s-pagination--item {
+                color: var(--text-secondary);
+                background-color: var(--bg-primary);
+                border: 1px solid var(--border);
+                padding: 6px 12px;
+                border-radius: 6px;
+                text-decoration: none;
+                font-size: 14px;
+                font-weight: 500;
+                transition: all 0.2s;
+            }
+
+            .s-pagination--item:hover { 
+                background-color: var(--hover); 
+                border-color: #d1d5db; 
+            }
+
+            .s-pagination--item.is-selected {
+                background-color: var(--primary);
+                color: white;
+                border-color: var(--primary);
+                cursor: default;
+            }
+        </style>
+
+        <div class="s-pagination site1 themed pager float-left">
+            {% if questionsHome.has_other_pages %}
+                <!-- First Page Button -->
+                {% if questionsHome.number != 1 %}
+                    <a class="s-pagination--item js-pagination-item" href="?page=1" rel="" title="Go to first page">
+                        <span>« First</span>
+                    </a>
+                {% else %}
+                    <div class="s-pagination--item" style="opacity: 0.5; cursor: not-allowed;">« First</div>
+                {% endif %}
+
+                <!-- Previous Page Button -->
+                {% if questionsHome.has_previous %}
+                    <a class="s-pagination--item js-pagination-item" href="?page={{ questionsHome.previous_page_number }}" rel="" title="Go to previous page">
+                        <span>‹ Prev</span>
+                    </a>
+                {% else %}
+                    <div class="s-pagination--item" style="opacity: 0.5; cursor: not-allowed;">‹ Prev</div>
+                {% endif %}
+
+                <!-- Page Numbers -->
+                {% for i in questionsHome.paginator.page_range %}
+                    {% if questionsHome.number == i %}
+                        <div class="s-pagination--item is-selected">{{ i }}</div>
+                    {% else %}
+                        <a class="s-pagination--item js-pagination-item" href="?page={{ i }}" rel="" title="Go to page {{ i }}">{{ i }}</a>
+                    {% endif %}
+                {% endfor %}
+
+                <!-- Next Page Button -->
+                {% if questionsHome.has_next %}
+                    <a class="s-pagination--item js-pagination-item" href="?page={{ questionsHome.next_page_number }}" rel="" title="Go to next page">
+                        <span>Next ›</span>
+                    </a>
+                {% else %}
+                    <div class="s-pagination--item" style="opacity: 0.5; cursor: not-allowed;">Next ›</div>
+                {% endif %}
+
+                <!-- Last Page Button -->
+                {% if questionsHome.number != questionsHome.paginator.num_pages %}
+                    <a class="s-pagination--item js-pagination-item" href="?page={{ questionsHome.paginator.num_pages }}" rel="" title="Go to last page">
+                        <span>Last »</span>
+                    </a>
+                {% else %}
+                    <div class="s-pagination--item" style="opacity: 0.5; cursor: not-allowed;">Last »</div>
+                {% endif %}
+            {% endif %}
+        </div>
 
     </div>
 

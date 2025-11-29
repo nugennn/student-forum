@@ -4955,7 +4955,7 @@ def questions(request):
 
     page = request.GET.get('page', 1)
 
-    paginator = Paginator(questions, 9)
+    paginator = Paginator(questions, 5)
     try:
         questions = paginator.page(page)
     except PageNotAnInteger:
