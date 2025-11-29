@@ -320,7 +320,7 @@
 {% endblock css %}
 
 {% block content %}
-<div class="community-header">
+<div class="community-header" style="margin-bottom: 32px;">
     <div class="community-icon-large">
         {% if community.icon %}
             <img src="{{ community.icon.url }}" alt="{{ community.name }}">
@@ -346,16 +346,35 @@
         <div class="community-actions">
             {% if is_member %}
                 <button class="btn btn-secondary" onclick="leaveCommunity('{{ community.slug }}')">Leave Community</button>
+            {% elif has_pending_request %}
+                <button class="btn btn-warning" disabled style="cursor: not-allowed;">
+                    <i class="fas fa-clock"></i> Request Pending
+                </button>
             {% else %}
                 <button class="btn btn-primary" onclick="joinCommunity('{{ community.slug }}')">Join Community</button>
+            {% endif %}
+            
+            {% if community.is_private and user == community.creator or is_admin %}
+                <a href="{% url 'community:pending_join_requests' community.slug %}" class="btn btn-warning ms-2">
+                    <i class="fas fa-user-clock"></i> Pending Requests
+                    {% if pending_requests_count > 0 %}
+                        <span class="badge bg-danger">{{ pending_requests_count }}</span>
+                    {% endif %}
+                </a>
+            {% endif %}
+            
+            {% if user == community.creator %}
+                <button class="btn btn-danger ms-2" onclick="deleteCommunity('{{ community.slug }}', '{{ community.name }}')">
+                    <i class="fas fa-trash"></i> Delete Community
+                </button>
             {% endif %}
         </div>
     </div>
 </div>
 
-<div class="community-content">
+<div class="community-content" style="margin-top: 32px;">
     <div>
-        <div class="community-description">
+        <div class="community-description" style="margin-bottom: 40px;">
             <h2>About</h2>
             <div class="community-description-text">
                 {{ community.description|safe }}
@@ -363,15 +382,38 @@
         </div>
 
         <!-- Questions Section -->
-        <div class="community-questions mt-4">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h2 class="h5 mb-0">Questions</h2>
-                <a href="{% url 'qa:new_question' %}" class="btn btn-primary btn-sm">Ask Question</a>
-            </div>
-            
-            {% if questions %}
-                <div class="question-list">
-                    {% for question in questions %}
+        <div class="community-questions" style="margin-top: 40px;">
+            {% if is_restricted %}
+                <div style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); padding: 50px 30px; text-align: center; border-radius: 12px; margin-top: 30px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                    <div style="background: white; width: 80px; height: 80px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                        <i class="fas fa-lock" style="font-size: 36px; color: #f59e0b;"></i>
+                    </div>
+                    <h3 style="color: #92400e; margin-bottom: 15px; font-weight: 600;">Private Community</h3>
+                    <p style="color: #78350f; font-size: 16px; margin-bottom: 20px; max-width: 500px; margin-left: auto; margin-right: auto;">
+                        This community is private. You need to be a member to view questions and participate.
+                    </p>
+                    {% if has_pending_request %}
+                        <div style="background: rgba(255,255,255,0.7); padding: 15px 25px; border-radius: 8px; display: inline-block; margin-top: 10px;">
+                            <i class="fas fa-clock" style="color: #f59e0b; margin-right: 8px;"></i>
+                            <span style="color: #92400e; font-weight: 500;">Your join request is pending approval</span>
+                        </div>
+                    {% else %}
+                        <p style="color: #78350f; margin-top: 15px; font-size: 14px;">
+                            Click the <strong>"Join Community"</strong> button above to request access
+                        </p>
+                    {% endif %}
+                </div>
+            {% else %}
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h2 class="h5 mb-0">Questions</h2>
+                    {% if is_member %}
+                        <a href="{% url 'qa:new_question' %}" class="btn btn-primary btn-sm">Ask Question</a>
+                    {% endif %}
+                </div>
+                
+                {% if questions %}
+                    <div class="question-list">
+                        {% for question in questions %}
                         <div class="question-summary mb-3 p-3 border rounded">
                             <div class="d-flex">
                                 <div class="text-center me-3" style="min-width: 60px;">
@@ -478,13 +520,16 @@
                         </nav>
                     {% endif %}
                 </div>
-            {% else %}
-                <div class="text-center py-5 bg-light rounded">
-                    <i class="fas fa-comment-alt-question fa-3x text-muted mb-3"></i>
-                    <h5 class="text-muted">No questions yet</h5>
-                    <p class="text-muted mb-0">Be the first to ask a question in this community!</p>
-                    <a href="{% url 'qa:new_question' %}" class="btn btn-primary mt-3">Ask a Question</a>
-                </div>
+                {% else %}
+                    <div class="text-center py-5 bg-light rounded">
+                        <i class="fas fa-comment-alt-question fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">No questions yet</h5>
+                        <p class="text-muted mb-0">Be the first to ask a question in this community!</p>
+                        {% if is_member %}
+                            <a href="{% url 'qa:new_question' %}" class="btn btn-primary mt-3">Ask a Question</a>
+                        {% endif %}
+                    </div>
+                {% endif %}
             {% endif %}
         </div>
     </div>
@@ -564,13 +609,34 @@ async function joinCommunity(slug) {
                 'Content-Type': 'application/json'
             }
         });
+        
+        const data = await response.json();
+        
         if (response.ok) {
-            location.reload();
+            if (data.is_request) {
+                // Join request submitted for private community
+                alert(data.message);
+                
+                // Change button to "Request Pending"
+                const joinBtn = document.querySelector('[onclick*="joinCommunity"]');
+                if (joinBtn) {
+                    joinBtn.outerHTML = `
+                        <button class="btn btn-warning" disabled style="cursor: not-allowed;">
+                            <i class="fas fa-clock"></i> Request Pending
+                        </button>
+                    `;
+                }
+            } else {
+                // Successfully joined public community
+                location.reload();
+            }
         } else {
-            alert('Failed to join community');
+            // Show error message from server
+            alert(data.message || 'Failed to join community');
         }
     } catch (error) {
         console.error('Error:', error);
+        alert('An error occurred. Please try again.');
     }
 }
 
@@ -591,6 +657,29 @@ async function leaveCommunity(slug) {
             }
         } catch (error) {
             console.error('Error:', error);
+        }
+    }
+}
+
+async function deleteCommunity(slug, communityName) {
+    if (confirm(`Are you sure you want to permanently delete the community "${communityName}"? This action cannot be undone.`)) {
+        try {
+            const response = await fetch(`/community/${slug}/delete/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCsrfToken(),
+                    'Content-Type': 'application/json'
+                }
+            });
+            if (response.ok) {
+                alert('Community deleted successfully');
+                window.location.href = '/community/';
+            } else {
+                alert('Failed to delete community');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('An error occurred. Please try again.');
         }
     }
 }

@@ -21,4 +21,9 @@ urlpatterns = [
     path('<slug:slug>/leave/', views.leave_community, name='leave_community'),
     path('<slug:slug>/members/remove/<int:user_id>/', views.remove_member, name='remove_member'),
     path('<slug:slug>/members/change-role/<int:user_id>/', views.change_member_role, name='change_member_role'),
+    
+    # Join requests for private communities
+    path('<slug:slug>/join-requests/', views.pending_join_requests, name='pending_join_requests'),
+    path('<slug:slug>/join-requests/<int:request_id>/approve/', views.approve_join_request, name='approve_join_request'),
+    path('<slug:slug>/join-requests/<int:request_id>/reject/', views.reject_join_request, name='reject_join_request'),
 ]

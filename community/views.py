@@ -7,9 +7,10 @@ from django.contrib import messages
 from django.utils import timezone
 from django.contrib.auth.decorators import user_passes_test
 from django.contrib.auth.models import User
-from .models import Community, CommunityMember
+from .models import Community, CommunityMember, CommunityJoinRequest
 from qa.models import Question
 from .forms import CommunityForm
+from notification.models import Notification
 
 @login_required
 def community_list(request):
@@ -35,9 +36,16 @@ def community_list(request):
     
     # Get user's ACTIVE joined communities only
     user_communities = []
+    pending_requests = []
     if request.user.is_authenticated:
         user_communities = request.user.community_memberships.filter(
             is_active=True
+        ).values_list('community_id', flat=True)
+        
+        # Get user's pending join requests
+        pending_requests = CommunityJoinRequest.objects.filter(
+            user=request.user,
+            status='pending'
         ).values_list('community_id', flat=True)
     
     context = {
@@ -46,6 +54,7 @@ def community_list(request):
         'categories': categories,  # Empty list for now
         'search_query': search_query,
         'user_communities': user_communities,
+        'pending_requests': pending_requests,
     }
     return render(request, 'community/community_list.html', context)
 
@@ -62,16 +71,50 @@ def community_detail(request, slug):
         is_active=True
     ).exists()
     
+    # Check if user has a pending join request
+    has_pending_request = CommunityJoinRequest.objects.filter(
+        community=community,
+        user=request.user,
+        status='pending'
+    ).exists()
+    
     # Get member role if user is a member
     member_role = None
+    is_admin = False
     if is_member:
         member = CommunityMember.objects.get(community=community, user=request.user)
         member_role = member.role
+        is_admin = member.role == 'admin'
     
-    # Get community members
+    # Get pending join requests count (for creator/admin)
+    pending_requests_count = 0
+    if community.is_private and (request.user == community.creator or is_admin):
+        pending_requests_count = CommunityJoinRequest.objects.filter(
+            community=community,
+            status='pending'
+        ).count()
+    
+    # For private communities, restrict access to members only
+    if community.is_private and not is_member:
+        # Non-members can only see basic info, no questions or members
+        context = {
+            'community': community,
+            'is_member': is_member,
+            'has_pending_request': has_pending_request,
+            'member_role': member_role,
+            'is_admin': is_admin,
+            'members': [],
+            'member_count': community.member_count,
+            'questions': [],
+            'pending_requests_count': pending_requests_count,
+            'is_restricted': True,  # Flag to show restricted message
+        }
+        return render(request, 'community/community_detail.html', context)
+    
+    # Get community members (only for members or public communities)
     members = community.members.filter(is_active=True).select_related('user')[:10]
     
-    # Get questions for this community
+    # Get questions for this community (only for members or public communities)
     questions_list = Question.objects.filter(
         community=community,
         is_deleted=False
@@ -91,10 +134,13 @@ def community_detail(request, slug):
     context = {
         'community': community,
         'is_member': is_member,
+        'has_pending_request': has_pending_request,
         'member_role': member_role,
+        'is_admin': is_admin,
         'members': members,
         'member_count': community.member_count,
         'questions': questions,
+        'pending_requests_count': pending_requests_count,
     }
     return render(request, 'community/community_detail.html', context)
 
@@ -141,6 +187,60 @@ def join_community(request, slug):
     ).exists():
         return JsonResponse({'success': False, 'message': 'Already a member'}, status=400)
     
+    # For private communities, create a join request instead
+    if community.is_private:
+        # Check if there's already a pending request
+        existing_request = CommunityJoinRequest.objects.filter(
+            community=community,
+            user=request.user,
+            status='pending'
+        ).first()
+        
+        if existing_request:
+            return JsonResponse({'success': False, 'message': 'Join request already pending'}, status=400)
+        
+        # Create new join request
+        join_request = CommunityJoinRequest.objects.create(
+            community=community,
+            user=request.user,
+            message=request.POST.get('message', ''),
+            status='pending'
+        )
+        
+        # Create notification for community creator
+        Notification.objects.create(
+            noti_receiver=community.creator,
+            noti_sender=request.user,
+            type_of_noti='community_join_request',
+            url=f'/community/{community.slug}/join-requests/',
+            extra_data=community.name,
+            is_read=False
+        )
+        
+        # Also notify admins (if any)
+        admins = CommunityMember.objects.filter(
+            community=community,
+            role='admin',
+            is_active=True
+        ).exclude(user=community.creator)
+        
+        for admin_member in admins:
+            Notification.objects.create(
+                noti_receiver=admin_member.user,
+                noti_sender=request.user,
+                type_of_noti='community_join_request',
+                url=f'/community/{community.slug}/join-requests/',
+                extra_data=community.name,
+                is_read=False
+            )
+        
+        return JsonResponse({
+            'success': True, 
+            'message': 'Join request submitted. Waiting for approval from community creator.',
+            'is_request': True
+        })
+    
+    # For public communities, join directly
     # Handle re-join: reactivate if soft-deleted
     member, created = CommunityMember.objects.get_or_create(
         community=community,
@@ -455,3 +555,112 @@ def delete_community(request, slug):
     
     # If not a POST request, redirect to community detail
     return redirect('community:community_detail', slug=slug)
+
+
+@login_required
+def pending_join_requests(request, slug):
+    """View pending join requests for a community (creator/admin only)"""
+    community = get_object_or_404(Community, slug=slug, is_active=True)
+    
+    # Check if user is creator or admin
+    is_creator = request.user == community.creator
+    is_admin = CommunityMember.objects.filter(
+        community=community,
+        user=request.user,
+        role='admin',
+        is_active=True
+    ).exists()
+    
+    if not (is_creator or is_admin):
+        messages.error(request, 'You do not have permission to view join requests')
+        return redirect('community:community_detail', slug=slug)
+    
+    # Get all pending requests
+    pending_requests = CommunityJoinRequest.objects.filter(
+        community=community,
+        status='pending'
+    ).select_related('user', 'user__profile')
+    
+    context = {
+        'community': community,
+        'pending_requests': pending_requests,
+        'is_creator': is_creator,
+        'is_admin': is_admin,
+    }
+    return render(request, 'community/pending_requests.html', context)
+
+
+@login_required
+@require_http_methods(["POST"])
+def approve_join_request(request, slug, request_id):
+    """Approve a join request"""
+    community = get_object_or_404(Community, slug=slug, is_active=True)
+    join_request = get_object_or_404(CommunityJoinRequest, id=request_id, community=community)
+    
+    # Check if user is creator or admin
+    is_creator = request.user == community.creator
+    is_admin = CommunityMember.objects.filter(
+        community=community,
+        user=request.user,
+        role='admin',
+        is_active=True
+    ).exists()
+    
+    if not (is_creator or is_admin):
+        return JsonResponse({'success': False, 'message': 'Permission denied'}, status=403)
+    
+    # Check if request is still pending
+    if join_request.status != 'pending':
+        return JsonResponse({'success': False, 'message': 'Request already processed'}, status=400)
+    
+    # Update request status
+    join_request.status = 'approved'
+    join_request.reviewed_by = request.user
+    join_request.save()
+    
+    # Add user as member
+    member, created = CommunityMember.objects.get_or_create(
+        community=community,
+        user=join_request.user,
+        defaults={'role': 'member', 'is_active': True}
+    )
+    if not created:
+        member.is_active = True
+        member.save()
+    
+    # Update member count
+    community.member_count = community.members.filter(is_active=True).count()
+    community.save()
+    
+    return JsonResponse({'success': True, 'message': f'{join_request.user.username} has been added to the community'})
+
+
+@login_required
+@require_http_methods(["POST"])
+def reject_join_request(request, slug, request_id):
+    """Reject a join request"""
+    community = get_object_or_404(Community, slug=slug, is_active=True)
+    join_request = get_object_or_404(CommunityJoinRequest, id=request_id, community=community)
+    
+    # Check if user is creator or admin
+    is_creator = request.user == community.creator
+    is_admin = CommunityMember.objects.filter(
+        community=community,
+        user=request.user,
+        role='admin',
+        is_active=True
+    ).exists()
+    
+    if not (is_creator or is_admin):
+        return JsonResponse({'success': False, 'message': 'Permission denied'}, status=403)
+    
+    # Check if request is still pending
+    if join_request.status != 'pending':
+        return JsonResponse({'success': False, 'message': 'Request already processed'}, status=400)
+    
+    # Update request status
+    join_request.status = 'rejected'
+    join_request.reviewed_by = request.user
+    join_request.save()
+    
+    return JsonResponse({'success': True, 'message': 'Join request rejected'})

@@ -1902,9 +1902,18 @@ def home(request):
 def bountied_home(request):
     questions = Question.objects.filter(
                     is_deleted=False,  # Added this
-                    is_bountied=True)[:50]
+                    is_bountied=True)
     
-    count_bounty = Question.objects.filter(is_deleted=False, is_bountied=True).count()
+    count_bounty = questions.count()
+
+    page = request.GET.get('page', 1)
+    paginator = Paginator(questions, 5)
+    try:
+        questions = paginator.page(page)
+    except PageNotAnInteger:
+        questions = paginator.page(1)
+    except EmptyPage:
+        questions = paginator.page(paginator.num_pages)
 
     context = {
         'questions': questions,
@@ -1922,9 +1931,18 @@ def hot_q_day_home(request):
                     ).filter(qupvote__date__gt=last_3_days
                     ).order_by('qupvote'
                     ).order_by('-countComment'
-                    ).distinct()[:50]
+                    ).distinct()
     
     count_bounty = Question.objects.filter(is_deleted=False, is_bountied=True).count()
+
+    page = request.GET.get('page', 1)
+    paginator = Paginator(questions, 5)
+    try:
+        questions = paginator.page(page)
+    except PageNotAnInteger:
+        questions = paginator.page(1)
+    except EmptyPage:
+        questions = paginator.page(paginator.num_pages)
 
     context = {
         'questions': questions,
@@ -1942,9 +1960,18 @@ def hot_q_week_home(request):
                     ).filter(qupvote__date__gt=last_7_days
                     ).order_by('qupvote'
                     ).order_by('-countComment'
-                    ).distinct()[:50]
+                    ).distinct()
     
     count_bounty = Question.objects.filter(is_deleted=False, is_bountied=True).count()
+
+    page = request.GET.get('page', 1)
+    paginator = Paginator(questions, 5)
+    try:
+        questions = paginator.page(page)
+    except PageNotAnInteger:
+        questions = paginator.page(1)
+    except EmptyPage:
+        questions = paginator.page(paginator.num_pages)
 
     context = {
         'questions': questions,
@@ -1962,9 +1989,18 @@ def hot_q_month_home(request):
                     ).filter(qupvote__date__gt=last_28_days
                     ).order_by('qupvote'
                     ).order_by('-countComment'
-                    ).distinct()[:50]
+                    ).distinct()
     
     count_bounty = Question.objects.filter(is_deleted=False, is_bountied=True).count()
+
+    page = request.GET.get('page', 1)
+    paginator = Paginator(questions, 5)
+    try:
+        questions = paginator.page(page)
+    except PageNotAnInteger:
+        questions = paginator.page(1)
+    except EmptyPage:
+        questions = paginator.page(paginator.num_pages)
 
     context = {
         'questions': questions,

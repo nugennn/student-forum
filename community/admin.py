@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Community, CommunityMember, CommunityCategory
+from .models import Community, CommunityMember, CommunityCategory, CommunityJoinRequest
 
 
 @admin.register(Community)
@@ -33,6 +33,27 @@ class CommunityMemberAdmin(admin.ModelAdmin):
     list_filter = ('role', 'is_active', 'joined_at')
     search_fields = ('user__username', 'community__name')
     readonly_fields = ('joined_at',)
+
+
+@admin.register(CommunityJoinRequest)
+class CommunityJoinRequestAdmin(admin.ModelAdmin):
+    list_display = ('user', 'community', 'status', 'created_at', 'reviewed_by')
+    list_filter = ('status', 'created_at')
+    search_fields = ('user__username', 'community__name')
+    readonly_fields = ('created_at', 'updated_at')
+    
+    fieldsets = (
+        ('Request Information', {
+            'fields': ('community', 'user', 'message')
+        }),
+        ('Status', {
+            'fields': ('status', 'reviewed_by')
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
 
 
 @admin.register(CommunityCategory)

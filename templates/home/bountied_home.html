@@ -313,6 +313,38 @@
     #sidebar {
         padding: 24px 24px 24px 12px;
     }
+
+    /* --- Pagination --- */
+    .s-pagination { 
+        display: flex; 
+        justify-content: flex-start; 
+        gap: 4px; 
+        margin-top: 24px; 
+    }
+
+    .s-pagination--item {
+        color: var(--text-secondary);
+        background-color: var(--bg-primary);
+        border: 1px solid var(--border);
+        padding: 6px 12px;
+        border-radius: 6px;
+        text-decoration: none;
+        font-size: 14px;
+        font-weight: 500;
+        transition: all 0.2s;
+    }
+
+    .s-pagination--item:hover { 
+        background-color: var(--hover); 
+        border-color: #d1d5db; 
+    }
+
+    .s-pagination--item.is-selected {
+        background-color: var(--primary);
+        color: white;
+        border-color: var(--primary);
+        cursor: default;
+    }
 </style>
 
 <div id="content" class="snippet-hidden">
@@ -399,6 +431,55 @@
                 </div>
             </div>
             {% endfor %}
+        </div>
+
+        <div class="s-pagination site1 themed pager float-left" style="margin-top: 24px; margin-bottom: 24px;">
+            {% if questions.has_other_pages %}
+                <!-- First Page Button -->
+                {% if questions.number != 1 %}
+                    <a class="s-pagination--item js-pagination-item" href="?page=1" rel="" title="Go to first page">
+                        <span>« First</span>
+                    </a>
+                {% else %}
+                    <div class="s-pagination--item" style="opacity: 0.5; cursor: not-allowed;">« First</div>
+                {% endif %}
+
+                <!-- Previous Page Button -->
+                {% if questions.has_previous %}
+                    <a class="s-pagination--item js-pagination-item" href="?page={{ questions.previous_page_number }}" rel="" title="Go to previous page">
+                        <span>‹ Prev</span>
+                    </a>
+                {% else %}
+                    <div class="s-pagination--item" style="opacity: 0.5; cursor: not-allowed;">‹ Prev</div>
+                {% endif %}
+
+                <!-- Page Numbers -->
+                {% for i in questions.paginator.page_range %}
+                    {% if questions.number == i %}
+                        <div class="s-pagination--item is-selected">{{ i }}</div>
+                    {% else %}
+                        <a class="s-pagination--item js-pagination-item" href="?page={{ i }}" rel="" title="Go to page {{ i }}">{{ i }}</a>
+                    {% endif %}
+                {% endfor %}
+
+                <!-- Next Page Button -->
+                {% if questions.has_next %}
+                    <a class="s-pagination--item js-pagination-item" href="?page={{ questions.next_page_number }}" rel="" title="Go to next page">
+                        <span>Next ›</span>
+                    </a>
+                {% else %}
+                    <div class="s-pagination--item" style="opacity: 0.5; cursor: not-allowed;">Next ›</div>
+                {% endif %}
+
+                <!-- Last Page Button -->
+                {% if questions.number != questions.paginator.num_pages %}
+                    <a class="s-pagination--item js-pagination-item" href="?page={{ questions.paginator.num_pages }}" rel="" title="Go to last page">
+                        <span>Last »</span>
+                    </a>
+                {% else %}
+                    <div class="s-pagination--item" style="opacity: 0.5; cursor: not-allowed;">Last »</div>
+                {% endif %}
+            {% endif %}
         </div>
 
         <br class="cbt"/>

@@ -384,6 +384,12 @@
                             <div class="ai-center d-flex jc-end">
                                 <div class="-right">
                                     <a href="#">all items</a>
+                                    {% if notifications %}
+                                        <span style="margin: 0 8px; color: #9ca3af;">|</span>
+                                        <a href="#" onclick="markAllNotificationsRead(event); return false;" style="color: #6366f1; font-weight: 500;">mark all read</a>
+                                        <span style="margin: 0 8px; color: #9ca3af;">|</span>
+                                        <a href="#" onclick="deleteAllNotifications(event); return false;" style="color: #ef4444; font-weight: 500;">delete all</a>
+                                    {% endif %}
                                 </div>
                             </div>
                         </div>
@@ -391,8 +397,8 @@
                     <div class="modal-content">
                         <ul>
                             {% for notification in notifications %}
-                            <li class="inbox-item">
-                                <a href="{{notification.url}}" class="d-flex gs8 gsx">
+                            <li class="inbox-item" style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px;">
+                                <a href="{{notification.url}}" class="d-flex gs8 gsx" style="flex: 1;">
                                     <div class="favicon site-icon flex--item" style="background: #6366f1; color: white; border-radius: 3px; display: flex; align-items: center; justify-content: center; width: 32px; height: 32px;" title="KHEC Forum">
                                         <i class="fas fa-graduation-cap" style="font-size: 18px;"></i>
                                     </div>
@@ -411,16 +417,27 @@
                                             Question ReOpen Vote Raises
                                             {% elif notification.type_of_noti == "NEW_ANSWER" %}
                                             New Answer to the Question
+                                            {% elif notification.type_of_noti == "community_join_request" %}
+                                            Community Join Request
                                             {% endif %}
                                             {% if notification.is_read == False %}<b class="unreadDot" style="color: red">Unread</b>{% endif %}
                                             </span>
                                             <span class="item-creation"><span title="2021-10-12 04:36:58Z" class="relativetime">{{notification.date_created|naturaltime}}</span></span>
                                         </div>
                                         <div class="item-location">
-                                            {% if notification.question_noti %}{{notification.question_noti.title}}{% else %}{{notification.answer_noti}}{% endif %}
+                                            {% if notification.type_of_noti == "community_join_request" %}
+                                                <strong>{{ notification.noti_sender.username }}</strong> wants to join <strong>{{ notification.extra_data }}</strong>
+                                            {% elif notification.question_noti %}
+                                                {{notification.question_noti.title}}
+                                            {% else %}
+                                                {{notification.answer_noti}}
+                                            {% endif %}
                                         </div>
                                     </div>
                                 </a>
+                                <button onclick="deleteNotification(event, {{ notification.id }})" style="background: none; border: none; color: #ef4444; cursor: pointer; padding: 4px 8px; margin-left: 8px;" title="Delete notification">
+                                    <i class="fas fa-trash" style="font-size: 14px;"></i>
+                                </button>
                             </li>
                             {% empty %}
                             <li style="padding: 12px 16px; text-align: center; color: #6a737c;">
@@ -655,6 +672,32 @@ function openInbox() {
         $this.removeClass('fillTheSVG');
         forBackground.removeClass('forBackgroundClass');
     }
+    
+    // Mark all notifications as read when inbox is opened
+    const badge = document.querySelector('.button__badge');
+    if (badge && badge.textContent) {
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value || getCsrfToken();
+        fetch('/read_All_Notifications/', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrfToken,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({})
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success || data.action === 'readedAll') {
+                // Remove badge
+                if (badge) {
+                    badge.remove();
+                }
+                // Remove unread indicators
+                document.querySelectorAll('.unreadDot').forEach(el => el.remove());
+            }
+        })
+        .catch(error => console.error('Error marking notifications as read:', error));
+    }
 }
 
 function openAchievementInbox() {
@@ -742,6 +785,127 @@ $('._review, .reviewSVGOuter').click(function() {
         forBackground.addClass('forBackgroundClass');
     }
 });
+
+function markAllNotificationsRead(event) {
+    event.preventDefault();
+    
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value || getCsrfToken();
+    
+    fetch('/read_All_Notifications/', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': csrfToken,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({})
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success || data.action === 'readedAll') {
+            // Remove unread indicators
+            document.querySelectorAll('.unreadDot').forEach(el => el.remove());
+            // Update notification badge
+            const badge = document.querySelector('.button__badge');
+            if (badge) {
+                badge.remove();
+            }
+            alert('All notifications marked as read');
+            // Reload the page to update notification count
+            location.reload();
+        } else {
+            alert('Failed to mark notifications as read');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred: ' + error.message);
+    });
+}
+
+function deleteNotification(event, notificationId) {
+    event.preventDefault();
+    event.stopPropagation();
+    
+    if (!confirm('Are you sure you want to delete this notification?')) {
+        return;
+    }
+    
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value || getCsrfToken();
+    
+    fetch(`/delete/${notificationId}/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': csrfToken,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({})
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            // Find and remove the notification item from DOM
+            const notificationItem = event.target.closest('.inbox-item');
+            if (notificationItem) {
+                notificationItem.remove();
+            }
+            // Update notification count
+            location.reload();
+        } else {
+            alert('Failed to delete notification');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred: ' + error.message);
+    });
+}
+
+function deleteAllNotifications(event) {
+    event.preventDefault();
+    
+    if (!confirm('Are you sure you want to delete all notifications? This action cannot be undone.')) {
+        return;
+    }
+    
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value || getCsrfToken();
+    
+    fetch('/delete-all/', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': csrfToken,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({})
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            alert('All notifications deleted');
+            location.reload();
+        } else {
+            alert('Failed to delete all notifications');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred: ' + error.message);
+    });
+}
 </script>
 
 <!-- MAIN CONTAINER WITH SIDEBAR -->

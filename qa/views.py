@@ -4199,10 +4199,19 @@ def BountiedQuestions(request, query=None):
             is_deleted=False
         )
 
+    page = request.GET.get('page', 1)
+    paginator = Paginator(questions, 5)
+    try:
+        questions = paginator.page(page)
+    except PageNotAnInteger:
+        questions = paginator.page(1)
+    except EmptyPage:
+        questions = paginator.page(paginator.num_pages)
+
     context = {
         'questions': questions,
         'query': query,
-        'questionsCount': questions.count()}
+        'questionsCount': questions.paginator.count if hasattr(questions, 'paginator') else len(questions)}
     return render(request, 'qa/BountiedQuestions.html', context)
 
 
@@ -4220,10 +4229,19 @@ def unansweredQuestions(request, query=None):
             Q(answer__answer_owner=None)
         ).distinct()
 
+    page = request.GET.get('page', 1)
+    paginator = Paginator(questions, 5)
+    try:
+        questions = paginator.page(page)
+    except PageNotAnInteger:
+        questions = paginator.page(1)
+    except EmptyPage:
+        questions = paginator.page(paginator.num_pages)
+
     context = {
         'questions': questions,
         'query': query,
-        'questionsCount': questions.count()}
+        'questionsCount': questions.paginator.count if hasattr(questions, 'paginator') else len(questions)}
     return render(request, 'qa/unansweredQuestions.html', context)
 
 
@@ -4236,6 +4254,15 @@ def activeQuestions(request, query=None):
             tags__name__icontains=query,
             is_deleted=False,
             is_bountied=False).order_by('active_date').distinct()
+
+    page = request.GET.get('page', 1)
+    paginator = Paginator(questions, 5)
+    try:
+        questions = paginator.page(page)
+    except PageNotAnInteger:
+        questions = paginator.page(1)
+    except EmptyPage:
+        questions = paginator.page(paginator.num_pages)
 
     context = {'questions': questions, 'query': query}
     return render(request, 'qa/activeQuestions.html', context)

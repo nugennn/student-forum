@@ -1,0 +1,153 @@
+{% extends 'profile/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>Pending Join Requests - {{ community.name }}</h2>
+                <a href="{% url 'community:community_detail' community.slug %}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to Community
+                </a>
+            </div>
+
+            {% if pending_requests %}
+                <div class="card">
+                    <div class="card-body">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>User</th>
+                                    <th>Message</th>
+                                    <th>Requested</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for request in pending_requests %}
+                                <tr id="request-{{ request.id }}">
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <img src="{% if request.user.profile.profile_photo %}{{ request.user.profile.profile_photo.url }}{% else %}{% static 'default.jpg' %}{% endif %}" 
+                                                 alt="{{ request.user.username }}" 
+                                                 class="rounded-circle me-2" 
+                                                 style="width: 40px; height: 40px; object-fit: cover;">
+                                            <div>
+                                                <a href="{% url 'profile:activityPageTabProfile' request.user.id request.user.username %}" 
+                                                   class="text-decoration-none fw-bold">
+                                                    {% if request.user.profile.full_name %}
+                                                        {{ request.user.profile.full_name }}
+                                                    {% else %}
+                                                        {{ request.user.username }}
+                                                    {% endif %}
+                                                </a>
+                                                <div class="text-muted small">@{{ request.user.username }}</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        {% if request.message %}
+                                            {{ request.message }}
+                                        {% else %}
+                                            <span class="text-muted">No message</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <small class="text-muted">{{ request.created_at|timesince }} ago</small>
+                                    </td>
+                                    <td>
+                                        <button class="btn btn-success btn-sm" onclick="approveRequest({{ request.id }})">
+                                            <i class="fas fa-check"></i> Approve
+                                        </button>
+                                        <button class="btn btn-danger btn-sm" onclick="rejectRequest({{ request.id }})">
+                                            <i class="fas fa-times"></i> Reject
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            {% else %}
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i> No pending join requests at this time.
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+function getCsrfToken() {
+    return document.querySelector('[name=csrfmiddlewaretoken]').value;
+}
+
+async function approveRequest(requestId) {
+    if (!confirm('Approve this join request?')) return;
+    
+    try {
+        const response = await fetch(`/community/{{ community.slug }}/join-requests/${requestId}/approve/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCsrfToken(),
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            alert(data.message);
+            // Remove the row from the table
+            document.getElementById(`request-${requestId}`).remove();
+            
+            // Reload if no more requests
+            const tbody = document.querySelector('tbody');
+            if (tbody.children.length === 0) {
+                location.reload();
+            }
+        } else {
+            alert(data.message || 'Failed to approve request');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('An error occurred. Please try again.');
+    }
+}
+
+async function rejectRequest(requestId) {
+    if (!confirm('Reject this join request?')) return;
+    
+    try {
+        const response = await fetch(`/community/{{ community.slug }}/join-requests/${requestId}/reject/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCsrfToken(),
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            alert(data.message);
+            // Remove the row from the table
+            document.getElementById(`request-${requestId}`).remove();
+            
+            // Reload if no more requests
+            const tbody = document.querySelector('tbody');
+            if (tbody.children.length === 0) {
+                location.reload();
+            }
+        } else {
+            alert(data.message || 'Failed to reject request');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('An error occurred. Please try again.');
+    }
+}
+</script>
+{% endblock content %}

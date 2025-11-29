@@ -1,6 +1,8 @@
 from django.db import models
 from django.contrib.auth.models import User
 from qa.models import Question,Answer
+from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.models import ContentType
 
 TYPE_OF_NOTI = [
 
@@ -11,6 +13,7 @@ TYPE_OF_NOTI = [
 	('question_reopen_voted','Question ReOpen Voted'),
 	('question_suggested_edit', 'Question Suggested Edit'),
 	('NEW_ANSWER', 'New_Answer'),
+	('community_join_request', 'Community Join Request'),
 
 ]
 
@@ -22,6 +25,10 @@ class Notification(models.Model):
 	is_read = models.BooleanField(default=False)
 	question_noti = models.ForeignKey(Question, on_delete=models.CASCADE, blank=True, null=True)
 	answer_noti = models.ForeignKey(Answer, on_delete=models.CASCADE, blank=True, null=True)
+	
+	# Generic fields for additional notification data
+	noti_sender = models.ForeignKey(User, on_delete=models.CASCADE, blank=True, null=True, related_name='noti_sender')
+	extra_data = models.CharField(max_length=500, blank=True, null=True)  # For storing community name, etc.
 
 	def __str__(self):
 		return f"{self.type_of_noti} - [USER] {self.noti_receiver} - [READED?] - {self.is_read}"
