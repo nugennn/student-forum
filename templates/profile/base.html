@@ -254,6 +254,7 @@
             <li class="-item chat-button-item chatSVGOuter chatThisIsOuter" style="display: flex; align-items: center; position: relative;">
                 <a href="{% url 'chat:chat_list' %}" class="-link" style="display: flex; align-items: center; justify-content: center; padding: 8px; cursor: pointer; position: relative;" title="Messages">
                     <i class="fa fa-comments fa-lg iconChat chatSVG" aria-hidden="true" style="font-size: 18px;"></i>
+                    {% if countUnreadChats %}<span class="unread-chat-badge" style="position: absolute; top: 2px; right: 2px; background: #5eba7d; color: white; border-radius: 3px; font-size: 10px; padding: 2px 4px; font-weight: 500;">{{countUnreadChats}}</span>{% endif %}
                 </a>
             </li>
 

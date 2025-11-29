@@ -26,9 +26,16 @@
                                 <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-center opacity-50">
                                 {% endif %}
                                     <div class="d-flex align-items-center flex-grow-1">
-                                        <img src="{{ chat.photo }}" alt="{{ chat.name }}" 
-                                             class="rounded-circle me-3" width="50" height="50" 
-                                             onerror="this.src='https://via.placeholder.com/50'">
+                                        <div style="position: relative; display: inline-block;">
+                                            <img src="{{ chat.photo }}" alt="{{ chat.name }}" 
+                                                 class="rounded-circle me-3" width="50" height="50" 
+                                                 onerror="this.src='https://via.placeholder.com/50'">
+                                            {% if chat.type == 'private' and chat.is_teacher %}
+                                                <div style="position: absolute; bottom: -2px; right: 8px; background: #667eea; border: 2px solid white; border-radius: 50%; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; color: white; font-size: 10px; font-weight: bold;" title="Verified Teacher">
+                                                    <i class="fas fa-check" style="font-size: 8px;"></i>
+                                                </div>
+                                            {% endif %}
+                                        </div>
                                         <div class="flex-grow-1">
                                             <h6 class="mb-0">
                                                 {% if chat.type == 'group' %}
@@ -87,11 +94,15 @@
                                         <img src="{{ user.photo }}" alt="{{ user.username }}" 
                                              class="rounded-circle shadow-sm" width="70" height="70"
                                              onerror="this.src='https://via.placeholder.com/70'">
-                                        {% if user.is_very_active %}
-                                        <span class="position-absolute bottom-0 end-0 translate-middle p-1 bg-success border border-light rounded-circle" 
-                                              title="Active in last 24 hours">
-                                            <span class="visually-hidden">Active</span>
-                                        </span>
+                                        {% if user.is_teacher %}
+                                            <div style="position: absolute; bottom: 0; right: 0; background: #667eea; border: 2px solid white; border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; color: white; font-size: 12px; font-weight: bold;" title="Verified Teacher">
+                                                <i class="fas fa-check" style="font-size: 9px;"></i>
+                                            </div>
+                                        {% elif user.is_very_active %}
+                                            <span class="position-absolute bottom-0 end-0 translate-middle p-1 bg-success border border-light rounded-circle" 
+                                                  title="Active in last 24 hours">
+                                                <span class="visually-hidden">Active</span>
+                                            </span>
                                         {% endif %}
                                     </div>
                                     

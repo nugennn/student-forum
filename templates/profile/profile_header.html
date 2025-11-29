@@ -181,8 +181,17 @@
 <!-- Profile Header -->
 <div class="profile-header">
     <div class="profile-header-top">
-        <div class="profile-avatar">
+        <div class="profile-avatar" style="position: relative; display: inline-block;">
             <img src="{% if profileData.profile_photo %}{{ profileData.profile_photo.url }}{% endif %}" alt="{{ profileData.user }}" width="96" height="96">
+            {% if profileData.is_teacher %}
+                <div style="position: absolute; bottom: 0; right: 0; background: #667eea; border: 3px solid white; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; color: white; font-size: 16px; font-weight: bold;" title="Verified Teacher">
+                    <i class="fas fa-check" style="font-size: 14px;"></i>
+                </div>
+            {% elif profileData.is_student %}
+                <div style="position: absolute; bottom: 0; right: 0; background: #06b6d4; border: 3px solid white; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; color: white; font-size: 16px; font-weight: bold;" title="Verified Student">
+                    <i class="fas fa-check" style="font-size: 14px;"></i>
+                </div>
+            {% endif %}
         </div>
         <div class="profile-info">
             <h1 class="profile-name d-inline-block">{% if profileData.full_name %}{{ profileData.full_name }}{% else %}{{ profileData.user.get_full_name }}{% endif %}{% if profileData.is_teacher %}<span class="teacher-badge"><i class="fas fa-chalkboard-user"></i> Teacher</span>{% elif profileData.is_student %}<span class="student-badge"><i class="fas fa-graduation-cap"></i> Student</span>{% endif %}</h1>
