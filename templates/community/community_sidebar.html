@@ -1,0 +1,227 @@
+{% load static %}
+{% load profile_extras %}
+
+<style>
+    .community-sidebar {
+        position: sticky;
+        top: 20px;
+    }
+    
+    .sidebar-card {
+        background: #fff;
+        border-radius: 8px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        padding: 1.25rem;
+        margin-bottom: 1.25rem;
+    }
+    
+    .stats {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        margin-bottom: 1rem;
+    }
+    
+    .stat {
+        text-align: center;
+        padding: 0.75rem;
+        background: #f8f9fa;
+        border-radius: 6px;
+    }
+    
+    .stat-value {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #212529;
+        line-height: 1.2;
+    }
+    
+    .stat-label {
+        font-size: 0.75rem;
+        color: #6c757d;
+        margin-top: 0.25rem;
+    }
+    
+    .members-list {
+        max-height: 300px;
+        overflow-y: auto;
+        padding-right: 8px;
+    }
+    
+    .member-item {
+        padding: 0.5rem 0;
+        border-bottom: 1px solid #f1f3f5;
+        transition: background-color 0.2s;
+    }
+    
+    .member-item:hover {
+        background-color: #f8f9fa;
+    }
+    
+    .member-avatar img {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+    
+    .member-name {
+        font-weight: 500;
+        color: #212529;
+        text-decoration: none;
+        font-size: 0.875rem;
+    }
+    
+    .member-name:hover {
+        color: #0d6efd;
+    }
+    
+    .member-role {
+        font-size: 0.75rem;
+        color: #6c757d;
+    }
+    
+    .admin-actions {
+        margin-top: 0.5rem;
+        display: flex;
+        gap: 0.5rem;
+    }
+    
+    .admin-actions .btn-sm {
+        padding: 0.15rem 0.4rem;
+        font-size: 0.7rem;
+    }
+</style>
+
+<div class="sidebar-card">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="mb-0">Community Info</h5>
+        {% if community.creator == request.user or member_role == 'admin' %}
+        <div class="dropdown">
+            <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="communityActions" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="fas fa-cog"></i>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="communityActions">
+                <li><a class="dropdown-item" href="{% url 'community:edit_community' community.slug %}"><i class="fas fa-edit me-2"></i>Edit Community</a></li>
+                <li><a class="dropdown-item" href="{% url 'community:manage_members' community.slug %}"><i class="fas fa-users-cog me-2"></i>Manage Members</a></li>
+                {% if community.creator == request.user %}
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item text-danger" href="#" data-bs-toggle="modal" data-bs-target="#deleteCommunityModal"><i class="fas fa-trash-alt me-2"></i>Delete Community</a></li>
+                {% endif %}
+            </ul>
+        </div>
+        {% endif %}
+    </div>
+    
+    <div class="stats">
+        <div class="stat">
+            <div class="stat-value">{{ community.member_count }}</div>
+            <div class="stat-label">Members</div>
+        </div>
+        <div class="stat">
+            <div class="stat-value">{{ questions.paginator.count|default:0 }}</div>
+            <div class="stat-label">Questions</div>
+        </div>
+    </div>
+    
+    {% if community.creator == request.user or member_role == 'admin' %}
+    <div class="d-grid gap-2 mt-3">
+        <a href="{% url 'community:manage_members' community.slug %}" class="btn btn-outline-primary btn-sm">
+            <i class="fas fa-users-cog me-1"></i> Manage Members
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+<div class="sidebar-card">
+    <h5 class="mb-3">Top Members</h5>
+    <div class="members-list">
+        {% for member in members|slice:":10" %}
+        <div class="member-item d-flex align-items-center">
+            <div class="member-avatar me-2 flex-shrink-0">
+                <a href="{% url 'profile:activityPageTabProfile' member.user.id member.user.username %}">
+                    <img src="{% if member.user.profile.profile_photo %}{{ member.user.profile.profile_photo.url }}{% else %}{% static 'default.jpg' %}{% endif %}" 
+                         alt="{{ member.user.username }}"
+                         onerror="this.onerror=null; this.src='{% static 'default.jpg' %}'">
+                </a>
+            </div>
+            <div class="member-details flex-grow-1">
+                <div class="d-flex align-items-center">
+                    <a href="{% url 'profile:activityPageTabProfile' member.user.id member.user.username %}" 
+                       class="member-name">
+                        {% if member.user.profile.full_name %}
+                            {{ member.user.profile.full_name|truncatechars:15 }}
+                        {% else %}
+                            {{ member.user.username|truncatechars:15 }}
+                        {% endif %}
+                    </a>
+                    {% if member.role == 'admin' %}
+                    <span class="badge bg-primary ms-2" style="font-size: 0.6rem;">Admin</span>
+                    {% endif %}
+                </div>
+                <div class="member-role">
+                    {% with reputation=member.user|calculate_reputation %}
+                        {{ reputation }} reputation
+                    {% endwith %}
+                </div>
+                {% if community.creator != member.user and member.user != request.user %}
+                {% if community.creator == request.user or member_role == 'admin' and member.user != request.user %}
+                <div class="admin-actions">
+                    {% if member.role != 'admin' %}
+                    <form action="{% url 'community:change_member_role' community.slug member.user.id %}" method="post" class="d-inline">
+                        {% csrf_token %}
+                        <input type="hidden" name="role" value="admin">
+                        <button type="submit" class="btn btn-sm btn-outline-success">Make Admin</button>
+                    </form>
+                    {% else %}
+                    <form action="{% url 'community:change_member_role' community.slug member.user.id %}" method="post" class="d-inline">
+                        {% csrf_token %}
+                        <input type="hidden" name="role" value="member">
+                        <button type="submit" class="btn btn-sm btn-outline-warning">Remove Admin</button>
+                    </form>
+                    {% endif %}
+                    <form action="{% url 'community:remove_member' community.slug member.user.id %}" method="post" class="d-inline">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Are you sure you want to remove this member?')">Remove</button>
+                    </form>
+                </div>
+                {% endif %}
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    
+    {% if member_count > 10 %}
+    <div class="text-center mt-3">
+        <a href="{% url 'community:members' community.slug %}" class="btn btn-sm btn-outline-primary w-100">
+            View All {{ member_count }} Members
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+{% if community.creator == request.user %}
+<!-- Delete Community Modal -->
+<div class="modal fade" id="deleteCommunityModal" tabindex="-1" aria-labelledby="deleteCommunityModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteCommunityModalLabel">Delete Community</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete the community "{{ community.name }}"? This action cannot be undone.</p>
+                <p class="text-danger"><strong>Warning:</strong> All community data, including questions and discussions, will be permanently deleted.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form action="{% url 'community:delete_community' community.slug %}" method="post">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Delete Community</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}

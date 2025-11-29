@@ -1,8 +1,82 @@
 {% extends 'profile/base.html' %}
 {% load static %}
+{% load profile_extras %}
 
 {% block css %}
 <style>
+    /* Question list styles */
+    .question-summary {
+        transition: all 0.2s ease;
+        background-color: #fff;
+    }
+    
+    .question-summary:hover {
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.05);
+    }
+    
+    .question-summary h3 a {
+        color: #0074cc;
+    }
+    
+    .question-summary h3 a:hover {
+        color: #0a95ff;
+    }
+    
+    .reputation-score {
+        color: #6c757d;
+        font-weight: 600;
+        font-size: 11px;
+    }
+    
+    .tags .badge {
+        font-size: 12px;
+        padding: 0.25em 0.5em;
+    }
+    
+    .tags .badge:hover {
+        background-color: #e1ecf4 !important;
+        color: #39739d !important;
+    }
+    
+    /* Pagination */
+    .pagination .page-link {
+        color: #0d6efd;
+    }
+    
+    .pagination .page-item.active .page-link {
+        background-color: #0d6efd;
+        border-color: #0d6efd;
+    }
+    
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .question-summary {
+            padding: 15px !important;
+        }
+        
+        .question-summary .d-flex {
+            flex-direction: column;
+        }
+        
+        .question-summary .text-center {
+            margin-bottom: 15px;
+            text-align: left !important;
+            display: flex;
+            gap: 15px;
+        }
+        
+        .question-summary .text-center > div {
+            margin: 0 !important;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .question-summary .text-center .fs-5 {
+            font-size: 1rem !important;
+        }
+    }
+    
     .community-header {
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         color: white;
@@ -286,6 +360,132 @@
             <div class="community-description-text">
                 {{ community.description|safe }}
             </div>
+        </div>
+
+        <!-- Questions Section -->
+        <div class="community-questions mt-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h2 class="h5 mb-0">Questions</h2>
+                <a href="{% url 'qa:new_question' %}" class="btn btn-primary btn-sm">Ask Question</a>
+            </div>
+            
+            {% if questions %}
+                <div class="question-list">
+                    {% for question in questions %}
+                        <div class="question-summary mb-3 p-3 border rounded">
+                            <div class="d-flex">
+                                <div class="text-center me-3" style="min-width: 60px;">
+                                    <div class="text-muted small">
+                                        <div class="fs-5">{{ question.calculate_UpVote_DownVote|default:0 }}</div>
+                                        <div class="text-nowrap">vote{{ question.calculate_UpVote_DownVote|pluralize }}</div>
+                                    </div>
+                                    <div class="text-muted small mt-2">
+                                        <div class="fs-5">{{ question.count_answers }}</div>
+                                        <div class="text-nowrap">answer{{ question.count_answers|pluralize }}</div>
+                                    </div>
+                                    <div class="text-muted small mt-2">
+                                        <div class="fs-5">{{ question.calculate_viewers|default:0 }}</div>
+                                        <div class="text-nowrap">view{{ question.calculate_viewers|pluralize }}</div>
+                                    </div>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <h3 class="h5 mb-2">
+                                        <a href="{{ question.get_absolute_url }}" class="text-decoration-none">{{ question.title|truncatewords:15 }}</a>
+                                    </h3>
+                                    <div class="mb-2">
+                                        {{ question.body|striptags|truncatewords:30 }}
+                                    </div>
+                                    <div class="d-flex flex-wrap align-items-center justify-content-between">
+                                        <div class="tags mb-2">
+                                            {% for tag in question.tags.all|slice:":5" %}
+                                                <a href="{% url 'tagbadge:taggedItemsFrom_All' tag.id %}" class="badge bg-light text-dark me-1 mb-1">{{ tag.name }}</a>
+                                            {% endfor %}
+                                            {% if question.tags.count > 5 %}
+                                                <span class="text-muted">+{{ question.tags.count|add:"-5" }} more</span>
+                                            {% endif %}
+                                        </div>
+                                        <div class="user-info d-flex align-items-center">
+                                            <div class="user-gravatar32 me-2" style="width: 24px; height: 24px; border-radius: 50%; overflow: hidden;">
+                                                <a href="{{ question.post_owner.profile.get_absolute_url }}">
+                                                    <img src="{% if question.post_owner.profile.profile_photo %}{{ question.post_owner.profile.profile_photo.url }}{% else %}{% static 'default.jpg' %}{% endif %}" 
+                                                         alt="" width="24" height="24" style="object-fit: cover; width: 100%; height: 100%;">
+                                                </a>
+                                            </div>
+                                            <div class="user-details">
+                                                <div class="d-flex align-items-center" style="font-size: 12px;">
+                                                    <a href="{{ question.post_owner.profile.get_absolute_url }}" class="fw-medium text-decoration-none">
+                                                        {% if question.post_owner.profile.full_name %}
+                                                            {{ question.post_owner.profile.full_name }}
+                                                        {% else %}
+                                                            {{ question.post_owner.username }}
+                                                        {% endif %}
+                                                    </a>
+                                                    <span class="reputation-score ms-1" title="reputation score">
+                                                        {{ question.post_owner|calculate_reputation }}
+                                                    </span>
+                                                </div>
+                                                <div class="text-muted" style="font-size: 11px;">
+                                                    asked <span title="{{ question.date }}">{{ question.date|timesince }} ago</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+
+                    <!-- Pagination -->
+                    {% if questions.has_other_pages %}
+                        <nav aria-label="Question pagination" class="mt-4">
+                            <ul class="pagination justify-content-center">
+                                {% if questions.has_previous %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ questions.previous_page_number }}" aria-label="Previous">
+                                            <span aria-hidden="true">&laquo;</span>
+                                        </a>
+                                    </li>
+                                {% else %}
+                                    <li class="page-item disabled">
+                                        <span class="page-link" aria-hidden="true">&laquo;</span>
+                                    </li>
+                                {% endif %}
+
+                                {% for i in questions.paginator.page_range %}
+                                    {% if questions.number == i %}
+                                        <li class="page-item active">
+                                            <span class="page-link">{{ i }} <span class="visually-hidden">(current)</span></span>
+                                        </li>
+                                    {% else %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ i }}">{{ i }}</a>
+                                        </li>
+                                    {% endif %}
+                                {% endfor %}
+
+                                {% if questions.has_next %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ questions.next_page_number }}" aria-label="Next">
+                                            <span aria-hidden="true">&raquo;</span>
+                                        </a>
+                                    </li>
+                                {% else %}
+                                    <li class="page-item disabled">
+                                        <span class="page-link" aria-hidden="true">&raquo;</span>
+                                    </li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                    {% endif %}
+                </div>
+            {% else %}
+                <div class="text-center py-5 bg-light rounded">
+                    <i class="fas fa-comment-alt-question fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">No questions yet</h5>
+                    <p class="text-muted mb-0">Be the first to ask a question in this community!</p>
+                    <a href="{% url 'qa:new_question' %}" class="btn btn-primary mt-3">Ask a Question</a>
+                </div>
+            {% endif %}
         </div>
     </div>
 

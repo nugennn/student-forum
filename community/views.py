@@ -2,12 +2,13 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_http_methods, require_GET, require_POST
 from django.http import JsonResponse, HttpResponseForbidden
-from django.core.paginator import Paginator
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.contrib import messages
 from django.utils import timezone
 from django.contrib.auth.decorators import user_passes_test
 from django.contrib.auth.models import User
 from .models import Community, CommunityMember
+from qa.models import Question
 from .forms import CommunityForm
 
 @login_required
@@ -70,12 +71,30 @@ def community_detail(request, slug):
     # Get community members
     members = community.members.filter(is_active=True).select_related('user')[:10]
     
+    # Get questions for this community
+    questions_list = Question.objects.filter(
+        community=community,
+        is_deleted=False
+    ).select_related('post_owner', 'post_owner__profile').order_by('-date')
+    
+    # Paginate questions
+    page = request.GET.get('page', 1)
+    paginator = Paginator(questions_list, 10)  # Show 10 questions per page
+    
+    try:
+        questions = paginator.page(page)
+    except PageNotAnInteger:
+        questions = paginator.page(1)
+    except EmptyPage:
+        questions = paginator.page(paginator.num_pages)
+    
     context = {
         'community': community,
         'is_member': is_member,
         'member_role': member_role,
         'members': members,
         'member_count': community.member_count,
+        'questions': questions,
     }
     return render(request, 'community/community_detail.html', context)
 
@@ -200,7 +219,7 @@ def edit_community(request, slug):
     """Edit community details"""
     community = get_object_or_404(Community, slug=slug, is_active=True)
     
-    # Check if user is an admin of the community
+    # Check if user is an admin or creator of the community
     is_admin = CommunityMember.objects.filter(
         community=community,
         user=request.user,
@@ -208,21 +227,47 @@ def edit_community(request, slug):
         is_active=True
     ).exists()
     
-    if not is_admin and request.user != community.creator:
+    if request.user != community.creator and not is_admin:
         messages.error(request, 'You do not have permission to edit this community')
         return redirect('community:community_detail', slug=slug)
     
     if request.method == 'POST':
         form = CommunityForm(request.POST, request.FILES, instance=community)
         if form.is_valid():
-            updated_community = form.save(commit=False)
-            # Only update the slug if the name has changed
-            if 'name' in form.changed_data:
-                from django.utils.text import slugify
-                updated_community.slug = slugify(form.cleaned_data['name'])
-            updated_community.save()
-            messages.success(request, 'Community updated successfully')
-            return redirect('community:community_detail', slug=updated_community.slug)
+            try:
+                updated_community = form.save(commit=False)
+                # Only update the slug if the name has changed
+                if 'name' in form.changed_data:
+                    from django.utils.text import slugify
+                    from django.db import IntegrityError
+                    
+                    # Try to create a new slug, handle potential duplicates
+                    base_slug = slugify(form.cleaned_data['name'])
+                    new_slug = base_slug
+                    counter = 1
+                    
+                    while True:
+                        try:
+                            # Check if slug already exists and it's not the current community
+                            if Community.objects.filter(slug=new_slug).exclude(pk=community.pk).exists():
+                                new_slug = f"{base_slug}-{counter}"
+                                counter += 1
+                            else:
+                                break
+                        except IntegrityError:
+                            new_slug = f"{base_slug}-{counter}"
+                            counter += 1
+                    
+                    updated_community.slug = new_slug
+                
+                updated_community.save()
+                messages.success(request, 'Community updated successfully')
+                return redirect('community:community_detail', slug=updated_community.slug)
+                
+            except Exception as e:
+                messages.error(request, f'Error updating community: {str(e)}')
+        else:
+            messages.error(request, 'Please correct the errors below.')
     else:
         form = CommunityForm(instance=community)
     
@@ -230,7 +275,9 @@ def edit_community(request, slug):
         'form': form,
         'community': community,
         'is_admin': is_admin,
+        'current_page': 'settings',
     }
+    return render(request, 'community/edit_community.html', context)
     return render(request, 'community/edit_community.html', context)
 
 
@@ -381,3 +428,30 @@ def change_member_role(request, slug, user_id):
     
     messages.success(request, f'Updated role for {user.username} to {new_role}')
     return redirect('community:community_members', slug=slug)
+
+@login_required
+def delete_community(request, slug):
+    """
+    Delete a community. Only the community creator can delete the community.
+    This is a soft delete that marks the community as inactive.
+    """
+    community = get_object_or_404(Community, slug=slug, is_active=True)
+    
+    # Only the community creator can delete the community
+    if community.creator != request.user:
+        messages.error(request, 'You do not have permission to delete this community.')
+        return redirect('community:community_detail', slug=slug)
+    
+    if request.method == 'POST':
+        # Soft delete the community
+        community.is_active = False
+        community.save()
+        
+        # Deactivate all community memberships
+        CommunityMember.objects.filter(community=community).update(is_active=False)
+        
+        messages.success(request, f'The community "{community.name}" has been deleted.')
+        return redirect('community:community_list')
+    
+    # If not a POST request, redirect to community detail
+    return redirect('community:community_detail', slug=slug)

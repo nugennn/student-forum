@@ -10,11 +10,13 @@ urlpatterns = [
     
     # Community CRUD
     path('create/', views.create_community, name='create_community'),
+    path('<slug:slug>/delete/', views.delete_community, name='delete_community'),
     path('<slug:slug>/', views.community_detail, name='community_detail'),
     path('<slug:slug>/edit/', views.edit_community, name='edit_community'),
     path('<slug:slug>/members/', views.community_members, name='community_members'),
     
     # Community membership
+    path('<slug:slug>/manage-members/', views.community_members, name='manage_members'),
     path('<slug:slug>/join/', views.join_community, name='join_community'),
     path('<slug:slug>/leave/', views.leave_community, name='leave_community'),
     path('<slug:slug>/members/remove/<int:user_id>/', views.remove_member, name='remove_member'),
