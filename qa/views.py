@@ -3926,48 +3926,14 @@ def edit_answer(request, answer_id):
                         request.user.profile.save()
             else:
                 is_boolean_true = False
-            data_url = request.build_absolute_uri(
-                post.questionans.get_absolute_url())
-
-            if not request.user.profile.edit_questions_answers:
-                sendForReview = QuestionEditVotes.objects.create(
-                    edit_suggested_by=request.user, edited_answer=post)
-                reviewInstance = ReviewQuestionEdit.objects.create(
-                    queue_of=sendForReview, answer_to_view_if=post, is_reviewed=False)
-                reviewInstance.edit_reviewed_by.add(request.user)
-                request.user.profile.posts_edited_counter += 1
-                request.user.profile.save()
-                getReviewingInstance = ReviewQuestionEdit.objects.filter(
-                    queue_of=sendForReview, answer_to_view_if=post, is_reviewed=False).first()
-                # data_url = request.build_absolute_uri(getReviewingInstance.get_absolute_url())
-                data_url = request.build_absolute_uri(
-                    reverse(
-                        'review:reviewSuggesstedEdit', args=(
-                            getReviewingInstance.pk, )))
-                Notification.objects.create(
-                    noti_receiver=post_owner,
-                    type_of_noti="answer_edit",
-                    url=data_url,
-                    answer_noti=post)
-            elif request.user == post.answer_owner:
-                QuestionEditVotes.objects.create(
-                    edit_suggested_by=request.user,
-                    edited_answer=post,
-                    rev_Action="Approve")
-            else:
-                request.user.profile.posts_edited_counter += 1
-                request.user.profile.save()
-                data_url = request.build_absolute_uri(
-                    post.questionans.get_absolute_url())
-                Notification.objects.create(
-                    noti_receiver=post_owner,
-                    type_of_noti="answer_edit",
-                    url=data_url,
-                    answer_noti=post)
-                QuestionEditVotes.objects.create(
-                    edit_suggested_by=request.user,
-                    edited_answer=post,
-                    rev_Action="Approve")
+            # Mark the answer as edited
+            post.is_edited = True
+            post.a_edited_by = request.user
+            post.a_edited_time = timezone.now()
+            
+            # Build URL for notifications
+            data_url = request.build_absolute_uri(post.questionans.get_absolute_url())
+            
             if request.user.profile.posts_edited_counter <= 1:
                 TagBadge.objects.get_or_create(
                     awarded_to_user=request.user,
@@ -4143,47 +4109,14 @@ def edit_question(request, question_id):
             #         if request.user.profile.Refiner_Illuminator_TagPostCounter >= 500:
             #             TagBadge.objects.get_or_create(awarded_to_user=request.user,badge_type="GOLD", tag_name="Illuminator",bade_position="BADGE")
 
-            # sendForReview = QuestionEdit.objects.create(edited_question=post,edited_by=request.user)
-            if not request.user.profile.edit_questions_answers:
-                sendForReview = QuestionEditVotes.objects.create(
-                    edit_suggested_by=request.user, edited_question=post)
-                reviewInstance = ReviewQuestionEdit.objects.create(
-                    queue_of=sendForReview, question_to_view=post, is_reviewed=False)
-                reviewInstance.edit_reviewed_by.add(request.user)
-                request.user.profile.posts_edited_counter += 1
-                request.user.profile.save()
-                getReviewingInstance = ReviewQuestionEdit.objects.filter(
-                    queue_of=sendForReview, question_to_view=post, is_reviewed=False).first()
-                # data_url = request.build_absolute_uri(getReviewingInstance.get_absolute_url())
-                data_url = request.build_absolute_uri(
-                    reverse(
-                        'review:reviewSuggesstedEdit', args=(
-                            getReviewingInstance.pk, )))
-                Notification.objects.create(
-                    noti_receiver=post_owner,
-                    type_of_noti="question_edit",
-                    url=data_url,
-                    question_noti=post)
-            elif request.user == post.post_owner:
-                QuestionEditVotes.objects.create(
-                    edit_suggested_by=request.user,
-                    edited_question=post,
-                    rev_Action="Approve",
-                    is_completed=True)
-            else:
-                request.user.profile.posts_edited_counter += 1
-                request.user.profile.save()
-                data_url = request.build_absolute_uri(post.get_absolute_url())
-                Notification.objects.create(
-                    noti_receiver=post_owner,
-                    type_of_noti="question_edit",
-                    url=data_url,
-                    question_noti=post)
-                QuestionEditVotes.objects.create(
-                    edit_suggested_by=request.user,
-                    edited_question=post,
-                    rev_Action="Approve",
-                    is_completed=True)
+            # Mark the question as edited
+            post.is_edited = True
+            post.q_edited_by = request.user
+            post.q_edited_time = timezone.now()
+            post.save()
+            
+            # Build URL for notifications
+            data_url = request.build_absolute_uri(post.get_absolute_url())
 
             if request.user.profile.posts_edited_counter <= 1:
                 TagBadge.objects.get_or_create(
@@ -4239,21 +4172,6 @@ def edit_question(request, question_id):
         'form': form,
         'post_owner': post_owner}
     return render(request, 'qa/edit_question.html', context)
-
-
-def getQuestionEditHistory(request, question_id):
-    getQuestion = get_object_or_404(Question, pk=question_id)
-
-    editHistory = getQuestion.history.all()  # .exclude(body=None)
-
-    # for his in editHistory:
-
-    #     if his.prev_record is not None and his.next_record is not None:
-    #         print("Worked")
-    #         print(len(his.next_record.body) - len(his.prev_record.body))
-
-    context = {'getQuestion': getQuestion, 'editHistory': editHistory}
-    return render(request, 'qa/getQuestionEditHistory.html', context)
 
 
 def answer_edit_history(request, answer_id):
