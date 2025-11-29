@@ -217,7 +217,11 @@
                     <div class="d-flex gs8 s-anchors s-anchors__muted fw-wrap">
 
                         <div class="flex--item">
-                            <a href="#" class="js-share-link" title="Short permalink to this question">Share</a>
+                            <button type="button" class="s-btn s-btn__link" onclick="openShareModal('question', {{data.id}})" title="Share this question">Share</button>
+                        </div>
+                        
+                        <div class="flex--item">
+                            <button type="button" class="s-btn s-btn__link" onclick="openRetweetModal('question', {{data.id}})" title="Retweet this question">Retweet</button>
                         </div>
 
                         {% if request.user == data.post_owner and canMakeAnotherEdit == True %}
@@ -614,7 +618,11 @@
                         <div class="js-post-menu pt2" data-post-id="{{answer.id}}">
                             <div class="d-flex gs8 s-anchors s-anchors__muted fw-wrap">
                                 <div class="flex--item">
-                                    <a href="" class="js-share-link">Share</a>
+                                    <button type="button" class="s-btn s-btn__link" onclick="openShareModal('answer', {{answer.id}})" title="Share this answer">Share</button>
+                                </div>
+                                
+                                <div class="flex--item">
+                                    <button type="button" class="s-btn s-btn__link" onclick="openRetweetModal('answer', {{answer.id}})" title="Retweet this answer">Retweet</button>
                                 </div>
 
                                 {% if request.user == answer.answer_owner %}
@@ -2098,12 +2106,132 @@ document.addEventListener("DOMContentLoaded",function(){window.addEventListener(
 <!-- MARK - ACCEPT, UNACCEPT - END -->
 
 
+        <div id="shareModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="shareModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="shareModalLabel">Share Post</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>Choose how you want to share this post:</p>
+                <div class="list-group">
+                    <button type="button" class="list-group-item list-group-item-action" onclick="sharePost('share')">
+                        <i class="fas fa-share-alt"></i> Share
+                        <small class="d-block text-muted">Share this post with your followers</small>
+                    </button>
+                    <button type="button" class="list-group-item list-group-item-action" onclick="sharePost('repost')">
+                        <i class="fas fa-retweet"></i> Repost
+                        <small class="d-block text-muted">Repost this to your profile</small>
+                    </button>
+                    <button type="button" class="list-group-item list-group-item-action" onclick="sharePost('quote')">
+                        <i class="fas fa-quote-left"></i> Quote
+                        <small class="d-block text-muted">Quote this post with your own comment</small>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quote Modal -->
+<div id="quoteModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="quoteModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="quoteModalLabel">Quote Post</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="quoteText">Add your comment:</label>
+                    <textarea class="form-control" id="quoteText" rows="4" placeholder="Add your thoughts..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="submitQuote()">Quote Post</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Global variables for share functionality
+let currentSharePostId = null;
+let currentSharePostType = null;
+let currentShareType = null;
+
+function openShareModal(postType, postId) {
+    currentSharePostId = postId;
+    currentSharePostType = postType;
+    $('#shareModal').modal('show');
+}
+
+function openRetweetModal(postType, postId) {
+    currentSharePostId = postId;
+    currentSharePostType = postType;
+    sharePost('repost');
+}
+
+function sharePost(shareType) {
+    currentShareType = shareType;
+    
+    if (shareType === 'quote') {
+        $('#shareModal').modal('hide');
+        $('#quoteModal').modal('show');
+    } else {
+        submitShare(shareType, '');
+    }
+}
+
+function submitShare(shareType, quoteText) {
+    $.ajax({
+        url: "{% url 'qa:share_post' %}",
+        type: 'POST',
+        data: {
+            post_id: currentSharePostId,
+            post_type: currentSharePostType,
+            share_type: shareType,
+            quote_text: quoteText,
+            csrfmiddlewaretoken: "{{ csrf_token }}"
+        },
+        success: function(response) {
+            if (response.success) {
+                $('#shareModal').modal('hide');
+                $('#quoteModal').modal('hide');
+                alert(response.message);
+                location.reload();
+            } else {
+                alert('Error: ' + response.error);
+            }
+        },
+        error: function(error) {
+            alert('An error occurred while sharing the post');
+            console.error(error);
+        }
+    });
+}
+
+function submitQuote() {
+    const quoteText = $('#quoteText').val();
+    if (!quoteText.trim()) {
+        alert('Please add a comment for your quote');
+        return;
+    }
+    submitShare('quote', quoteText);
+}
+</script>
+
         <script>
         $(document).ready(function(){$(".save-comment").on("click",function(){var t=$(this).data("data"),e=$(".comment-text-"+t).val();$(".user-username").val();$.ajax({url:"{% url 'qa:save_comment' data.id %}",type:"post",data:{comment:e,answerid:t,csrfmiddlewaretoken:"{{csrf_token}}"},dataType:"json",beforeSend:function(){$(".save-comment").addClass("disabled").text("saving...")},success:function(n){if(1==n.bool){$(".comment-text-"+t).val("");var a=`<ul class="comments-list js-comments-list">\n            <li id="comment-{{comment.id}}" class="comment js-comment " data-comment-id="{{comment.id}}" data-comment-owner-id="{{comment.commented_by.id}}" data-comment-score="0">\n\n                <div class="js-comment-actions comment-actions">\n                    <div class="comment-score js-comment-edit-hide">\n                    </div>\n                        \n                                    {% if request.user in comment.com_upvote.all %}\n                                    <button name='submit' type='submit' value="upVoteCommentIt"><i class="fas upvote-comment-active fa-sort-up fa-2x"></i></button>\n                                    {% else %}\n                                    <button name='submit' type='submit' value="upVoteCommentIt"><i class="fas upvote-comment-inactive fa-sort-up fa-2x"></i></button>\n                                    {% endif %}\n                                </span>\n                       \n                        <div class="comment-flagging js-comment-edit-hide">\n                            <button class="js-comment-flag s-btn s-btn__unset bg-transparent c-pointer fc-black-300 o40 h:fc-red-500 h:o100"\n                                    aria-label="Flag Comment"\n                                    aria-pressed="false"\n                                    title="Flag this comment for serious problems or moderator attention">\n                                <svg aria-hidden="true" class="svg-icon iconFlag" width="18" height="18" viewBox="0 0 18 18"><path d="M3 2v14h2v-6h3.6l.4 1h6V3H9.5L9 2H3Z"/></svg>\n                            </button>\n                        </div>\n                </div>\n\n                <div class="comment-text  js-comment-text-and-form">\n                    <div class="comment-body js-comment-edit-hide">\n                        \n                        <span class="comment-copy">${e}</span>\n                        \n                      <div class="d-inline-flex ai-center">\n        &ndash;&nbsp;<a href="{% url 'profile:activityPageTabProfile' data.post_owner.id data.post_owner.username %}"\n                                    title="16,021 reputation"\n                                    class="comment-user">{{request.user}}</a>\n                        </div>\n                        <span class="comment-date" dir="ltr"><span title="2021-12-08 10:40:00Z, License: CC BY-SA 4.0" class="relativetime-clean">{{comment.date|naturaltime}}</span></span>\n                                <span title="this comment was edited 2 times">\n                                    <svg aria-hidden="true" class="va-text-bottom o50 svg-icon iconPencilSm" width="14" height="14" viewBox="0 0 14 14"><path d="m11.1 1.71 1.13 1.12c.2.2.2.51 0 .71L11.1 4.7 9.21 2.86l1.17-1.15c.2-.2.51-.2.71 0ZM2 10.12l6.37-6.43 1.88 1.88L3.88 12H2v-1.88Z"/></svg>\n                                </span>\n                    </div>\n                </div>\n    </li>\n\n            </ul>`;$(".comment-wrapper-"+t).append(a);var s=$(".comment-count-"+t).text();$(".comment-count-"+t).text(parseInt(s)+1)}else 0==n.bool&&($(".contain").html("Write Something"),$(".contain").hide(2e3));$(".save-comment").removeClass("disabled").text("Submit")}})})});
         </script>
 
 {% endblock js %} 
-
 
 
 {% block css %}

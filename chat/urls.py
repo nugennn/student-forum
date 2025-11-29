@@ -21,6 +21,8 @@ urlpatterns = [
     path('group/<int:group_id>/add-member/', views.add_group_member, name='add_member'),
     path('group/<int:group_id>/remove-member/', views.remove_group_member, name='remove_member'),
     path('group/<int:group_id>/update-info/', views.update_group_info, name='update_group_info'),
+    path('group/<int:group_id>/delete/', views.delete_group_chat, name='delete_group'),
+    path('group/<int:group_id>/leave/', views.leave_group_chat, name='leave_group'),
     
     # Reactions
     path('message/<int:message_id>/react/', views.react_to_message, name='react_to_message'),

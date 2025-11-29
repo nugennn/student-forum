@@ -174,6 +174,8 @@ def chat_list(request):
         if hasattr(other_user, 'profile') and other_user.profile and other_user.profile.profile_photo:
             photo_url = other_user.profile.profile_photo.url
         
+        is_teacher = hasattr(other_user, 'profile') and other_user.profile.is_teacher
+        
         all_chats.append({
             'type': 'private',
             'id': chat.id,
@@ -183,6 +185,7 @@ def chat_list(request):
             'latest_message': latest_msg.content if latest_msg else 'No messages yet',
             'latest_message_time': latest_msg.created_at if latest_msg else None,
             'unread_count': ChatNotification.objects.filter(user=user, message__private_chat=chat, is_read=False).count(),
+            'is_teacher': is_teacher,
         })
     
     for chat in group_chats:
@@ -812,6 +815,52 @@ def update_group_info(request, group_id):
             'success': True,
             'name': group.name,
             'photo_url': group.profile_photo.url if group.profile_photo else None,
+        })
+    
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=400)
+
+
+@login_required
+@require_http_methods(["POST"])
+def delete_group_chat(request, group_id):
+    """Delete a group chat - only creator can delete"""
+    try:
+        group = get_object_or_404(GroupChat, id=group_id)
+        
+        if request.user != group.creator:
+            return JsonResponse({'error': 'Only group creator can delete the group'}, status=403)
+        
+        group.delete()
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Group chat deleted successfully'
+        })
+    
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=400)
+
+
+@login_required
+@require_http_methods(["POST"])
+def leave_group_chat(request, group_id):
+    """Leave a group chat - any member can leave"""
+    try:
+        group = get_object_or_404(GroupChat, id=group_id)
+        
+        if request.user not in group.members.all():
+            return JsonResponse({'error': 'You are not a member of this group'}, status=403)
+        
+        # Prevent creator from leaving (they must delete the group instead)
+        if request.user == group.creator:
+            return JsonResponse({'error': 'Group creator cannot leave. Delete the group instead.'}, status=400)
+        
+        group.members.remove(request.user)
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'You have left the group chat'
         })
     
     except Exception as e:
