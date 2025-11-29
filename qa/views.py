@@ -3355,48 +3355,44 @@ def question_upvote_downvote(request, question_id):
             if request.user == post.post_owner:
                 return JsonResponse({'action': 'cannotLikeOwnPost'})
             else:
+                # QUESTION REPUTATION - No reputation requirement
+                created = QDownvote(
+                    downvote_by_q=request.user,
+                    downvote_question_of=post)
+                created.save()
 
-                if request.user.profile.voteDownPriv:
-                    # QUESTION REPUTATION
-                    created = QDownvote(
-                        downvote_by_q=request.user,
-                        downvote_question_of=post)
-                    created.save()
+                if created == QDownvote.objects.filter(
+                        downvote_by_q=request.user).first():
+                    TagBadge.objects.get_or_create(
+                        awarded_to_user=request.user,
+                        badge_type="BRONZE",
+                        tag_name="Critic",
+                        bade_position="BADGE",
+                        questionIf_TagOf_Q=post)
+                    PrivRepNotification.objects.get_or_create(
+                        for_user=request.user,
+                        type_of_PrivNotify="BADGE_EARNED",
+                        url=question_URL,
+                        for_if="Critic",
+                        description="First down vote"
+                    )
 
-                    if created == QDownvote.objects.filter(
-                            downvote_by_q=request.user).first():
-                        TagBadge.objects.get_or_create(
-                            awarded_to_user=request.user,
-                            badge_type="BRONZE",
-                            tag_name="Critic",
-                            bade_position="BADGE",
-                            questionIf_TagOf_Q=post)
-                        PrivRepNotification.objects.get_or_create(
-                            for_user=request.user,
-                            type_of_PrivNotify="BADGE_EARNED",
-                            url=question_URL,
-                            for_if="Critic",
-                            description="First down vote"
-                        )
-
-                    getAlltheReputation = Reputation.objects.filter(
-                        awarded_to=request.user).aggregate(
-                        Sum('answer_rep_C'), Sum('question_rep_C'))
-                    d = getAlltheReputation['question_rep_C__sum']
-                    total_question_rep = getAlltheReputation['question_rep_C__sum'] if d else 0
-                    s = getAlltheReputation['answer_rep_C__sum']
-                    total_answer_rep = getAlltheReputation['answer_rep_C__sum'] if s else 0
-                    totalReputation = total_question_rep + total_answer_rep
-                    if totalReputation > 2:
-                        decRep = Reputation.objects.get_or_create(
-                            awarded_to=post.post_owner,
-                            question_O=post,
-                            question_rep_C=-2,
-                            reputation_on_what='QUESTION_DOWNVOTE')
-                    rewardPrivielege(request, post.post_owner)
-                    return JsonResponse({'action': 'dislike_only'})
-                else:
-                    return JsonResponse({'action': 'lackOfPrivelege'})
+                getAlltheReputation = Reputation.objects.filter(
+                    awarded_to=request.user).aggregate(
+                    Sum('answer_rep_C'), Sum('question_rep_C'))
+                d = getAlltheReputation['question_rep_C__sum']
+                total_question_rep = getAlltheReputation['question_rep_C__sum'] if d else 0
+                s = getAlltheReputation['answer_rep_C__sum']
+                total_answer_rep = getAlltheReputation['answer_rep_C__sum'] if s else 0
+                totalReputation = total_question_rep + total_answer_rep
+                if totalReputation > 2:
+                    decRep = Reputation.objects.get_or_create(
+                        awarded_to=post.post_owner,
+                        question_O=post,
+                        question_rep_C=-2,
+                        reputation_on_what='QUESTION_DOWNVOTE')
+                rewardPrivielege(request, post.post_owner)
+                return JsonResponse({'action': 'dislike_only'})
 
     else:
         messages.error(request, 'Something went wrong')
