@@ -7,34 +7,44 @@
 
 {% block content %}
 
-<!DOCTYPE html>
+<style>
+    /* Ensure images in markdown content are visible and properly sized */
+    .s-prose img {
+        max-width: 100%;
+        height: auto;
+        display: block;
+        margin: 1em 0;
+        border-radius: 4px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    
+    /* Style for attachment links */
+    .s-prose a[href*="martor_uploads"] {
+        display: inline-block;
+        padding: 8px 12px;
+        background: #f6f8fa;
+        border: 1px solid #d1d5db;
+        border-radius: 4px;
+        text-decoration: none;
+        color: #0969da;
+        margin: 0.5em 0;
+    }
+    
+    .s-prose a[href*="martor_uploads"]:hover {
+        background: #e9ecef;
+        border-color: #0969da;
+    }
+</style>
 
-    <html itemscope itemtype="https://schema.org/QAPage" class="html__responsive ">
-
-    <head>
-        <title>{{data.title}}- Stack Overflow</title>
-        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
-        <script async src="https://cdn.sstatic.net/Js/third-party/stacks/stacks.min.js?v=587378ef592b"></script>
-        <link rel="stylesheet" type="text/css" href="https://cdn.sstatic.net/Shared/stacks.css?v=1600cb081e8c">
-        <link rel="stylesheet" type="text/css" href="https://cdn.sstatic.net/Sites/stackoverflow/primary.css?v=8758134482da">
-        <link href="{% static 'qa/css/question-detail.css' %}" type="text/css" media="all" rel="stylesheet" />
+<link rel="stylesheet" type="text/css" href="https://cdn.sstatic.net/Shared/stacks.css?v=1600cb081e8c">
+<link rel="stylesheet" type="text/css" href="https://cdn.sstatic.net/Sites/stackoverflow/primary.css?v=8758134482da">
+<link href="{% static 'qa/css/question-detail.css' %}" type="text/css" media="all" rel="stylesheet" />
 <link href="{% static 'MarkDown-Editor/plugins/css/ace.min.css' %}" type="text/css" media="all" rel="stylesheet" />
 <link href="{% static 'MarkDown-Editor/martor/css/martor.semantic.min.css' %}" type="text/css" media="all" rel="stylesheet" />
-    <link href="{% static 'notification/css/notification.css' %}" type="text/css" media="all" rel="stylesheet" />
-
-
+<link href="{% static 'notification/css/notification.css' %}" type="text/css" media="all" rel="stylesheet" />
 <link href="{% static 'css/tailwind.css' %}" type="text/css" media="all" rel="stylesheet" />
 
-    </head>
-
-
-    <body class="question-page unified-theme">
-    <div id="notify-container"></div>
-    <div id="custom-header"></div>
-
-
-
-    <div id="content" class="snippet-hidden">
+    <div id="content" class="snippet-hidden" itemscope itemtype="https://schema.org/QAPage">
         <div itemprop="mainEntity" itemscope itemtype="https://schema.org/Question">
         <link itemprop="image" href="#">
 
@@ -1264,13 +1274,6 @@ $(document).ready(function () {
     });
 
   </script>
-
-
-</body>
-</html>
-
-
-
 
 
 

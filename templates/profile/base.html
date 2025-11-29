@@ -51,68 +51,116 @@
         }
 
         .left-sidebar {
-            background: var(--bg-primary);
-            border-radius: 0;
-            padding: 0;
-            border: none;
-            border-right: 1px solid var(--border);
+            background: var(--bg-primary) !important;
+            border-radius: 0 !important;
+            padding: 0 !important;
+            border: none !important;
+            border-right: 1px solid var(--border) !important;
+            min-width: 200px !important;
+            width: 200px !important;
+            flex-shrink: 0 !important;
         }
 
         .nav-links {
-            list-style: none;
-            padding: 0;
-            margin: 0;
+            list-style: none !important;
+            padding: 0 !important;
+            margin: 0 !important;
         }
 
         .nav-links li {
-            list-style: none;
+            list-style: none !important;
         }
 
         .nav-links > li > ol {
-            padding: 0;
-            margin: 0;
+            padding: 0 !important;
+            margin: 0 !important;
         }
 
         .nav-links--link {
-            display: flex;
-            align-items: center;
-            padding: 14px 20px;
-            border-radius: 0;
-            border-left: 3px solid transparent;
-            color: var(--text-secondary);
-            text-decoration: none;
-            font-size: 15px;
-            font-weight: 500;
-            transition: all 0.2s;
-            margin: 0;
-            gap: 12px;
+            display: flex !important;
+            align-items: center !important;
+            padding: 14px 20px !important;
+            border-radius: 0 !important;
+            border-left: 3px solid transparent !important;
+            color: var(--text-secondary) !important;
+            text-decoration: none !important;
+            font-size: 15px !important;
+            font-weight: 500 !important;
+            transition: all 0.2s !important;
+            margin: 0 !important;
+            gap: 12px !important;
+            flex-direction: row !important;
+            white-space: nowrap !important;
         }
 
         .nav-links--link:hover {
-            background: var(--hover);
-            color: var(--text-primary);
-            border-left-color: var(--primary);
+            background: var(--hover) !important;
+            color: var(--text-primary) !important;
+            border-left-color: var(--primary) !important;
         }
 
         .youarehere .nav-links--link {
-            background: #eef2ff;
-            color: var(--primary);
-            border-left-color: var(--primary);
-            font-weight: 600;
+            background: #eef2ff !important;
+            color: var(--primary) !important;
+            border-left-color: var(--primary) !important;
+            font-weight: 600 !important;
         }
 
         .nav-links--link svg {
-            width: 18px;
-            height: 18px;
-            opacity: 0.6;
-            flex-shrink: 0;
-            stroke-width: 2;
+            width: 18px !important;
+            height: 18px !important;
+            opacity: 0.6 !important;
+            flex-shrink: 0 !important;
+            stroke-width: 2 !important;
+            fill: none !important;
+            color: currentColor !important;
+        }
+
+        .nav-links--link span {
+            display: inline !important;
+            white-space: nowrap !important;
         }
 
         .youarehere .nav-links--link svg {
-            opacity: 1;
-            color: var(--primary);
-            fill: #eef2ff;
+            opacity: 1 !important;
+            color: var(--primary) !important;
+            fill: none !important;
+            stroke: currentColor !important;
+        }
+        
+        #nav-questions svg,
+        #nav-users svg {
+            opacity: 0.6 !important;
+            color: var(--text-secondary) !important;
+            stroke: currentColor !important;
+            fill: none !important;
+        }
+
+        #nav-questions svg circle,
+        #nav-questions svg path,
+        #nav-users svg circle,
+        #nav-users svg path {
+            fill: none !important;
+            stroke: currentColor !important;
+        }
+        
+        #nav-questions:hover svg,
+        #nav-users:hover svg,
+        .youarehere #nav-questions svg,
+        .youarehere #nav-users svg {
+            fill: none !important;
+        }
+        
+        #nav-questions:hover svg circle,
+        #nav-questions:hover svg path,
+        #nav-users:hover svg circle,
+        #nav-users:hover svg path,
+        .youarehere #nav-questions svg circle,
+        .youarehere #nav-questions svg path,
+        .youarehere #nav-users svg circle,
+        .youarehere #nav-users svg path {
+            fill: none !important;
+            stroke: currentColor !important;
         }
 
         .fs-fine {
