@@ -261,8 +261,14 @@
             {% endif %}
         </h1>
         <div class="community-meta">
-            Created by <strong>{{ community.creator.username }}</strong> • {{ community.member_count }} members
-        </div>
+    Created by 
+    <a href="{% url 'profile:activityPageTabProfile' community.creator.id community.creator.username %}" 
+       class="text-decoration-none" 
+       style="color: #f9f1f1ff; font-weight: 500;">
+        {% if community.creator.profile.full_name %}{{ community.creator.profile.full_name }}{% else %}{{ community.creator.username }}{% endif %}
+    </a> 
+    - {{ community.member_count }} members
+</div>
         <div class="community-actions">
             {% if is_member %}
                 <button class="btn btn-secondary" onclick="leaveCommunity('{{ community.slug }}')">Leave Community</button>
@@ -304,7 +310,18 @@
                     {% for member in members %}
                         <li class="member-item">
                             <div class="member-avatar">
-                                {{ member.user.username|first|upper }}
+                                {% if member.user.profile.profile_photo %}
+                                    <img src="{{ member.user.profile.profile_photo.url }}" 
+                                         alt="{{ member.user.username }}" 
+                                         class="rounded-circle" 
+                                         width="32" 
+                                         height="32"
+                                         onerror="this.onerror=null; this.textContent='{{ member.user.username|first|upper }}'; this.style.display='flex'; this.style.alignItems='center'; this.style.justifyContent='center'; this.style.backgroundColor='#f0f0f0'; this.style.borderRadius='50%'; this.style.width='32px'; this.style.height='32px'; this.style.fontWeight='bold';">
+                                {% else %}
+                                    <div style="width: 32px; height: 32px; border-radius: 50%; background-color: #f0f0f0; display: flex; align-items: center; justify-content: center; font-weight: bold;">
+                                        {{ member.user.username|first|upper }}
+                                    </div>
+                                {% endif %}
                             </div>
                             <a href="{% url 'profile:activityPageTabProfile' member.user.id member.user.username %}" class="member-name">
                                 {% if member.user.profile.full_name %}{{ member.user.profile.full_name }}{% else %}{{ member.user.username }}{% endif %}
