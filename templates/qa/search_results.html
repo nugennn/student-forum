@@ -47,7 +47,7 @@
     background-color: #0074cc;
     color: #fff;
     font-weight: 600;
-    padding: 0.7em 2em;
+    padding: 0.7em 1em;
     border-radius: 7px;
     font-size: 1.07em;
     border: none;
@@ -126,7 +126,8 @@
       <select name="t" style="padding:.45rem .6rem; border-radius:6px; border:1px solid #e9ecef; background:#fff;">
         <option value="questions" {% if result_type != 'tags' and result_type != 'users' %}selected{% endif %}>Questions</option>
         <option value="tags" {% if result_type == 'tags' %}selected{% endif %}>Tags</option>
-        <option value="users" {% if result_type == 'users' %}selected{% endif %}>Users</option>
+        <option value="users" {% if result_type == 'users' %}selected{% endif %}>Members</option>
+        <option value="communities" {% if result_type == 'communities' %}selected{% endif %}>Communities</option>
       </select>
       <button type="submit">Search</button>
   </form>
@@ -162,6 +163,32 @@
         {% endfor %}
       {% else %}
         <div class="no-results">No users found for "<b>{{ query }}</b>"</div>
+      {% endif %}
+
+    {% elif result_type == 'communities' %}
+      {% if results %}
+        {% for community in results %}
+          <div class="result-card">
+            <a href="{% url 'community:community_detail' community.slug %}" class="result-title">{{ community.name }}</a>
+            <div class="result-body">
+              {{ community.description|truncatewords:30|safe }}
+            </div>
+            <div class="result-meta" style="margin-top: 0.5rem; color: #6c757d; font-size: 0.9em;">
+              <span class="meta-item" style="margin-right: 1rem;">
+                <i class="fas fa-users"></i> {{ community.members.count }} members
+              </span>
+              {% if community.is_private %}
+                <span class="meta-item">
+                  <i class="fas fa-lock"></i> Private
+                </span>
+              {% endif %}
+            </div>
+          </div>
+        {% empty %}
+          <div class="no-results">No communities found matching "<b>{{ query }}</b>"</div>
+        {% endfor %}
+      {% else %}
+        <div class="no-results">No communities found matching "<b>{{ query }}</b>"</div>
       {% endif %}
 
     {% else %}

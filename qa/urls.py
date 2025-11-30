@@ -35,6 +35,7 @@ urlpatterns = [
 	path('save_comment/<int:question_id>/', views.save_comment, name='save_comment'),
 
 	path('upvote_comment/<int:commentq_id>/', views.upvote_comment, name='upvote_comment'),
+	path('edit_comment/<int:comment_id>/', views.edit_comment, name='edit_comment'),
 
 	path('edit_answer/<int:answer_id>/', views.edit_answer, name='edit_answer'),
 

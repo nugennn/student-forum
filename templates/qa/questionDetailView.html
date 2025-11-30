@@ -408,16 +408,20 @@
                     <div class="comment-body js-comment-edit-hide">
                         <span class="comment-copy">{{comment.comment}}</span>
                         <div class="d-inline-flex ai-center">&ndash;&nbsp;
-                            <a href="{% url 'profile:activityPageTabProfile' data.post_owner.id data.post_owner.username %}" title="{{comment.commented_by|calculate_reputation}} reputation" class="comment-user">{{comment.commented_by}}</a>
+                            <a href="{% url 'profile:activityPageTabProfile' comment.commented_by.id comment.commented_by.username %}" title="{{comment.commented_by|calculate_reputation}} reputation" class="comment-user">{{comment.commented_by.get_full_name|default:comment.commented_by.username}}</a>
                         </div>
                         <span class="comment-date" dir="ltr">
-                            <span title="2021-12-08 10:40:00Z, License: CC BY-SA 4.0" class="relativetime-clean">{{comment.date|naturaltime}}</span>
+                            <span title="{{comment.date|date:'Y-m-d H:i:s'}}" class="relativetime-clean">{{comment.date|naturaltime}}</span>
                         </span>
-                        <span title="this comment was edited 2 times">
-                            <svg aria-hidden="true" class="va-text-bottom o50 svg-icon iconPencilSm" width="14" height="14" viewBox="0 0 14 14">
-                                <path d="m11.1 1.71 1.13 1.12c.2.2.2.51 0 .71L11.1 4.7 9.21 2.86l1.17-1.15c.2-.2.51-.2.71 0ZM2 10.12l6.37-6.43 1.88 1.88L3.88 12H2v-1.88Z"/>
-                            </svg>
+                        {% if request.user == comment.commented_by %}
+                        <span class="comment-edit" title="Edit comment">
+                            <a href="#" class="js-edit-comment" data-comment-id="{{comment.id}}">
+                                <svg aria-hidden="true" class="va-text-bottom o50 svg-icon iconPencilSm" width="14" height="14" viewBox="0 0 14 14">
+                                    <path d="m11.1 1.71 1.13 1.12c.2.2.2.51 0 .71L11.1 4.7 9.21 2.86l1.17-1.15c.2-.2.51-.2.71 0ZM2 10.12l6.37-6.43 1.88 1.88L3.88 12H2v-1.88Z"/>
+                                </svg>
+                            </a>
                         </span>
+                        {% endif %}
                     </div>
                 </div>
             </li>
@@ -2253,6 +2257,123 @@ function submitQuote() {
 
         <script>
         $(document).ready(function(){$(".save-comment").on("click",function(){var t=$(this).data("data"),e=$(".comment-text-"+t).val();$(".user-username").val();$.ajax({url:"{% url 'qa:save_comment' data.id %}",type:"post",data:{comment:e,answerid:t,csrfmiddlewaretoken:"{{csrf_token}}"},dataType:"json",beforeSend:function(){$(".save-comment").addClass("disabled").text("saving...")},success:function(n){if(1==n.bool){$(".comment-text-"+t).val("");var a=`<ul class="comments-list js-comments-list">\n            <li id="comment-{{comment.id}}" class="comment js-comment " data-comment-id="{{comment.id}}" data-comment-owner-id="{{comment.commented_by.id}}" data-comment-score="0">\n\n                <div class="js-comment-actions comment-actions">\n                    <div class="comment-score js-comment-edit-hide">\n                    </div>\n                        \n                                    {% if request.user in comment.com_upvote.all %}\n                                    <button name='submit' type='submit' value="upVoteCommentIt"><i class="fas upvote-comment-active fa-sort-up fa-2x"></i></button>\n                                    {% else %}\n                                    <button name='submit' type='submit' value="upVoteCommentIt"><i class="fas upvote-comment-inactive fa-sort-up fa-2x"></i></button>\n                                    {% endif %}\n                                </span>\n                       \n                        <div class="comment-flagging js-comment-edit-hide">\n                            <button class="js-comment-flag s-btn s-btn__unset bg-transparent c-pointer fc-black-300 o40 h:fc-red-500 h:o100"\n                                    aria-label="Flag Comment"\n                                    aria-pressed="false"\n                                    title="Flag this comment for serious problems or moderator attention">\n                                <svg aria-hidden="true" class="svg-icon iconFlag" width="18" height="18" viewBox="0 0 18 18"><path d="M3 2v14h2v-6h3.6l.4 1h6V3H9.5L9 2H3Z"/></svg>\n                            </button>\n                        </div>\n                </div>\n\n                <div class="comment-text  js-comment-text-and-form">\n                    <div class="comment-body js-comment-edit-hide">\n                        \n                        <span class="comment-copy">${e}</span>\n                        \n                      <div class="d-inline-flex ai-center">\n        &ndash;&nbsp;<a href="{% url 'profile:activityPageTabProfile' data.post_owner.id data.post_owner.username %}"\n                                    title="16,021 reputation"\n                                    class="comment-user">{{request.user}}</a>\n                        </div>\n                        <span class="comment-date" dir="ltr"><span title="2021-12-08 10:40:00Z, License: CC BY-SA 4.0" class="relativetime-clean">{{comment.date|naturaltime}}</span></span>\n                                <span title="this comment was edited 2 times">\n                                    <svg aria-hidden="true" class="va-text-bottom o50 svg-icon iconPencilSm" width="14" height="14" viewBox="0 0 14 14"><path d="m11.1 1.71 1.13 1.12c.2.2.2.51 0 .71L11.1 4.7 9.21 2.86l1.17-1.15c.2-.2.51-.2.71 0ZM2 10.12l6.37-6.43 1.88 1.88L3.88 12H2v-1.88Z"/></svg>\n                                </span>\n                    </div>\n                </div>\n    </li>\n\n            </ul>`;$(".comment-wrapper-"+t).append(a);var s=$(".comment-count-"+t).text();$(".comment-count-"+t).text(parseInt(s)+1)}else 0==n.bool&&($(".contain").html("Write Something"),$(".contain").hide(2e3));$(".save-comment").removeClass("disabled").text("Submit")}})})});
+        </script>
+
+        <script>
+        // Comment editing functionality
+        $(document).on('click', '.js-edit-comment', function(e) {
+            e.preventDefault();
+            const commentId = $(this).data('comment-id');
+            const commentLi = $(`#comment-${commentId}`);
+            const commentBody = commentLi.find('.comment-body');
+            const commentText = commentLi.find('.comment-copy').text().trim();
+            
+            // Store original comment in data attribute
+            commentBody.data('original-comment', commentText);
+            
+            // Create edit form
+            const editForm = `
+                <div class="comment-edit-form">
+                    <textarea class="form-control edit-comment-text" rows="2">${commentText}</textarea>
+                    <div class="mt-2">
+                        <button class="btn btn-primary btn-sm save-edit-comment" data-comment-id="${commentId}">Save</button>
+                        <button type="button" class="btn btn-link btn-sm cancel-edit-comment">Cancel</button>
+                    </div>
+                </div>
+            `;
+            
+            // Hide comment text and show edit form
+            commentBody.hide();
+            commentBody.after(editForm);
+        });
+
+        // Save edited comment
+        $(document).on('click', '.save-edit-comment', function() {
+            const button = $(this);
+            const commentId = button.data('comment-id');
+            const editForm = button.closest('.comment-edit-form');
+            const newText = editForm.find('.edit-comment-text').val().trim();
+            const commentLi = $(`#comment-${commentId}`);
+            const commentBody = commentLi.find('.comment-body');
+            
+            if (!newText) {
+                alert('Comment cannot be empty');
+                return;
+            }
+            
+            // Show loading state
+            button.prop('disabled', true).text('Saving...');
+            
+            $.ajax({
+                url: '{% url "qa:edit_comment" 0 %}'.replace('0', commentId),
+                type: 'POST',
+                data: {
+                    comment: newText,
+                    csrfmiddlewaretoken: '{{ csrf_token }}'
+                },
+                success: function(response) {
+                    if (response.success) {
+                        // Update comment text
+                        commentLi.find('.comment-copy').text(newText);
+                        
+                        // Show success message
+                        const toastId = 'comment-update-toast-' + Date.now();
+                        const toast = `
+                            <div id="${toastId}" class="alert alert-success alert-dismissible fade show" role="alert" style="position: fixed; top: 20px; right: 20px; z-index: 9999; min-width: 250px;">
+                                Comment updated successfully
+                                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
+                        `;
+                        
+                        // Remove any existing toasts
+                        $('.alert-dismissible').remove();
+                        
+                        // Add new toast
+                        $('body').append(toast);
+                        
+                        // Auto-remove after 3 seconds
+                        setTimeout(function() {
+                            $('#' + toastId).fadeOut(400, function() {
+                                $(this).remove();
+                            });
+                        }, 3000);
+                        
+                        // Remove edit form and show updated comment
+                        editForm.remove();
+                        commentBody.show();
+                    } else {
+                        alert('Failed to update comment: ' + (response.error || 'Unknown error'));
+                        button.prop('disabled', false).text('Save');
+                    }
+                },
+                error: function(xhr) {
+                    let errorMsg = 'An error occurred while updating the comment';
+                    try {
+                        const response = JSON.parse(xhr.responseText);
+                        if (response.error) {
+                            errorMsg = response.error;
+                        }
+                    } catch (e) {
+                        console.error('Error parsing error response:', e);
+                    }
+                    alert(errorMsg);
+                    button.prop('disabled', false).text('Save');
+                }
+            });
+        });
+
+        // Cancel editing
+        $(document).on('click', '.cancel-edit-comment', function(e) {
+            e.preventDefault();
+            const editForm = $(this).closest('.comment-edit-form');
+            const commentBody = editForm.siblings('.comment-body');
+            
+            // Remove edit form and show original comment
+            editForm.remove();
+            commentBody.show();
+        });
         </script>
 
 {% endblock js %} 

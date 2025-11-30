@@ -1,5 +1,8 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from .models import Question, Answer, Bounty, Reputation, ProtectQuestion, PostShare, PostLike
+from django.views.decorators.http import require_http_methods
+from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse
+from .models import Question, Answer, Bounty, Reputation, ProtectQuestion, PostShare, PostLike, CommentQ
 from .forms import QuestionForm, AnswerForm, UpdateQuestion
 from django.http import JsonResponse, HttpResponse
 from django.db.models import Count, Q, Sum, F
@@ -15,7 +18,7 @@ from datetime import timedelta
 from .decorators import loggedOutFromAllDevices, superuser_only, highModRequired
 from review.decorators import awardReputation
 from .forms import ProtectForm, EditAnswerForm
-from .models import CommentQ, QUpvote, QDownvote
+from .models import QUpvote, QDownvote
 from django.contrib.auth.models import User
 from tagbadge.models import TagBadge
 from simple_history.utils import update_change_reason
@@ -3848,6 +3851,40 @@ def answer_upvote_downvote(request, answer_id):
         return redirect('profile:posts')
 
 
+@login_required
+def edit_comment(request, comment_id):
+    if request.method == 'POST' and is_ajax(request):
+        comment = get_object_or_404(CommentQ, id=comment_id)
+        
+        # Check if the current user is the comment owner
+        if request.user != comment.commented_by:
+            return JsonResponse({
+                'success': False,
+                'error': 'You do not have permission to edit this comment.'
+            }, status=403)
+        
+        new_comment = request.POST.get('comment', '').strip()
+        if not new_comment:
+            return JsonResponse({
+                'success': False,
+                'error': 'Comment cannot be empty.'
+            }, status=400)
+        
+        # Update the comment
+        comment.comment = new_comment
+        comment.save()
+        
+        return JsonResponse({
+            'success': True,
+            'comment': comment.comment
+        })
+    
+    return JsonResponse({
+        'success': False,
+        'error': 'Invalid request method.'
+    }, status=405)
+
+
 def upvote_comment(request, commentq_id):
     com = get_object_or_404(CommentQ, pk=commentq_id)
 
@@ -5048,6 +5085,14 @@ def search_questions(request):
                 Q(username__icontains=query) | Q(profile__full_name__icontains=query)
             ).distinct()
             result_type = 'users'
+        elif search_type == 'communities':
+            # Search communities
+            from community.models import Community
+            results = Community.objects.filter(
+                Q(name__icontains=query) &
+                Q(is_active=True)
+            ).distinct()
+            result_type = 'communities'
         else:
             # Default: search questions by title, body, and answers
             question_matches = Question.objects.filter(

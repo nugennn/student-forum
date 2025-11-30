@@ -59,7 +59,7 @@
         width: 18px;
         height: 18px;
         cursor: pointer;
-        margin-right: 8px;
+        margin-right: 10px;
     }
 
     .checkbox-label {
@@ -67,6 +67,13 @@
         align-items: center;
         font-weight: 400;
         cursor: pointer;
+        gap: 10px;
+    }
+
+    .form-check-input {
+        margin-right: 10px;
+        width: 18px;
+        height: 18px;
     }
 
     .form-row {
@@ -230,11 +237,18 @@
 
             <!-- Publish Checkbox -->
             <div class="form-group">
-                <label class="checkbox-label">
-                    {{ form.is_published }}
-                    {{ form.is_published.label }}
-                </label>
-                <div class="help-text">Uncheck to save as draft without publishing</div>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <input type="checkbox" 
+                           name="{{ form.is_published.name }}" 
+                           id="{{ form.is_published.id_for_label }}" 
+                           class="form-check-input"
+                           style="width: 18px; height: 18px; margin: 0px;"
+                           {% if form.is_published.value or not form.is_published.value is None and form.is_published.value %}checked{% endif %}>
+                    <label for="{{ form.is_published.id_for_label }}" style="margin: 20px; font-weight: normal; cursor: pointer;">
+                        Publish this Notice
+                    </label>
+                </div>
+                <div class="help-text" style="margin-top: 8px;">Uncheck to save as draft without publishing</div>
             </div>
 
             <!-- Form Actions -->
