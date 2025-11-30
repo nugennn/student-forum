@@ -113,6 +113,10 @@ urlpatterns = [
 	path('get-shares/<int:post_id>/<str:post_type>/', views.get_shares, name='get_shares'),
 
 	path('like-post/', views.like_post, name='like_post'),
+
+	path('repost-to-profile/', views.repost_to_profile, name='repost_to_profile'),
+
+	path('send-post-via-chat/', views.send_post_via_chat, name='send_post_via_chat'),
     
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

@@ -1696,6 +1696,9 @@ $(document).keydown(function(event) {
 
 <script type="text/javascript" src="{% static 'qa/js/question-detail-page.js' %}"></script>
 <script type="text/javascript" src="{% static 'qa/js/question-detail-modal.js' %}"></script>
+<script type="text/javascript" src="{% static 'qa/js/share-post.js' %}"></script>
+
+{% include 'partials/share_modal.html' %}
 
 
 
@@ -2169,6 +2172,27 @@ let currentShareType = null;
 function openShareModal(postType, postId) {
     currentSharePostId = postId;
     currentSharePostType = postType;
+    
+    // Also populate the share-post.js data
+    currentShareData.postType = postType;
+    currentShareData.postId = postId;
+    
+    // Build post URL
+    const baseUrl = window.location.origin;
+    if (postType === 'question') {
+        currentShareData.postUrl = `${baseUrl}/questionDetailView/${postId}/`;
+        // Get the question title from the page
+        const titleElement = document.querySelector('h1');
+        currentShareData.postTitle = titleElement ? titleElement.innerText : 'Check out this question';
+    } else if (postType === 'answer') {
+        // For answers, use the current question URL with anchor
+        const questionId = document.querySelector('[data-question-id]')?.getAttribute('data-question-id');
+        currentShareData.postUrl = `${baseUrl}/questionDetailView/${questionId}/#answer-${postId}`;
+        currentShareData.postTitle = 'Check out this answer';
+    }
+    
+    console.log('Share modal opened with data:', currentShareData);
+    
     $('#shareModal').modal('show');
 }
 

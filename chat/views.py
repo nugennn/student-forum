@@ -603,11 +603,21 @@ def send_link(request):
             link_image = None
         
         if chat_type == 'private':
-            chat_id = data.get('chat_id')
-            chat = get_object_or_404(PrivateChat, id=chat_id)
+            recipient_id = data.get('chat_id')
+            try:
+                recipient = User.objects.get(id=recipient_id)
+            except User.DoesNotExist:
+                return JsonResponse({'error': 'User not found'}, status=404)
             
-            if request.user not in chat.participants.all():
-                return JsonResponse({'error': 'Unauthorized'}, status=403)
+            # Prevent sending to self
+            if recipient == request.user:
+                return JsonResponse({'error': 'Cannot send to yourself'}, status=400)
+            
+            # Get or create private chat
+            chat = PrivateChat.objects.filter(participants=request.user).filter(participants=recipient).first()
+            if not chat:
+                chat = PrivateChat.objects.create()
+                chat.participants.add(request.user, recipient)
             
             message = Message.objects.create(
                 sender=request.user,
@@ -938,4 +948,86 @@ def get_users(request):
     except Exception as e:
         logger = logging.getLogger(__name__)
         logger.error(f"Error getting users: {str(e)}")
+        return JsonResponse({'error': str(e)}, status=400)
+
+
+@login_required
+@require_http_methods(["GET"])
+def get_chat_recipients(request):
+    """Get list of users and group chats for share modal"""
+    try:
+        from .models import GroupChat, Message, PrivateChat
+        from django.db.models import Max, Q
+        
+        # Get recent chat users (sorted by most recent message)
+        recent_users = set()
+        recent_users_list = []
+        
+        # Get private chats with most recent messages (only those with actual messages)
+        recent_chats = PrivateChat.objects.filter(
+            participants=request.user,
+            messages__isnull=False
+        ).annotate(
+            last_message=Max('messages__created_at')
+        ).order_by('-last_message').distinct()[:20]
+        
+        for chat in recent_chats:
+            # Get the other participant
+            other_user = chat.participants.exclude(id=request.user.id).first()
+            if other_user and other_user.id not in recent_users:
+                recent_users.add(other_user.id)
+                try:
+                    full_name = None
+                    if hasattr(other_user, 'profile') and other_user.profile:
+                        full_name = other_user.profile.full_name
+                except:
+                    full_name = None
+                
+                recent_users_list.append({
+                    'id': other_user.id,
+                    'type': 'user',
+                    'name': full_name or other_user.username,
+                    'username': other_user.username,
+                    'recent': True
+                })
+        
+        # Get all other users (excluding recent and current user)
+        all_users = User.objects.exclude(id=request.user.id).exclude(id__in=recent_users)
+        other_users_list = []
+        for user in all_users:
+            try:
+                full_name = None
+                if hasattr(user, 'profile') and user.profile:
+                    full_name = user.profile.full_name
+            except:
+                full_name = None
+            
+            other_users_list.append({
+                'id': user.id,
+                'type': 'user',
+                'name': full_name or user.username,
+                'username': user.username,
+                'recent': False
+            })
+        
+        # Combine: recent first, then others
+        users_list = recent_users_list + other_users_list
+        
+        # Get all group chats the user is a member of
+        group_chats = GroupChat.objects.filter(members=request.user)
+        groups_list = []
+        for group in group_chats:
+            groups_list.append({
+                'id': group.id,
+                'type': 'group',
+                'name': group.name
+            })
+        
+        return JsonResponse({
+            'users': users_list,
+            'groups': groups_list
+        })
+    except Exception as e:
+        logger = logging.getLogger(__name__)
+        logger.error(f"Error getting chat recipients: {str(e)}")
         return JsonResponse({'error': str(e)}, status=400)

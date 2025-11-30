@@ -670,6 +670,11 @@ document.addEventListener('DOMContentLoaded', function() {
 const groupId = {{ group.id }};
 const chatType = 'group';
 
+function getCsrfToken() {
+    return document.querySelector('[name=csrfmiddlewaretoken]')?.value || 
+           document.cookie.split('; ').find(row => row.startsWith('csrftoken='))?.split('=')[1] || '';
+}
+
 document.getElementById('messageForm').addEventListener('submit', function(e) {
     e.preventDefault();
     sendMessage();

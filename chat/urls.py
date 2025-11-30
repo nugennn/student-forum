@@ -32,4 +32,5 @@ urlpatterns = [
     
     # Users
     path('get-users/', views.get_users, name='get_users'),
+    path('get-chat-recipients/', views.get_chat_recipients, name='get_chat_recipients'),
 ]

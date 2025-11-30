@@ -2012,6 +2012,11 @@ def questionDetailView(request, pk,):  # slug):
     else:
         is_flagged = ''
 
+    # Get reposts for this question
+    question_reposts = PostShare.objects.filter(
+        question=data, share_type='repost'
+    ).select_related('shared_by').order_by('-created_at')
+
     context = {
         'is_flagged': is_flagged,
         'tagInlineEditForm': tagInlineEditForm,
@@ -2052,6 +2057,7 @@ def questionDetailView(request, pk,):  # slug):
         'getAcceptedAnswerCorrected': getAcceptedAnswerCorrected,
         're_open_form': re_open_form,
         'answers': answers,
+        'question_reposts': question_reposts,
     }
 
     return render(request, 'qa/questionDetailView.html', context)
@@ -4993,6 +4999,12 @@ def questions(request):
     countQuestions = Question.objects.count()
     # print("Printing Query")
     # print(query)
+    
+    # Include reposts in the feed
+    reposts = PostShare.objects.filter(share_type='repost').select_related(
+        'shared_by', 'question', 'answer'
+    ).order_by('-created_at')
+    
     context = {
         'bool_1': bool_1,
         'countQuestions': countQuestions,
@@ -5002,6 +5014,7 @@ def questions(request):
         'query': query,
         'object_list': object_list,
         'questions': questions,
+        'reposts': reposts,
         'selected': selected,
         'notifics': notifics,
         'objs': objs,
@@ -5154,6 +5167,135 @@ def get_shares(request, post_id, post_type):
         return JsonResponse({'error': str(e)}, status=500)
 
 
+@login_required
+def repost_to_profile(request):
+    """Repost a question or answer to user's profile"""
+    if request.method == 'POST':
+        post_id = request.POST.get('post_id')
+        post_type = request.POST.get('post_type')
+        
+        try:
+            if post_type == 'question':
+                post = Question.objects.get(pk=post_id)
+            elif post_type == 'answer':
+                post = Answer.objects.get(pk=post_id)
+            else:
+                return JsonResponse({'error': 'Invalid post type'}, status=400)
+            
+            # Create a repost entry
+            repost = PostShare.objects.create(
+                shared_by=request.user,
+                question=post if post_type == 'question' else None,
+                answer=post if post_type == 'answer' else None,
+                share_type='repost'
+            )
+            
+            # Create notification for post owner
+            post_owner = post.post_owner if post_type == 'question' else post.answer_owner
+            if request.user != post_owner:
+                Notification.objects.create(
+                    noti_receiver=post_owner,
+                    type_of_noti='post_reposted',
+                    url=post.get_absolute_url() if post_type == 'question' else post.questionans.get_absolute_url(),
+                    question_noti=post if post_type == 'question' else post.questionans,
+                    answer_noti=post if post_type == 'answer' else None
+                )
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Posted to your profile!',
+                'share_id': repost.id
+            })
+        
+        except (Question.DoesNotExist, Answer.DoesNotExist):
+            return JsonResponse({'error': 'Post not found'}, status=404)
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)
+
+
+@login_required
+def send_post_via_chat(request):
+    """Send a post link to a user or group chat"""
+    if request.method == 'POST':
+        recipient_type = request.POST.get('recipient_type')  # 'user' or 'group'
+        recipient_id = request.POST.get('recipient_id')
+        post_id = request.POST.get('post_id')
+        post_type = request.POST.get('post_type')
+        post_url = request.POST.get('post_url')
+        post_title = request.POST.get('post_title')
+        
+        try:
+            from chat.models import PrivateChat, GroupChat, Message
+            
+            if recipient_type == 'user':
+                # Send to individual user
+                recipient = User.objects.get(id=recipient_id)
+                
+                # Prevent sending to self
+                if recipient == request.user:
+                    return JsonResponse({'error': 'Cannot send to yourself'}, status=400)
+                
+                # Get or create private chat between sender and recipient
+                chat = PrivateChat.objects.filter(participants=request.user).filter(participants=recipient).first()
+                if not chat:
+                    chat = PrivateChat.objects.create()
+                    chat.participants.add(request.user, recipient)
+                
+                # Create message with post link
+                message = Message.objects.create(
+                    sender=request.user,
+                    private_chat=chat,
+                    message_type='link',
+                    content=post_title,
+                    link_url=post_url,
+                    link_title=post_title,
+                    link_description=f"Shared {post_type}"
+                )
+                
+                return JsonResponse({
+                    'success': True,
+                    'message': 'Post sent via chat!',
+                    'message_id': message.id
+                })
+            
+            elif recipient_type == 'group':
+                # Send to group chat
+                group_chat = GroupChat.objects.get(id=recipient_id)
+                
+                # Verify user is a member of the group
+                if not group_chat.members.filter(id=request.user.id).exists():
+                    return JsonResponse({'error': 'You are not a member of this group'}, status=403)
+                
+                # Create message with post link
+                message = Message.objects.create(
+                    sender=request.user,
+                    group_chat=group_chat,
+                    message_type='link',
+                    content=post_title,
+                    link_url=post_url,
+                    link_title=post_title,
+                    link_description=f"Shared {post_type}"
+                )
+                
+                return JsonResponse({
+                    'success': True,
+                    'message': 'Post sent to group!',
+                    'message_id': message.id
+                })
+            
+            else:
+                return JsonResponse({'error': 'Invalid recipient type'}, status=400)
+        
+        except User.DoesNotExist:
+            return JsonResponse({'error': 'User not found'}, status=404)
+        except GroupChat.DoesNotExist:
+            return JsonResponse({'error': 'Group not found'}, status=404)
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)
+    
+    return JsonResponse({'error': 'Invalid request method'}, status=400)
+
+    
 @login_required
 def like_post(request):
     """Like/unlike a post"""
