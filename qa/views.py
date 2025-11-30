@@ -3274,6 +3274,7 @@ def question_upvote_downvote(request, question_id):
         if QUpvote.objects.filter(
                 upvote_by_q=request.user,
                 upvote_question_of=post).exists():
+            # User has upvoted, now switching to downvote
             if likepost.date > upvote_time_limit or edited_time > likepost.date:
                 m = QDownvote(
                     downvote_by_q=request.user,
@@ -5394,4 +5395,101 @@ def martor_upload_image(request):
         'status': 400,
         'error': 'No image provided'
     })
+
+
+# AJAX endpoint for voting on questions from home/questions list pages
+@login_required
+def vote_question_ajax(request):
+    """Handle upvote/downvote on questions via AJAX"""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Invalid request method'}, status=400)
+    
+    question_id = request.POST.get('question_id')
+    vote_type = request.POST.get('vote_type')  # 'up' or 'down'
+    
+    if not question_id or not vote_type:
+        return JsonResponse({'success': False, 'error': 'Missing parameters'}, status=400)
+    
+    try:
+        question = get_object_or_404(Question, pk=question_id)
+        
+        if vote_type == 'up':
+            # Check if already upvoted
+            existing_upvote = QUpvote.objects.filter(
+                upvote_by_q=request.user,
+                upvote_question_of=question
+            ).first()
+            
+            if existing_upvote:
+                # Remove upvote
+                existing_upvote.delete()
+            else:
+                # Remove downvote if exists
+                QDownvote.objects.filter(
+                    downvote_by_q=request.user,
+                    downvote_question_of=question
+                ).delete()
+                
+                # Add upvote
+                QUpvote.objects.create(
+                    upvote_by_q=request.user,
+                    upvote_question_of=question
+                )
+                
+                # Award reputation
+                Reputation.objects.get_or_create(
+                    awarded_to=question.post_owner,
+                    question_O=question,
+                    question_rep_C=10,
+                    reputation_on_what='QUESTION_UPVOTE'
+                )
+        
+        elif vote_type == 'down':
+            # Check if already downvoted
+            existing_downvote = QDownvote.objects.filter(
+                downvote_by_q=request.user,
+                downvote_question_of=question
+            ).first()
+            
+            if existing_downvote:
+                # Remove downvote
+                existing_downvote.delete()
+            else:
+                # Remove upvote if exists
+                QUpvote.objects.filter(
+                    upvote_by_q=request.user,
+                    upvote_question_of=question
+                ).delete()
+                
+                # Add downvote
+                QDownvote.objects.create(
+                    downvote_by_q=request.user,
+                    downvote_question_of=question
+                )
+                
+                # Deduct reputation
+                Reputation.objects.get_or_create(
+                    awarded_to=question.post_owner,
+                    question_O=question,
+                    question_rep_C=-2,
+                    reputation_on_what='QUESTION_DOWNVOTE'
+                )
+        
+        # Get updated vote count
+        upvotes = question.qupvote_set.count()
+        downvotes = question.qdownvote_set.count()
+        vote_count = upvotes - downvotes
+        
+        return JsonResponse({
+            'success': True,
+            'vote_count': vote_count,
+            'upvotes': upvotes,
+            'downvotes': downvotes
+        })
+    
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)
 
