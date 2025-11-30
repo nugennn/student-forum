@@ -118,6 +118,8 @@ urlpatterns = [
 	path('repost-to-profile/', views.repost_to_profile, name='repost_to_profile'),
 
 	path('send-post-via-chat/', views.send_post_via_chat, name='send_post_via_chat'),
+
+	path('vote-question/', views.vote_question_ajax, name='vote_question_ajax'),
     
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
