@@ -370,93 +370,7 @@
             {% for question in questionsHome %}
             <div id="question-mini-list">
                 <div>
-                    <div class="question-summary narrow" id="question-summary-{{question.id}}">
-                        <div onclick="window.location.href='{{question.get_absolute_url}}'" class="cp">
-                            <div class="votes">
-                                <div class="mini-counts"><span title="{{question.calculate_UpVote_DownVote}} votes">{{question.calculate_UpVote_DownVote}}</span></div>
-                                <div>votes</div>
-                            </div>
-
-                            <div class="status unanswered">
-                                <div class="mini-counts"><span title="{{question.count_answers}} responses">{{question.count_answers}}</span></div>
-                                <div>replies</div>
-                            </div>
-
-                            <div class="views">
-                                <div class="mini-counts"><span title="{{question.calculate_viewers}} views">{{question.calculate_viewers}}</span></div>
-                                <div>views</div>
-                            </div>
-                        </div>
-
-                        <div class="summary">
-                            <h3><a href="{{question.get_absolute_url}}" class="question-hyperlink">{{question.title}}</a></h3>
-                            <div class="tags d-flex gs4 fw-wrap mt2 float-none lh-unset">
-                                {% if question.community %}
-                                <span class="post-tag flex--item" style="background: #f0fdf4 !important; color: #15803d !important; border-color: #bbf7d0 !important; font-weight: 600;" title="Community: {{question.community.name}}">
-                                    📍 {{question.community.name}}
-                                </span>
-                                {% endif %}
-                                {% for tag in question.tags.all %}
-                                <a href="{% url 'tagbadge:taggedItemsFrom_All' tag.id %}" class="post-tag flex--item" rel="tag">{{tag}}</a>
-                                {% endfor %}
-
-                                <!-- Action Buttons -->
-                                <div style="display: flex; gap: 12px; margin-top: 16px; padding-top: 16px; border-top: 1px solid #e2e8f0; align-items: center;">
-                                    <div id="id_likes{{ question.id }}">
-                                        <form method="GET" class="likeForm d-inline" action="{% url 'qa:question_upvote_downvote' question.id %}" data-pk="{{ question.id }}" style="display: inline;">
-                                            <button name='submit' type='submit' value="like" class="action-btn" style="display: flex; align-items: center; gap: 6px; padding: 6px 12px; border: 1px solid #e2e8f0; background: #fff; border-radius: 6px; cursor: pointer; font-size: 13px; color: #64748b; transition: all 0.2s ease;">
-                                                {% if request.user in question.qupvote_set.all %}
-                                                <i class="fas active fa-arrow-up"></i>
-                                                {% else %}
-                                                <i class="fas inactive fa-arrow-up"></i>
-                                                {% endif %}
-                                                <span class="vote-count">{{question.calculate_UpVote_DownVote}}</span>
-                                            </button>
-                                        </form>
-                                    </div>
-                                    <div id="id_dislikes{{ question.id }}">
-                                        <form method="GET" class="dislikeForm d-inline" action="{% url 'qa:question_upvote_downvote' question.id %}" data-pk="{{ question.id }}" style="display: inline;">
-                                            <button name='submit' type='submit' value="downVote" class="action-btn" style="display: flex; align-items: center; gap: 6px; padding: 6px 12px; border: 1px solid #e2e8f0; background: #fff; border-radius: 6px; cursor: pointer; font-size: 13px; color: #64748b; transition: all 0.2s ease;">
-                                                {% if request.user in question.qdownvote_set.all %}
-                                                <i class="fas active fa-arrow-down"></i>
-                                                {% else %}
-                                                <i class="fas inactive fa-arrow-down"></i>
-                                                {% endif %}
-                                            </button>
-                                        </form>
-                                    </div>
-                                    
-                                    <!-- Comment Button -->
-                                    <a href="{{question.get_absolute_url}}#comments" class="action-btn" style="display: flex; align-items: center; gap: 6px; padding: 6px 12px; border: 1px solid #e2e8f0; background: #fff; border-radius: 6px; cursor: pointer; font-size: 13px; color: #64748b; transition: all 0.2s ease; text-decoration: none;">
-                                        <i class="fas fa-comment"></i>
-                                        <span>{{question.comment_set.count}}</span>
-                                    </a>
-                                    
-                                    <!-- Share Button -->
-                                    <button class="action-btn" onclick="openShareModal('question', {{question.id}})" style="display: flex; align-items: center; gap: 6px; padding: 6px 12px; border: 1px solid #e2e8f0; background: #fff; border-radius: 6px; cursor: pointer; font-size: 13px; color: #64748b; transition: all 0.2s ease;">
-                                        <i class="fas fa-share-alt"></i>
-                                    </button>
-                                </div>
-                                
-                                <div class="flex--item started ml-auto mt0 as-center d-flex ai-center">
-                                    <div class="user-avatar" style="width: 24px; height: 24px; border-radius: 50%; overflow: hidden; margin-right: 8px;">
-                                        <img src="{% if question.post_owner.profile.profile_photo %}{{ question.post_owner.profile.profile_photo.url }}{% else %}{% static 'default.jpg' %}{% endif %}" alt="" width="24" height="24" style="object-fit: cover; width: 100%; height: 100%;">
-                                    </div>
-                                    <a href="{% url 'profile:activityPageTabProfile' question.post_owner.id question.post_owner.username %}" style="color: var(--text-primary); font-weight: 500;">
-                                        {% if question.post_owner.profile.full_name %}
-                                            {{ question.post_owner.profile.full_name }}
-                                        {% else %}
-                                            {{ question.post_owner }}
-                                        {% endif %}
-                                    </a>
-                                    <span class="reputation-score" dir="ltr">{{question.post_owner|calculate_reputation}}</span>
-                                    <a href="{{question.get_absolute_url}}" class="started-link" style="margin-left: 8px;">
-                                        <span class="relativetime">{{question.date|naturaltime}}</span>
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    {% include 'partials/question_card.html' %}
                 </div>
             </div>
             {% endfor %}
@@ -672,16 +586,20 @@ $(document).ready(function() {
                 let likes = parseInt(voteCountSpan.text());
                 
                 if (response.action == 'undislike_and_like') {
-                    likes += 2;
-                    voteCountSpan.text(likes);
-                    $(`#question-summary-${pk} .votes .mini-counts span`).first().text(likes);
+                    let upvoteSpans = $(`#question-summary-${pk} .votes .mini-counts span`);
+                    let upvoteCount = parseInt(upvoteSpans.eq(0).text().replace('+', '')) + 1;
+                    let downvoteCount = parseInt(upvoteSpans.eq(2).text().replace('-', '')) - 1;
+                    upvoteSpans.eq(0).text('+' + upvoteCount);
+                    upvoteSpans.eq(2).text('-' + downvoteCount);
+                    voteCountSpan.text(upvoteCount);
                     thisElement.find('i').removeClass('inactive').addClass('active');
                     $(`.dislikeForm[data-pk="${pk}"] i`).removeClass('active').addClass('inactive');
 
                 } else if (response.action == 'unlike') {
-                    likes -= 1;
-                    voteCountSpan.text(likes);
-                    $(`#question-summary-${pk} .votes .mini-counts span`).first().text(likes);
+                    let upvoteSpans = $(`#question-summary-${pk} .votes .mini-counts span`);
+                    let upvoteCount = parseInt(upvoteSpans.eq(0).text().replace('+', '')) - 1;
+                    upvoteSpans.eq(0).text('+' + upvoteCount);
+                    voteCountSpan.text(upvoteCount);
                     thisElement.find('i').removeClass('active').addClass('inactive');
 
                 } else if (response.action == 'voteError') {
@@ -691,9 +609,10 @@ $(document).ready(function() {
                 } else if (response.action == 'cannotLikeOwnPost') {
                     showToastNotification('You cannot vote for your own post', 'error');
                 } else if (response.action == 'like_only') {
-                    likes++;
-                    voteCountSpan.text(likes);
-                    $(`#question-summary-${pk} .votes .mini-counts span`).first().text(likes);
+                    let upvoteSpans = $(`#question-summary-${pk} .votes .mini-counts span`);
+                    let upvoteCount = parseInt(upvoteSpans.eq(0).text().replace('+', '')) + 1;
+                    upvoteSpans.eq(0).text('+' + upvoteCount);
+                    voteCountSpan.text(upvoteCount);
                     thisElement.find('i').removeClass('inactive').addClass('active');
                 }
             }
@@ -723,16 +642,19 @@ $(document).ready(function() {
                 let likes = parseInt(voteCountSpan.text());
                 
                 if (response.action == 'unlike_and_dislike') {
-                    likes -= 2;
-                    voteCountSpan.text(likes);
-                    $(`#question-summary-${pk} .votes .mini-counts span`).first().text(likes);
+                    let upvoteSpans = $(`#question-summary-${pk} .votes .mini-counts span`);
+                    let upvoteCount = parseInt(upvoteSpans.eq(0).text().replace('+', '')) - 1;
+                    let downvoteCount = parseInt(upvoteSpans.eq(2).text().replace('-', '')) + 1;
+                    upvoteSpans.eq(0).text('+' + upvoteCount);
+                    upvoteSpans.eq(2).text('-' + downvoteCount);
+                    voteCountSpan.text(upvoteCount);
                     likeForm.find('i').removeClass('active').addClass('inactive');
                     thisElement.find('i').removeClass('inactive').addClass('active');
 
                 } else if (response.action == 'undislike') {
-                    likes++;
-                    voteCountSpan.text(likes);
-                    $(`#question-summary-${pk} .votes .mini-counts span`).first().text(likes);
+                    let upvoteSpans = $(`#question-summary-${pk} .votes .mini-counts span`);
+                    let downvoteCount = parseInt(upvoteSpans.eq(2).text().replace('-', '')) - 1;
+                    upvoteSpans.eq(2).text('-' + downvoteCount);
                     thisElement.find('i').removeClass('active').addClass('inactive');
 
                 } else if (response.action == 'voteError') {
@@ -742,9 +664,9 @@ $(document).ready(function() {
                 } else if (response.action == 'cannotLikeOwnPost') {
                     showToastNotification('You cannot vote for your own post', 'error');
                 } else if (response.action == 'dislike_only') {
-                    likes--;
-                    voteCountSpan.text(likes);
-                    $(`#question-summary-${pk} .votes .mini-counts span`).first().text(likes);
+                    let upvoteSpans = $(`#question-summary-${pk} .votes .mini-counts span`);
+                    let downvoteCount = parseInt(upvoteSpans.eq(2).text().replace('-', '')) + 1;
+                    upvoteSpans.eq(2).text('-' + downvoteCount);
                     thisElement.find('i').removeClass('inactive').addClass('active');
                 }
             }

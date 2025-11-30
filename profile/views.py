@@ -1867,6 +1867,7 @@ def Votes_castActivity(request, user_id, username):
 @login_required
 def home(request):
     from campus_updates.models import CampusUpdate
+    from community.models import Community
     
     # Get latest 3 posts within 1 week with highest reputation (votes)
     last_week = timezone.now() - timedelta(days=7)
@@ -1888,6 +1889,9 @@ def home(request):
     # Filter out expired notices
     campus_updates = [u for u in campus_updates if not u.is_expired()]
     
+    # Get communities joined by the current user
+    communities = Community.objects.filter(members__user=request.user).order_by('name')
+    
     # Pagination
     page = request.GET.get('page', 1)
     paginator = Paginator(questionsHome_all, 5)
@@ -1903,6 +1907,7 @@ def home(request):
         'questionsHome': questionsHome,
         'count_bounty': count_bounty,  # Added this for your template
         'campus_updates': campus_updates,  # Add campus updates to context
+        'communities': communities,  # Add user's communities to context
     }
     return render(request, 'profile/home.html', context)
 

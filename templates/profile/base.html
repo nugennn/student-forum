@@ -973,6 +973,38 @@ function deleteAllNotifications(event) {
                     </li>
                 </ol>
             </nav>
+            <!-- Communities List Section -->
+            <div style="margin-top: 24px; padding: 0 12px;">
+                <div style="font-size: 12px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; padding: 0 8px;">Your Communities</div>
+                <ul style="list-style: none; margin: 0; padding: 0;">
+                    <li style="margin-bottom: 8px;">
+                        <a href="{% url 'community:create_community' %}" style="display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 6px; text-decoration: none; color: var(--text-primary); font-size: 13px; transition: background 0.2s;">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="1"></circle>
+                                <path d="M12 1v6m0 6v6"></path>
+                                <path d="M4.22 4.22l4.24 4.24m5.08 5.08l4.24 4.24"></path>
+                                <path d="M1 12h6m6 0h6"></path>
+                                <path d="M4.22 19.78l4.24-4.24m5.08-5.08l4.24-4.24"></path>
+                            </svg>
+                            <span>Create Community</span>
+                        </a>
+                    </li>
+                    {% if communities %}
+                        {% for community in communities %}
+                        <li style="margin-bottom: 8px;">
+                            <a href="{% url 'community:community_detail' community.slug %}" style="display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 6px; text-decoration: none; color: var(--text-primary); font-size: 13px; transition: background 0.2s; hover: background var(--hover);">
+                                {% if community.icon %}
+                                    <img src="{{ community.icon.url }}" alt="{{ community.name }}" style="width: 20px; height: 20px; border-radius: 50%; object-fit: cover;">
+                                {% else %}
+                                    <div style="width: 20px; height: 20px; border-radius: 50%; background: var(--primary); color: white; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 11px; flex-shrink: 0;">{{ community.name|first }}</div>
+                                {% endif %}
+                                <span style="flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ community.name }}</span>
+                            </a>
+                        </li>
+                        {% endfor %}
+                    {% endif %}
+                </ul>
+            </div>
         </div>
     </div>
 

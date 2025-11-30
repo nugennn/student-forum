@@ -116,6 +116,7 @@ TEMPLATES = [
                 'notification.context_processors.notificationViewer',
                 'profile.context_processors.top_questions',
                 'profile.context_processors.count_all_bounties',
+                'profile.context_processors.user_communities',
                 'chat.context_processors.count_unread_chat_messages',
             ],
         },

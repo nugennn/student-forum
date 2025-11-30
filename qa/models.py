@@ -89,6 +89,14 @@ class Question(models.Model):
         return get_Upvotes - get_DownVotes
 
     @property
+    def count_upvotes(self):
+        return self.qupvote_set.count()
+
+    @property
+    def count_downvotes(self):
+        return self.qdownvote_set.count()
+
+    @property
     def calculate_viewers(self):
         return self.viewers.all().count()
 
