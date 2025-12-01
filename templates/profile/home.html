@@ -326,17 +326,58 @@
         text-decoration: none;
     }
 
-    .bottom-notice a:hover {
-        text-decoration: underline;
-    }
+.bottom-notice {
+    background: var(--bg-primary);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--primary);
+    padding: 20px;
+    border-radius: 8px;
+    font-size: 15px;
+    color: var(--text-secondary);
+    margin-top: 24px;
+    line-height: 1.7;
+}
 
-    #mainbar {
-        padding: 24px;
-    }
+.bottom-notice a {
+    color: var(--primary);
+    font-weight: 500;
+    text-decoration: none;
+}
 
-    #sidebar {
-        padding: 24px 24px 24px 12px;
-    }
+.bottom-notice a:hover {
+    text-decoration: underline;
+}
+
+#mainbar {
+    padding: 24px;
+}
+
+#sidebar {
+    padding: 24px 24px 24px 12px;
+    position: sticky;
+    top: 80px;
+    max-height: calc(100vh - 100px);
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+#sidebar::-webkit-scrollbar {
+    width: 6px;
+}
+
+#sidebar::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+#sidebar::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 3px;
+}
+
+#sidebar::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
 </style>
 
 <div id="content" class="snippet-hidden">
