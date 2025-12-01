@@ -84,9 +84,8 @@ class Question(models.Model):
 
     @property
     def calculate_UpVote_DownVote(self):
-        get_Upvotes = self.qupvote_set.count()
-        get_DownVotes = self.qdownvote_set.count()
-        return get_Upvotes - get_DownVotes
+        # Return only upvotes count (downvotes shown separately)
+        return self.qupvote_set.count()
 
     @property
     def count_upvotes(self):

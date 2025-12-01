@@ -537,8 +537,13 @@
                         <div class="stats">
                             <div class="{% if question.is_answer_accepted %}status answered-accepted{% endif %}">
                                 <div class="votes">
-                                    <span class="vote-count-post"><strong>{{question.calculate_UpVote_DownVote}}</strong></span>
-                                    <div class="viewcount">vote{{question.calculate_UpVote_DownVote|pluralize}}</div>
+                                    <div style="display: flex; flex-direction: column; align-items: center; gap: 4px;">
+                                        <div style="display: flex; align-items: center; gap: 4px;">
+                                            <span style="color: #2ecc71; font-weight: 600;">↑{{question.count_upvotes}}</span>
+                                            <span style="color: #e74c3c; font-weight: 600;">↓{{question.count_downvotes}}</span>
+                                        </div>
+                                        <span class="vote-count-post" style="display: none;"><strong>{{question.calculate_UpVote_DownVote}}</strong></span>
+                                    </div>
                                 </div>
                             </div>
                             <div class="status {% if question.is_answer_accepted %}answered-accepted{% elif question.answer_set.all %}answered{% else %}unanswered{% endif %}">
@@ -657,7 +662,7 @@
                                 {% else %}
                                 <i class="fas inactive fa-arrow-up"></i>
                                 {% endif %}
-                                <span class="vote-count">{{question.calculate_UpVote_DownVote}}</span>
+                                <span class="vote-count">{{question.count_upvotes}}</span>
                             </button>
                         </form>
                         
@@ -669,6 +674,7 @@
                                 {% else %}
                                 <i class="fas inactive fa-arrow-down"></i>
                                 {% endif %}
+                                <span class="vote-count">{{question.count_downvotes}}</span>
                             </button>
                         </form>
                         
@@ -771,29 +777,17 @@ $(document).ready(function() {
                 let likes = parseInt(voteCountSpan.text());
                 
                 if (response.action == 'undislike_and_like') {
-                    likes += 2;
-                    voteCountSpan.text(likes);
-                    $(`#question-summary-${pk} .vote-count-post strong`).text(likes);
-                    thisElement.find('i').removeClass('inactive').addClass('active');
-                    $(`.dislikeForm[data-pk="${pk}"] i`).removeClass('active').addClass('inactive');
-
+                    location.reload();
                 } else if (response.action == 'unlike') {
-                    likes -= 1;
-                    voteCountSpan.text(likes);
-                    $(`#question-summary-${pk} .vote-count-post strong`).text(likes);
-                    thisElement.find('i').removeClass('active').addClass('inactive');
-
+                    location.reload();
                 } else if (response.action == 'voteError') {
-                    showToastNotification('Your vote is now locked. It will be unlocked unless the Question is edited.', 'error');
+                    showToastNotification('Your vote is locked for 5 minutes. Wait or ask the author to edit the question to unlock it.', 'error');
                 } else if (response.action == 'lackOfPrivelege') {
                     showToastNotification('You need at least 15 Reputation to upvote', 'error');
                 } else if (response.action == 'cannotLikeOwnPost') {
                     showToastNotification('You cannot vote for your own post', 'error');
                 } else if (response.action == 'like_only') {
-                    likes++;
-                    voteCountSpan.text(likes);
-                    $(`#question-summary-${pk} .vote-count-post strong`).text(likes);
-                    thisElement.find('i').removeClass('inactive').addClass('active');
+                    location.reload();
                 }
             }
         });
@@ -822,29 +816,17 @@ $(document).ready(function() {
                 let likes = parseInt(voteCountSpan.text());
                 
                 if (response.action == 'unlike_and_dislike') {
-                    likes -= 2;
-                    voteCountSpan.text(likes);
-                    $(`#question-summary-${pk} .vote-count-post strong`).text(likes);
-                    likeForm.find('i').removeClass('active').addClass('inactive');
-                    thisElement.find('i').removeClass('inactive').addClass('active');
-
+                    location.reload();
                 } else if (response.action == 'undislike') {
-                    likes++;
-                    voteCountSpan.text(likes);
-                    $(`#question-summary-${pk} .vote-count-post strong`).text(likes);
-                    thisElement.find('i').removeClass('active').addClass('inactive');
-
+                    location.reload();
                 } else if (response.action == 'voteError') {
-                    showToastNotification('Your vote is now locked. It will be unlocked unless the Question is edited.', 'error');
+                    showToastNotification('Your vote is locked for 5 minutes. Wait or ask the author to edit the question to unlock it.', 'error');
                 } else if (response.action == 'lackOfPrivelege') {
                     showToastNotification('You need at least 15 Reputation to downvote', 'error');
                 } else if (response.action == 'cannotLikeOwnPost') {
                     showToastNotification('You cannot vote for your own post', 'error');
                 } else if (response.action == 'dislike_only') {
-                    likes--;
-                    voteCountSpan.text(likes);
-                    $(`#question-summary-${pk} .vote-count-post strong`).text(likes);
-                    thisElement.find('i').removeClass('inactive').addClass('active');
+                    location.reload();
                 }
             }
         });

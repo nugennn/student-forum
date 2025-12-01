@@ -196,7 +196,7 @@
                         {% else %}
                         <i class="fas inactive fa-arrow-up"></i>
                         {% endif %}
-                        <span class="vote-count">{{question.calculate_UpVote_DownVote}}</span>
+                        <span class="vote-count">{{question.count_upvotes}}</span>
                     </button>
                 </form>
             </div>
@@ -209,6 +209,7 @@
                         {% else %}
                         <i class="fas inactive fa-arrow-down"></i>
                         {% endif %}
+                        <span class="vote-count">{{question.count_downvotes}}</span>
                     </button>
                 </form>
             </div>

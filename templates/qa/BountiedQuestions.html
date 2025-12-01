@@ -542,6 +542,44 @@
                                 </div>
                             </div>
                         </div>
+
+                        <!-- Action Buttons -->
+                        <div style="display: flex; gap: 12px; margin-top: 16px; padding-top: 16px; border-top: 1px solid #e2e8f0; align-items: center;">
+                            <!-- Upvote Form -->
+                            <form method="GET" class="likeForm d-inline" action="{% url 'qa:question_upvote_downvote' question.id %}" data-pk="{{ question.id }}" style="display: inline;">
+                                <button name='submit' type='submit' value='like' class="action-btn">
+                                    {% if request.user in question.qupvote_set.all %}
+                                    <i class="fas active fa-arrow-up"></i>
+                                    {% else %}
+                                    <i class="fas inactive fa-arrow-up"></i>
+                                    {% endif %}
+                                    <span class="vote-count">{{question.count_upvotes}}</span>
+                                </button>
+                            </form>
+                            
+                            <!-- Downvote Form -->
+                            <form method="GET" class="dislikeForm d-inline" action="{% url 'qa:question_upvote_downvote' question.id %}" data-pk="{{ question.id }}" style="display: inline;">
+                                <button name='submit' type='submit' value='downVote' class="action-btn">
+                                    {% if request.user in question.qdownvote_set.all %}
+                                    <i class="fas active fa-arrow-down"></i>
+                                    {% else %}
+                                    <i class="fas inactive fa-arrow-down"></i>
+                                    {% endif %}
+                                    <span class="vote-count">{{question.count_downvotes}}</span>
+                                </button>
+                            </form>
+                            
+                            <!-- Comment Button -->
+                            <a href="{{question.get_absolute_url}}#comments" class="action-btn">
+                                <i class="fas fa-comment"></i>
+                                <span>{{question.comment_set.count}}</span>
+                            </a>
+                            
+                            <!-- Share Button -->
+                            <button class="action-btn" onclick="openShareModal('question', {{question.id}})">
+                                <i class="fas fa-share-alt"></i>
+                            </button>
+                        </div>
                     </div>
                     {% endif %}
                     {% empty %}

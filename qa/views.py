@@ -3092,84 +3092,79 @@ def question_upvote_downvote(request, question_id):
         if QDownvote.objects.filter(
                 downvote_by_q=request.user,
                 downvote_question_of=post).exists():
-
-            if downVotedPost.date > upvote_time_limit or edited_time > downVotedPost.date:
-                QDownvote.objects.filter(
-                    downvote_by_q=request.user,
-                    downvote_question_of=post).delete()
-                m = QUpvote(upvote_by_q=request.user, upvote_question_of=post)
-                m.save()
-                if Reputation.objects.filter(
-                        awarded_to=post.post_owner,
-                        question_O=post,
-                        question_rep_C=-2,
-                        reputation_on_what='QUESTION_DOWNVOTE').exists():
-                    Reputation.objects.filter(
-                        awarded_to=post.post_owner,
-                        question_O=post,
-                        question_rep_C=-2,
-                        reputation_on_what='QUESTION_DOWNVOTE').delete()
-                    Reputation.objects.get_or_create(
-                        awarded_to=post.post_owner,
-                        question_O=post,
-                        question_rep_C=10,
-                        reputation_on_what='MY_QUESTION_UPVOTE_REP_P')
-                    PrivRepNotification.objects.get_or_create(
-                        for_user=post.post_owner,
-                        type_of_PrivNotify="MY_QUESTION_UPVOTE_REP_P",
-                        url=question_URL,
-                        for_if="",
-                        description="",
-                        question_priv_noti=post,
-                    )
-
-                rewardPrivielege(request, post.post_owner)
-                return JsonResponse({'action': 'undislike_and_like'})
-            else:
-                return JsonResponse({'action': 'voteError'})
-
-        elif QUpvote.objects.filter(upvote_by_q=request.user, upvote_question_of=post).exists():
-            if likepost.date > upvote_time_limit or edited_time > likepost.date:
-                QUpvote.objects.filter(
-                    upvote_by_q=request.user,
-                    upvote_question_of=post).delete()
-                # deleteReputation = Reputation.objects.filter(awarded_to=post.post_owner,question_O=post, question_rep_C=10, reputation_on_what='QUESTION').first()
-                # deleteReputation.delete()
-                if post.qdownvote_set.all().count() >= 5:
-                    post.reversal_monitor = True
-                    post.save()
-
-                if PrivRepNotification.objects.filter(
+            # Allow vote change without time restriction
+            QDownvote.objects.filter(
+                downvote_by_q=request.user,
+                downvote_question_of=post).delete()
+            m = QUpvote(upvote_by_q=request.user, upvote_question_of=post)
+            m.save()
+            if Reputation.objects.filter(
+                    awarded_to=post.post_owner,
+                    question_O=post,
+                    question_rep_C=-2,
+                    reputation_on_what='QUESTION_DOWNVOTE').exists():
+                Reputation.objects.filter(
+                    awarded_to=post.post_owner,
+                    question_O=post,
+                    question_rep_C=-2,
+                    reputation_on_what='QUESTION_DOWNVOTE').delete()
+                Reputation.objects.get_or_create(
+                    awarded_to=post.post_owner,
+                    question_O=post,
+                    question_rep_C=10,
+                    reputation_on_what='MY_QUESTION_UPVOTE_REP_P')
+                PrivRepNotification.objects.get_or_create(
                     for_user=post.post_owner,
                     type_of_PrivNotify="MY_QUESTION_UPVOTE_REP_P",
                     url=question_URL,
                     for_if="",
                     description="",
                     question_priv_noti=post,
-                ):
-                    PrivRepNotification.objects.filter(
-                        for_user=post.post_owner,
-                        type_of_PrivNotify="MY_QUESTION_UPVOTE_REP_P",
-                        url=question_URL,
-                        for_if="",
-                        description="",
-                        question_priv_noti=post,
-                    ).delete()
+                )
 
-                if Reputation.objects.filter(
-                        awarded_to=post.post_owner,
-                        question_O=post,
-                        question_rep_C=10,
-                        reputation_on_what='MY_QUESTION_UPVOTE_REP_P').exists():
-                    Reputation.objects.filter(
-                        awarded_to=post.post_owner,
-                        question_O=post,
-                        question_rep_C=10,
-                        reputation_on_what='MY_QUESTION_UPVOTE_REP_P').delete()
-                rewardPrivielege(request, post.post_owner)
-                return JsonResponse({'action': 'unlike'})
-            else:
-                return JsonResponse({'action': 'voteError'})
+            rewardPrivielege(request, post.post_owner)
+            return JsonResponse({'action': 'undislike_and_like'})
+
+        elif QUpvote.objects.filter(upvote_by_q=request.user, upvote_question_of=post).exists():
+            # Allow vote change without time restriction
+            QUpvote.objects.filter(
+                upvote_by_q=request.user,
+                upvote_question_of=post).delete()
+            # deleteReputation = Reputation.objects.filter(awarded_to=post.post_owner,question_O=post, question_rep_C=10, reputation_on_what='QUESTION').first()
+            # deleteReputation.delete()
+            if post.qdownvote_set.all().count() >= 5:
+                post.reversal_monitor = True
+                post.save()
+
+            if PrivRepNotification.objects.filter(
+                for_user=post.post_owner,
+                type_of_PrivNotify="MY_QUESTION_UPVOTE_REP_P",
+                url=question_URL,
+                for_if="",
+                description="",
+                question_priv_noti=post,
+            ):
+                PrivRepNotification.objects.filter(
+                    for_user=post.post_owner,
+                    type_of_PrivNotify="MY_QUESTION_UPVOTE_REP_P",
+                    url=question_URL,
+                    for_if="",
+                    description="",
+                    question_priv_noti=post,
+                ).delete()
+
+            if Reputation.objects.filter(
+                    awarded_to=post.post_owner,
+                    question_O=post,
+                    question_rep_C=10,
+                    reputation_on_what='MY_QUESTION_UPVOTE_REP_P').exists():
+                Reputation.objects.filter(
+                    awarded_to=post.post_owner,
+                    question_O=post,
+                    question_rep_C=10,
+                    reputation_on_what='MY_QUESTION_UPVOTE_REP_P').delete()
+            rewardPrivielege(request, post.post_owner)
+            return JsonResponse({'action': 'unlike'})
 
         else:
             if request.user == post.post_owner:
@@ -3290,66 +3285,61 @@ def question_upvote_downvote(request, question_id):
                         )
                     rewardPrivielege(request, post.post_owner)
 
-                    return JsonResponse({'action': 'like_only'})
-                else:
-                    return JsonResponse({'action': 'lackOfPrivelege'})
+                return JsonResponse({'action': 'like_only'})
     # DownVote
     elif request.GET.get('submit') == 'downVote':
         if QUpvote.objects.filter(
                 upvote_by_q=request.user,
                 upvote_question_of=post).exists():
-            # User has upvoted, now switching to downvote
-            if likepost.date > upvote_time_limit or edited_time > likepost.date:
-                m = QDownvote(
-                    downvote_by_q=request.user,
-                    downvote_question_of=post)
-                m.save()
-                QUpvote.objects.filter(
-                    upvote_by_q=request.user,
-                    upvote_question_of=post).delete()
-                # if Reputation.objects.filter()
-                getAlltheReputation = Reputation.objects.filter(
-                    awarded_to=request.user).aggregate(
-                    Sum('answer_rep_C'), Sum('question_rep_C'))
-                d = getAlltheReputation['question_rep_C__sum']
-                total_question_rep = getAlltheReputation['question_rep_C__sum'] if d else 0
-                s = getAlltheReputation['answer_rep_C__sum']
-                total_answer_rep = getAlltheReputation['answer_rep_C__sum'] if s else 0
-                totalReputation = total_question_rep + total_answer_rep
-                if post.qdownvote_set.all().count() >= 5:
-                    post.reversal_monitor = True
-                    post.save()
-                if totalReputation > 2:
-                    if Reputation.objects.filter(
-                            awarded_to=post.post_owner,
-                            question_O=post,
-                            question_rep_C=10,
-                            reputation_on_what='MY_QUESTION_UPVOTE_REP_P').exists():
-                        Reputation.objects.filter(
-                            awarded_to=post.post_owner,
-                            question_O=post,
-                            question_rep_C=10,
-                            reputation_on_what='MY_QUESTION_UPVOTE_REP_P').delete()
-                        Reputation.objects.get_or_create(
-                            awarded_to=post.post_owner,
-                            question_O=post,
-                            question_rep_C=-2,
-                            reputation_on_what='QUESTION_DOWNVOTE')
-                else:
-                    if Reputation.objects.filter(
-                            awarded_to=post.post_owner,
-                            question_O=post,
-                            question_rep_C=10,
-                            reputation_on_what='MY_QUESTION_UPVOTE_REP_P').exists():
-                        Reputation.objects.filter(
-                            awarded_to=post.post_owner,
-                            question_O=post,
-                            question_rep_C=10,
-                            reputation_on_what='MY_QUESTION_UPVOTE_REP_P').delete()
-                rewardPrivielege(request, post.post_owner)
-                return JsonResponse({'action': 'unlike_and_dislike'})
+            # User has upvoted, now switching to downvote - allow immediately
+            m = QDownvote(
+                downvote_by_q=request.user,
+                downvote_question_of=post)
+            m.save()
+            QUpvote.objects.filter(
+                upvote_by_q=request.user,
+                upvote_question_of=post).delete()
+            # if Reputation.objects.filter()
+            getAlltheReputation = Reputation.objects.filter(
+                awarded_to=request.user).aggregate(
+                Sum('answer_rep_C'), Sum('question_rep_C'))
+            d = getAlltheReputation['question_rep_C__sum']
+            total_question_rep = getAlltheReputation['question_rep_C__sum'] if d else 0
+            s = getAlltheReputation['answer_rep_C__sum']
+            total_answer_rep = getAlltheReputation['answer_rep_C__sum'] if s else 0
+            totalReputation = total_question_rep + total_answer_rep
+            if post.qdownvote_set.all().count() >= 5:
+                post.reversal_monitor = True
+                post.save()
+            if totalReputation > 2:
+                if Reputation.objects.filter(
+                        awarded_to=post.post_owner,
+                        question_O=post,
+                        question_rep_C=10,
+                        reputation_on_what='MY_QUESTION_UPVOTE_REP_P').exists():
+                    Reputation.objects.filter(
+                        awarded_to=post.post_owner,
+                        question_O=post,
+                        question_rep_C=10,
+                        reputation_on_what='MY_QUESTION_UPVOTE_REP_P').delete()
+                    Reputation.objects.get_or_create(
+                        awarded_to=post.post_owner,
+                        question_O=post,
+                        question_rep_C=-2,
+                        reputation_on_what='QUESTION_DOWNVOTE')
             else:
-                return JsonResponse({'action': 'voteError'})
+                if Reputation.objects.filter(
+                        awarded_to=post.post_owner,
+                        question_O=post,
+                        question_rep_C=10,
+                        reputation_on_what='MY_QUESTION_UPVOTE_REP_P').exists():
+                    Reputation.objects.filter(
+                        awarded_to=post.post_owner,
+                        question_O=post,
+                        question_rep_C=10,
+                        reputation_on_what='MY_QUESTION_UPVOTE_REP_P').delete()
+            rewardPrivielege(request, post.post_owner)
+            return JsonResponse({'action': 'unlike_and_dislike'})
         # if request.user in post.q_vote_ups.all():
 
         #     if voted_time > upvote_time_limit or edited_time > voted_time:
@@ -3360,30 +3350,30 @@ def question_upvote_downvote(request, question_id):
             # return JsonResponse({'action': 'voteError'})
 
         elif QDownvote.objects.filter(downvote_by_q=request.user, downvote_question_of=post).exists():
-            if downVotedPost.date > upvote_time_limit or edited_time > downVotedPost.date:
-                QDownvote.objects.filter(
-                    downvote_by_q=request.user,
-                    downvote_question_of=post).delete()
-                if Reputation.objects.filter(
-                        awarded_to=post.post_owner,
-                        question_O=post,
-                        question_rep_C=-2,
-                        reputation_on_what='QUESTION_DOWNVOTE').exists():
-                    Reputation.objects.filter(
-                        awarded_to=post.post_owner,
-                        question_O=post,
-                        question_rep_C=-2,
-                        reputation_on_what='QUESTION_DOWNVOTE').delete()
-                rewardPrivielege(request, post.post_owner)
-                return JsonResponse({'action': 'undislike'})
-            else:
-                return JsonResponse({'action': 'voteError'})
+            # Allow vote change without time restriction
+            QDownvote.objects.filter(
+                downvote_by_q=request.user,
+                downvote_question_of=post).delete()
+            if Reputation.objects.filter(
+                    awarded_to=post.post_owner,
+                    question_O=post,
+                    question_rep_C=-2,
+                    reputation_on_what='QUESTION_DOWNVOTE').exists():
+                Reputation.objects.filter(
+                    awarded_to=post.post_owner,
+                    question_O=post,
+                    question_rep_C=-2,
+                    reputation_on_what='QUESTION_DOWNVOTE').delete()
+            rewardPrivielege(request, post.post_owner)
+            return JsonResponse({'action': 'undislike'})
 
         else:
             if request.user == post.post_owner:
                 return JsonResponse({'action': 'cannotLikeOwnPost'})
             else:
-                # QUESTION REPUTATION - No reputation requirement
+                # QUESTION REPUTATION - Reduce reputation for downvote
+                post.q_reputation -= 2
+                post.save()
                 created = QDownvote(
                     downvote_by_q=request.user,
                     downvote_question_of=post)
