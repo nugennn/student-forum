@@ -138,9 +138,9 @@
 		        	<div class="markdown-diff tex2jax_ignore">
                     <table class="full-diff ">
                     	<tr>
-                    		<td class="s-prose content deleted"><div>{{history.prev_record.body|safe_markdown}}</div></td>
+                    		<td class="s-prose content deleted"><div>{{history.prev_record.body|safe_markdown|fix_markdown_images}}</div></td>
 
-							<td class="s-prose content inserted"><div>{{history.next_record.body|safe_markdown}}</div></td>
+							<td class="s-prose content inserted"><div>{{history.next_record.body|safe_markdown|fix_markdown_images}}</div></td>
 						</tr>
 					</table>
                 </div>

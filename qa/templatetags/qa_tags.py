@@ -4,8 +4,7 @@ from django.db.models import Count,BooleanField, ExpressionWrapper, Q,Exists, Ou
 from tagbadge.models import TagBadge
 from django.utils import timezone
 from datetime import timedelta
-
-
+import re
 
 register = template.Library()
 
@@ -121,3 +120,48 @@ def count_questions_all():
 def count_question_from_tag(tag):
     count_questions_from_tag = Question.objects.filter(tags__name__icontains=tag)
     return count_questions_from_tag.count()
+
+@register.filter
+def fix_markdown_images(html_content):
+    """
+    Fix markdown image URLs by adding /media/ prefix to relative paths.
+    Converts image src attributes to proper media URLs.
+    """
+    if not html_content:
+        return html_content
+    
+    # Fix image src attributes - convert relative paths to /media/ URLs
+    def fix_img_src(match):
+        img_tag = match.group(0)
+        src_match = re.search(r'src=["\']([^"\']+)["\']', img_tag)
+        
+        if src_match:
+            src = src_match.group(1)
+            
+            # Skip if already has /media/ or is absolute URL
+            if src.startswith('/media/') or src.startswith('http'):
+                return img_tag
+            
+            # Skip if it's a data URL
+            if src.startswith('data:'):
+                return img_tag
+            
+            # Add /media/ prefix to relative paths
+            if not src.startswith('/'):
+                src = '/media/' + src
+            else:
+                src = '/media' + src
+            
+            # Replace src in the img tag
+            return img_tag.replace(src_match.group(1), src)
+        
+        return img_tag
+    
+    # Find and fix all img tags
+    html_content = re.sub(r'<img[^>]*>', fix_img_src, html_content)
+    
+    # Fix double slashes in media paths
+    html_content = html_content.replace('/media//media/', '/media/')
+    html_content = html_content.replace('/media//', '/media/')
+    
+    return html_content

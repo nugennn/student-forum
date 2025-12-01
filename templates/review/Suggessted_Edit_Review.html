@@ -973,7 +973,7 @@
                         <h2 style="color: red;">Old</h2>
                             <div class="s-prose js-post-body">{{previousHistory}}</div>
                         <div class="s-prose js-post-body">
-                            <p>{{previousHistoryBody|safe_markdown}}</p>
+                            <p>{{previousHistoryBody|safe_markdown|fix_markdown_images}}</p>
                         </div>
                     </div>
 
@@ -981,7 +981,7 @@
                         <h2 style="color: red;">New</h2>
                             <div class="s-prose js-post-body">{{getNewEdit_Title.title}}</div>
                         <div class="s-prose js-post-body">
-                            <p>{{getNewEdit_Body|safe_markdown}}</p>
+                            <p>{{getNewEdit_Body|safe_markdown|fix_markdown_images}}</p>
                         </div>
                     </div>
                 </div>
@@ -1686,7 +1686,7 @@ How to use the <span class="fc-green-500 ws-nowrap">Suggested edits</span> queue
                         <h2 style="color: red;">Old</h2>
                             <!-- <h1 class="fs-title mb16">{{previousHistory}}</h1> -->
                         <div class="s-prose js-post-body">
-                            <p> {{previousHistoryBody|safe_markdown}}
+                            <p> {{previousHistoryBody|safe_markdown|fix_markdown_images}}
                         </div>
                     </div>
 
@@ -1694,7 +1694,7 @@ How to use the <span class="fc-green-500 ws-nowrap">Suggested edits</span> queue
                         <h2 style="color: red;">New</h2>
                             <h1 class="fs-title mb16">{{getNewEdit_Title.title}}</h1>
                         <div class="s-prose js-post-body">
-                            <p> {{getNewEdit_Body|safe_markdown}}</p>
+                            <p> {{getNewEdit_Body|safe_markdown|fix_markdown_images}}</p>
                         </div>
                     </div>
                 </div>
