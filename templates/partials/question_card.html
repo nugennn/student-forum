@@ -154,7 +154,7 @@
             </div>
             
             <!-- Answers Button - Show count only if > 0 -->
-            <a href="{{question.get_absolute_url}}" class="action-btn">
+            <a href="{{question.get_absolute_url}}#answers" class="action-btn">
                 <i class="fas fa-comments"></i>
                 {% if question.count_answers > 0 %}
                 <span>{{question.count_answers}}</span>
