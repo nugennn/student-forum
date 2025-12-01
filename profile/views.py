@@ -1926,6 +1926,7 @@ def home(request):
 
 @login_required
 def bountied_home(request):
+    from campus_updates.models import CampusUpdate
     from community.models import Community
     from django.db.models import Q
     
@@ -1948,15 +1949,32 @@ def bountied_home(request):
         questions = paginator.page(1)
     except EmptyPage:
         questions = paginator.page(paginator.num_pages)
+    
+    # Get latest 3 posts within 1 week with highest reputation (votes)
+    last_week = timezone.now() - timedelta(days=7)
+    hot_topics = Question.objects.filter(
+        is_deleted=False,
+        date__gte=last_week
+    ).annotate(
+        vote_count=Count('qupvote') - Count('qdownvote')
+    ).order_by('-vote_count')[:3]
+    
+    # Get latest campus updates (published and not expired)
+    campus_updates = CampusUpdate.objects.filter(is_published=True).order_by('-created_at')[:5]
+    # Filter out expired notices
+    campus_updates = [u for u in campus_updates if not u.is_expired()]
 
     context = {
         'questions': questions,
         'count_bounty': count_bounty,  # Added for consistency
+        'hot_topics': hot_topics,
+        'campus_updates': campus_updates,
     }
     return render(request, 'home/bountied_home.html', context)
 
 @login_required
 def hot_q_day_home(request):
+    from campus_updates.models import CampusUpdate
     from community.models import Community
     from django.db.models import Q
     
@@ -1985,15 +2003,32 @@ def hot_q_day_home(request):
         questions = paginator.page(1)
     except EmptyPage:
         questions = paginator.page(paginator.num_pages)
+    
+    # Get latest 3 posts within 1 week with highest reputation (votes)
+    last_week = timezone.now() - timedelta(days=7)
+    hot_topics = Question.objects.filter(
+        is_deleted=False,
+        date__gte=last_week
+    ).annotate(
+        vote_count=Count('qupvote') - Count('qdownvote')
+    ).order_by('-vote_count')[:3]
+    
+    # Get latest campus updates (published and not expired)
+    campus_updates = CampusUpdate.objects.filter(is_published=True).order_by('-created_at')[:5]
+    # Filter out expired notices
+    campus_updates = [u for u in campus_updates if not u.is_expired()]
 
     context = {
         'questions': questions,
         'count_bounty': count_bounty,  # Added for consistency
+        'hot_topics': hot_topics,
+        'campus_updates': campus_updates,
     }
     return render(request, 'home/hot_q_home.html', context)
 
 @login_required
 def hot_q_week_home(request):
+    from campus_updates.models import CampusUpdate
     from community.models import Community
     from django.db.models import Q
     
@@ -2022,15 +2057,32 @@ def hot_q_week_home(request):
         questions = paginator.page(1)
     except EmptyPage:
         questions = paginator.page(paginator.num_pages)
+    
+    # Get latest 3 posts within 1 week with highest reputation (votes)
+    last_week = timezone.now() - timedelta(days=7)
+    hot_topics = Question.objects.filter(
+        is_deleted=False,
+        date__gte=last_week
+    ).annotate(
+        vote_count=Count('qupvote') - Count('qdownvote')
+    ).order_by('-vote_count')[:3]
+    
+    # Get latest campus updates (published and not expired)
+    campus_updates = CampusUpdate.objects.filter(is_published=True).order_by('-created_at')[:5]
+    # Filter out expired notices
+    campus_updates = [u for u in campus_updates if not u.is_expired()]
 
     context = {
         'questions': questions,
         'count_bounty': count_bounty,  # Added for consistency
+        'hot_topics': hot_topics,
+        'campus_updates': campus_updates,
     }
     return render(request, 'home/hot_q_week_home.html', context)
 
 @login_required
 def hot_q_month_home(request):
+    from campus_updates.models import CampusUpdate
     from community.models import Community
     from django.db.models import Q
     
@@ -2059,10 +2111,26 @@ def hot_q_month_home(request):
         questions = paginator.page(1)
     except EmptyPage:
         questions = paginator.page(paginator.num_pages)
+    
+    # Get latest 3 posts within 1 week with highest reputation (votes)
+    last_week = timezone.now() - timedelta(days=7)
+    hot_topics = Question.objects.filter(
+        is_deleted=False,
+        date__gte=last_week
+    ).annotate(
+        vote_count=Count('qupvote') - Count('qdownvote')
+    ).order_by('-vote_count')[:3]
+    
+    # Get latest campus updates (published and not expired)
+    campus_updates = CampusUpdate.objects.filter(is_published=True).order_by('-created_at')[:5]
+    # Filter out expired notices
+    campus_updates = [u for u in campus_updates if not u.is_expired()]
 
     context = {
         'questions': questions,
         'count_bounty': count_bounty,  # Added for consistency
+        'hot_topics': hot_topics,
+        'campus_updates': campus_updates,
     }
     return render(request, 'home/hot_q_month_home.html', context)
 
