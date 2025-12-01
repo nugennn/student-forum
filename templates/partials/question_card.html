@@ -62,6 +62,60 @@
     transform: translateY(-2px) !important;
 }
 
+/* Image Lightbox */
+.image-lightbox {
+    display: none;
+    position: fixed;
+    z-index: 9999;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.9);
+    animation: fadeIn 0.3s ease;
+}
+
+.image-lightbox.active {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.image-lightbox img {
+    max-width: 90%;
+    max-height: 90vh;
+    object-fit: contain;
+}
+
+.image-lightbox .close-btn {
+    position: absolute;
+    top: 20px;
+    right: 30px;
+    color: #fff;
+    font-size: 40px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.image-lightbox .close-btn:hover {
+    color: #ccc;
+}
+
+.question-card-image img {
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.question-card-image img:hover {
+    opacity: 0.8;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
 /* Post card title styling */
 .question-summary.narrow h3 {
     margin-bottom: 16px !important;
@@ -108,20 +162,20 @@
             {% endwith %}
         </div>
         {% endif %}
-
-        <!-- Image Preview Section -->
-        {% if question.body %}
-            {% with body_html=question.body|safe_markdown %}
-                {% if "img" in body_html %}
-                    <div class="question-card-image" style="max-height: 280px; overflow: hidden; border-radius: 10px; background: #f5f5f5; display: flex; align-items: center; justify-content: center; margin-top: 12px;">
-                        <div style="width: 100%; display: flex; align-items: center; justify-content: center;">
-                            {{ body_html|safe }}
-                        </div>
-                    </div>
-                {% endif %}
-            {% endwith %}
-        {% endif %}
     </a>
+
+    <!-- Image Preview Section - Outside Link -->
+    {% if question.body %}
+        {% with body_html=question.body|safe_markdown %}
+            {% if "img" in body_html %}
+                <div class="question-card-image" style="max-height: 280px; overflow: hidden; border-radius: 10px; background: #f5f5f5; display: flex; align-items: center; justify-content: center; margin-top: 12px;">
+                    <div style="width: 100%; display: flex; align-items: center; justify-content: center;">
+                        {{ body_html|safe }}
+                    </div>
+                </div>
+            {% endif %}
+        {% endwith %}
+    {% endif %}
 
     <!-- Stats and Actions Row -->
     <div style="display: flex; align-items: center; justify-content: space-between; padding-top: 18px; border-top: 1px solid #e8eaed; gap: 24px; flex-wrap: wrap;">
@@ -196,3 +250,48 @@
         </div>
     </div>
 </div>
+
+<!-- Image Lightbox Modal -->
+<div id="imageLightbox-{{question.id}}" class="image-lightbox">
+    <span class="close-btn" onclick="closeLightbox('imageLightbox-{{question.id}}')">&times;</span>
+    <img id="lightboxImg-{{question.id}}" src="" alt="Expanded image">
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Add click handlers to all images in question card
+    const cardImages = document.querySelectorAll('#question-summary-{{question.id}} .question-card-image img');
+    cardImages.forEach(img => {
+        img.addEventListener('click', function(e) {
+            e.stopPropagation();
+            openLightbox('imageLightbox-{{question.id}}', this.src);
+        });
+    });
+});
+
+function openLightbox(lightboxId, imageSrc) {
+    const lightbox = document.getElementById(lightboxId);
+    const img = document.getElementById('lightboxImg-' + lightboxId.split('-')[1]);
+    if (lightbox && img) {
+        img.src = imageSrc;
+        lightbox.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+}
+
+function closeLightbox(lightboxId) {
+    const lightbox = document.getElementById(lightboxId);
+    if (lightbox) {
+        lightbox.classList.remove('active');
+        document.body.style.overflow = 'auto';
+    }
+}
+
+// Close lightbox when clicking outside the image
+document.addEventListener('click', function(e) {
+    if (e.target.classList.contains('image-lightbox')) {
+        e.target.classList.remove('active');
+        document.body.style.overflow = 'auto';
+    }
+});
+</script>
