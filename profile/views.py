@@ -1868,18 +1868,31 @@ def Votes_castActivity(request, user_id, username):
 def home(request):
     from campus_updates.models import CampusUpdate
     from community.models import Community
+    from django.db.models import Q
     
     # Get latest 3 posts within 1 week with highest reputation (votes)
+    # Exclude questions from private communities that the user is not a member of
     last_week = timezone.now() - timedelta(days=7)
+    user_communities = Community.objects.filter(members__user=request.user).values_list('id', flat=True)
     hot_topics = Question.objects.filter(
-        is_deleted=False,  # Added this
+        is_deleted=False,
         date__gte=last_week
+    ).filter(
+        Q(community__isnull=True) |  # Questions not in any community
+        Q(community__is_private=False) |  # Questions in public communities
+        Q(community__id__in=user_communities)  # Questions in communities the user is a member of
     ).annotate(
         vote_count=Count('qupvote') - Count('qdownvote')
     ).order_by('-vote_count')[:3]
     
     # Get trending questions for the main feed with pagination
-    questionsHome_all = Question.objects.filter(is_deleted=False).order_by('-date')
+    questionsHome_all = Question.objects.filter(
+        is_deleted=False
+    ).filter(
+        Q(community__isnull=True) |  # Questions not in any community
+        Q(community__is_private=False) |  # Questions in public communities
+        Q(community__id__in=user_communities)  # Questions in communities the user is a member of
+    ).order_by('-date')
     
     # Count bounties (only non-deleted)
     count_bounty = Question.objects.filter(is_deleted=False, is_bountied=True).count()
@@ -1913,9 +1926,17 @@ def home(request):
 
 @login_required
 def bountied_home(request):
+    from community.models import Community
+    from django.db.models import Q
+    
+    user_communities = Community.objects.filter(members__user=request.user).values_list('id', flat=True)
     questions = Question.objects.filter(
-                    is_deleted=False,  # Added this
-                    is_bountied=True)
+                    is_deleted=False,
+                    is_bountied=True
+                ).filter(
+                    Q(community__isnull=True) |
+                    Q(community__is_private=False) |
+                    Q(community__id__in=user_communities))
     
     count_bounty = questions.count()
 
@@ -1936,10 +1957,18 @@ def bountied_home(request):
 
 @login_required
 def hot_q_day_home(request):
+    from community.models import Community
+    from django.db.models import Q
+    
     last_3_days = timezone.now() - timedelta(days=3)
+    user_communities = Community.objects.filter(members__user=request.user).values_list('id', flat=True)
     questions = Question.objects.filter(
-                    is_deleted=False,  # Added this
+                    is_deleted=False,
                     viewers__gte=2
+                ).filter(
+                    Q(community__isnull=True) |
+                    Q(community__is_private=False) |
+                    Q(community__id__in=user_communities)
                     ).annotate(countComment=Count('commentq')
                     ).filter(qupvote__date__gt=last_3_days
                     ).order_by('qupvote'
@@ -1965,10 +1994,18 @@ def hot_q_day_home(request):
 
 @login_required
 def hot_q_week_home(request):
+    from community.models import Community
+    from django.db.models import Q
+    
     last_7_days = timezone.now() - timedelta(days=7)
+    user_communities = Community.objects.filter(members__user=request.user).values_list('id', flat=True)
     questions = Question.objects.filter(
-                    is_deleted=False,  # Added this
+                    is_deleted=False,
                     viewers__gte=2
+                ).filter(
+                    Q(community__isnull=True) |
+                    Q(community__is_private=False) |
+                    Q(community__id__in=user_communities)
                     ).annotate(countComment=Count('commentq')
                     ).filter(qupvote__date__gt=last_7_days
                     ).order_by('qupvote'
@@ -1994,10 +2031,18 @@ def hot_q_week_home(request):
 
 @login_required
 def hot_q_month_home(request):
+    from community.models import Community
+    from django.db.models import Q
+    
     last_28_days = timezone.now() - timedelta(days=28)
+    user_communities = Community.objects.filter(members__user=request.user).values_list('id', flat=True)
     questions = Question.objects.filter(
-                    is_deleted=False,  # Added this
+                    is_deleted=False,
                     viewers__gte=2
+                ).filter(
+                    Q(community__isnull=True) |
+                    Q(community__is_private=False) |
+                    Q(community__id__in=user_communities)
                     ).annotate(countComment=Count('commentq')
                     ).filter(qupvote__date__gt=last_28_days
                     ).order_by('qupvote'
