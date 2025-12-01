@@ -649,16 +649,6 @@
 
 {% endif %}
 {% endif %}
-<br>
-
-
-                <a class="flex--item s-btn__unset c-pointer py6 mx-auto" href="{% url 'qa:answerTimeline' answer.id %}" data-shortcut="T" data-ks-title="timeline" data-controller="s-tooltip" data-s-tooltip-placement="right" title="Show activity on this post." aria-label="Timeline">
-                    <svg aria-hidden="true" class="mln2 mr0 svg-icon iconHistory" width="19" height="18" viewBox="0 0 19 18">
-                        <path d="M3 9a8 8 0 113.73 6.77L8.2 14.3A6 6 0 105 9l3.01-.01-4 4-4-4h3L3 9Zm7-4h1.01L11 9.36l3.22 2.1-.6.93L10 10V5Z"/>
-                    </svg>
-                </a>
-                <br>
-                <a href="{% url 'qa:answer_edit_history' answer.id %}"><i class=" flex--item c-pointer py6 mx-auto fas fa-file-medical-alt fa-2x"></i></a>
             </div>
         </div>
 
