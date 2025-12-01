@@ -47,6 +47,9 @@ coverage.xml
 # pytest
 .pytest_cache/
 
+# Database
+db.sqlite3
+
 # mypy
 .mypy_cache/
 

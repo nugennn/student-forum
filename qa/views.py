@@ -1333,7 +1333,6 @@ def questionDetailView(request, pk,):  # slug):
         
         if not is_member:
             from django.contrib import messages
-            from django.shortcuts import redirect
             messages.error(request, 'You must be a member of this private community to view this question')
             return redirect('community:community_detail', slug=data.community.slug)
     
