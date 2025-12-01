@@ -145,9 +145,9 @@
         <!-- Tags Section -->
         <div class="tags d-flex gs4 fw-wrap" style="gap: 8px; flex-wrap: wrap;">
             {% if question.community %}
-            <span class="post-tag flex--item" style="background: #f0fdf4 !important; color: #15803d !important; border-color: #bbf7d0 !important; font-weight: 600;" title="Community: {{question.community.name}}">
-                📍 {{question.community.name}}
-            </span>
+            <a href="{% url 'community:community_detail' question.community.slug %}" class="post-tag flex--item" style="background: #f0fdf4 !important; color: #15803d !important; border-color: #bbf7d0 !important; font-weight: 600; text-decoration: none;" title="Community: {{question.community.name}}">
+                                        📍 {{question.community.name}}
+                                    </a>
             {% endif %}
             {% for tag in question.tags.all %}
             <span class="post-tag flex--item" style="background: #f8f9fa !important; border: 1px solid #e8eaed !important; color: #2c3e50 !important;">{{tag}}</span>

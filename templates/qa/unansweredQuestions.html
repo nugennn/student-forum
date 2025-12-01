@@ -2,6 +2,7 @@
 {% load humanize %}
 {% load static %}
 {% load qa_tags %}
+{% load community_tags %}
 
 {% block css %}
 <style>
@@ -444,6 +445,7 @@
 
                 <div id="questions" class="flush-left">
                     {% for question in questions %}
+                    {% if question|can_view_community_question:user %}
                     <div class="question-summary" id="question-summary-{{question.id}}">
                         <div class="statscontainer">
                             <div class="stats">
@@ -470,9 +472,9 @@
                             <div class="flex--item">
                                 <div class="d-flex gs4 fw-wrap tags">
                                     {% if question.community %}
-                                    <span class="post-tag flex--item" style="background: #f0fdf4 !important; color: #15803d !important; border-color: #bbf7d0 !important; font-weight: 600;" title="Community: {{question.community.name}}">
+                                    <a href="{% url 'community:community_detail' question.community.slug %}" class="post-tag flex--item" style="background: #f0fdf4 !important; color: #15803d !important; border-color: #bbf7d0 !important; font-weight: 600; text-decoration: none;" title="Community: {{question.community.name}}">
                                         📍 {{question.community.name}}
-                                    </span>
+                                    </a>
                                     {% endif %}
                                     {% for tag in question.get_all_tags %}
                                     <a href="{% url 'tagbadge:taggedItemsFrom_All' tag.id %}" class="post-tag flex--item" title="show questions tagged '{{tag}}'" rel="{{tag}}">{{tag}}</a>
@@ -542,6 +544,11 @@
                                 </div>
                             </div>
                         </div>
+                    </div>
+                    {% endif %}
+                    {% empty %}
+                    <div class="no-results">
+                        <p>No unanswered questions found. Try adjusting your search or filters.</p>
                     </div>
                     {% endfor %}
                 </div>

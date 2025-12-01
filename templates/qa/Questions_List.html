@@ -514,9 +514,9 @@
                             <div class="flex--item">
                                 <div class="d-flex gs4 fw-wrap tags">
                                     {% if question.community %}
-                                    <span class="post-tag flex--item" style="background: #f0fdf4 !important; color: #15803d !important; border-color: #bbf7d0 !important; font-weight: 600;" title="Community: {{question.community.name}}">
-                                        📍 {{question.community.name}}
-                                    </span>
+<a href="{% url 'community:community_detail' question.community.slug %}" class="post-tag flex--item" style="background: #f0fdf4 !important; color: #15803d !important; border-color: #bbf7d0 !important; font-weight: 600; text-decoration: none;" title="Community: {{question.community.name}}">
+    📍 {{question.community.name}}
+</a>
                                     {% endif %}
                                     {% for tag in question.get_all_tags %}
                                     <a href="{% url 'tagbadge:taggedItemsFrom_All' tag.id %}" class="post-tag flex--item" title="show questions tagged '{{tag}}'" rel="{{tag}}">{{tag}}</a>
@@ -623,6 +623,11 @@
                             <i class="fas fa-share-alt"></i>
                         </button>
                     </div>
+                </div>
+                {% comment %} {% endif %} {% endcomment %}
+                {% empty %}
+                <div class="no-results">
+                    <p>No questions found. Try adjusting your search or filters.</p>
                 </div>
                 {% endfor %}
             </div>

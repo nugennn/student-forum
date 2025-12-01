@@ -257,8 +257,13 @@
         <div class="mt24 mb12">
             <div class="post-taglist d-flex gs4 gsy fd-column">
                 <div class="d-flex ps-relative">
+                    {% if data.community %}
+                    <a href="{% url 'community:community_detail' data.community.slug %}" class="post-tag" style="background: #f0fdf4 !important; color: #15803d !important; border-color: #bbf7d0 !important; font-weight: 600; text-decoration: none;" title="Community: {{data.community.name}}">
+                        📍 {{data.community.name}}
+                    </a>
+                    {% endif %}
                     {% for tag in data.tags.all %}
-                    <a href="{% url 'tagbadge:taggedItemsFrom_All' tag.id %}" class="post-tag" title="show questions tagged &#39;{{tag}}&#39;" rel="tag">{{tag}}</a>
+                    <a href="{% url 'tagbadge:taggedItemsFrom_All' tag.id %}" class="post-tag" title="show questions tagged '{{tag}}'" rel="tag">{{tag}}</a>
                     {% endfor %}
                 </div>
             </div>
@@ -414,7 +419,8 @@
         <div id="comments-{{data.id}}" class="comments js-comments-container bt bc-black-075 mt12 " data-post-id="{{data.id}}" data-min-length="15">
         <ul class="comments-list js-comments-list">
             {% for comment in getAllTheComments %}
-            <li id="comment-{{comment.id}}" class="comment js-comment " data-comment-id="{{comment.id}}" data-comment-owner-id="{{comment.commented_by.id}}" data-comment-score="0">
+            {% if not comment.deleted %}
+            <li id="comment-{{comment.id}}" class="comment js-comment" data-comment-id="{{comment.id}}" data-comment-owner-id="{{comment.commented_by.id}}" data-comment-score="0">
                 <div class="js-comment-actions comment-actions">
                     <div class="comment-score js-comment-edit-hide"></div>
 
@@ -475,10 +481,18 @@
                                 </svg>
                             </a>
                         </span>
+                        <span class="comment-delete" title="Delete comment">
+                            <a href="#" class="js-delete-comment" data-comment-id="{{comment.id}}">
+                                <svg aria-hidden="true" class="va-text-bottom o50 svg-icon iconTrash" width="14" height="14" viewBox="0 0 14 14">
+                                    <path d="M11 3h-1.5l-.5-1h-4l-.5 1H3v1h8V3ZM4 5v7a1 1 0 0 0 1 1h4a1 1 0 0 0 1-1V5H4Z"/>
+                                </svg>
+                            </a>
+                        </span>
                         {% endif %}
                     </div>
                 </div>
             </li>
+            {% endif %}
             {% endfor %}
         </ul>
     </div>
@@ -816,8 +830,9 @@
     <div class="post-layout--right js-post-comments-component">
         <div id="comments-12816528" class="comments js-comments-container bt bc-black-075 mt12 " data-post-id="12816528" data-min-length="15">
             <ul class="comments-list js-comments-list">
-            {% for comment in answer.commentq_set.all %}  
-                <li id="comment-{{comment.id}}" class="comment js-comment " data-comment-id="{{comment.id}}" data-comment-owner-id="{{comment.commented_by.id}}" data-comment-score="1">
+            {% for comment in answer.commentq_set.all %}
+            {% if not comment.deleted %}
+                <li id="comment-{{comment.id}}" class="comment js-comment" data-comment-id="{{comment.id}}" data-comment-owner-id="{{comment.commented_by.id}}" data-comment-score="1">
                     <div class="js-comment-actions comment-actions">
 
                         <form method="GET" class="commentAnswerVoteForm" action="{% url 'qa:upvote_comment' comment.id %}" data-pk="{{comment.id}}">
@@ -848,13 +863,33 @@
                         <div class="comment-body js-comment-edit-hide">
                             
                             <span class="comment-copy">{{comment.comment}}</span>
-                            <span class="comment-date" dir="ltr"><span title="2015-04-10 21:15:50Z, License: CC BY-SA 3.0" class="relativetime-clean">{{comment.date}} ({{comment.date|naturaltime}})</span></span>
+                            <div class="d-inline-flex ai-center">&ndash;&nbsp;
+                                <a href="{% url 'profile:activityPageTabProfile' comment.commented_by.id comment.commented_by.username %}" title="{{comment.commented_by|calculate_reputation}} reputation" class="comment-user">{{comment.commented_by.get_full_name|default:comment.commented_by.username}}</a>
+                            </div>
+                            <span class="comment-date" dir="ltr">
+                                <span title="{{comment.date|date:'Y-m-d H:i:s'}}" class="relativetime-clean">{{comment.date|naturaltime}}</span>
+                            </span>
+                            {% if request.user == comment.commented_by %}
+                            <span class="comment-edit" title="Edit comment">
+                                <a href="#" class="js-edit-comment" data-comment-id="{{comment.id}}">
+                                    <svg aria-hidden="true" class="va-text-bottom o50 svg-icon iconPencilSm" width="14" height="14" viewBox="0 0 14 14">
+                                        <path d="m11.1 1.71 1.13 1.12c.2.2.2.51 0 .71L11.1 4.7 9.21 2.86l1.17-1.15c.2-.2.51-.2.71 0ZM2 10.12l6.37-6.43 1.88 1.88L3.88 12H2v-1.88Z"/>
+                                    </svg>
+                                </a>
+                            </span>
+                            <span class="comment-delete" title="Delete comment">
+                                <a href="#" class="js-delete-comment" data-comment-id="{{comment.id}}" data-answer-id="{{answer.id}}">
+                                    <svg aria-hidden="true" class="va-text-bottom o50 svg-icon iconTrash" width="14" height="14" viewBox="0 0 14 14">
+                                        <path d="M11 3h-1.5l-.5-1h-4l-.5 1H3v1h8V3ZM4 5v7a1 1 0 0 0 1 1h4a1 1 0 0 0 1-1V5H4Z"/>
+                                    </svg>
+                                </a>
+                            </span>
+                            {% endif %}
                         </div>
                     </div>
 
                 </li>
-
-
+                {% endif %}
                 {% endfor %}
             </ul>
         </div>
@@ -2474,6 +2509,123 @@ function submitQuote() {
         }
     });
 })();
+</script>
+
+<script>
+// Show toast notification
+function showToast(message, type = 'success') {
+    const toastId = 'toast-' + Date.now();
+    const toastHtml = `
+        <div id="${toastId}" class="s-toast js-toast fade show" aria-hidden="false" style="top: 60px;">
+            <aside class="s-notice s-notice__${type === 'success' ? 'success' : 'danger'}">
+                <div class="d-flex gs16 gsx ai-center jc-space-between">
+                    <div class="flex--item">
+                        <div class="m0 js-toast-body" role="status" tabindex="0">
+                            ${message}
+                        </div>
+                    </div>
+                    <div class="flex--item mr0 js-notice-actions">
+                        <div class="d-flex">
+                            <button class="p8 s-btn d-flex flex__center fc-dark js-dismiss" tabindex="0" role="button" aria-label="Dismiss">
+                                <svg class="m0 svg-icon iconClearSm" width="14" height="14" viewBox="0 0 14 14">
+                                    <path d="M12 3.41 10.59 2 7 5.59 3.41 2 2 3.41 5.59 7 2 10.59 3.41 12 7 8.41 10.59 12 12 10.59 8.41 7 12 3.41Z"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+        </div>
+    `;
+    
+    // Remove any existing toasts
+    $('.js-toast').remove();
+    
+    // Add new toast
+    $('.toast-container').html(toastHtml);
+    
+    // Auto-remove after 5 seconds
+    setTimeout(() => {
+        $(`#${toastId}`).fadeOut(400, function() {
+            $(this).remove();
+        });
+    }, 5000);
+}
+
+// Handle comment deletion
+$(document).on('click', '.js-delete-comment', function(e) {
+    e.preventDefault();
+    
+    const deleteButton = $(this);
+    const commentId = deleteButton.data('comment-id');
+    const commentElement = $(`#comment-${commentId}`);
+    const answerId = deleteButton.data('answer-id');
+    
+    // Show confirmation dialog
+    if (!confirm('Are you sure you want to delete this comment? This action cannot be undone.')) {
+        return;
+    }
+    
+    // Show loading state
+    const originalHtml = deleteButton.html();
+    deleteButton.html('<i class="fas fa-spinner fa-spin"></i>');
+    deleteButton.prop('disabled', true);
+    
+    // Determine if it's a question or answer comment
+    const isQuestionComment = typeof answerId === 'undefined';
+    const url = isQuestionComment 
+        ? `/comment/delete/question/${commentId}/` 
+        : `/comment/delete/answer/${commentId}/`;
+    
+    // Send AJAX request
+    $.ajax({
+        url: url,
+        type: 'POST',
+        data: {
+            csrfmiddlewaretoken: '{{ csrf_token }}'
+        },
+        success: function(response) {
+            if (response.success) {
+                // Remove the comment from the UI
+                commentElement.fadeOut(300, function() {
+                    $(this).remove();
+                    
+                    // Get the comments container
+                    const commentsContainer = isQuestionComment 
+                        ? $('.js-comments-list')
+                        : $(`#answer-${answerId} .js-comments-list`);
+                    
+                    // Update comment count
+                    const countElement = isQuestionComment
+                        ? $('.comment-count-question')
+                        : $(`#answer-${answerId} .comment-count-answer`);
+                    
+                    const currentCount = parseInt(countElement.text()) || 0;
+                    if (currentCount > 0) {
+                        countElement.text(currentCount - 1);
+                    }
+                    
+                    // If no more comments, show message
+                    if (commentsContainer.children().length === 0) {
+                        commentsContainer.html('<p class="fs-caption fc-light">No comments yet.</p>');
+                    }
+                });
+                
+                // Show success message
+                showToast('Comment deleted successfully');
+            } else {
+                // Show error message
+                showToast(`Error: ${response.error || 'Failed to delete comment'}`, 'error');
+                deleteButton.html(originalHtml).prop('disabled', false);
+            }
+        },
+        error: function(xhr, status, error) {
+            // Show error message
+            showToast('Error: Failed to delete comment. Please try again.', 'error');
+            deleteButton.html(originalHtml).prop('disabled', false);
+        }
+    });
+});
 </script>
 
 {% endblock js %} 

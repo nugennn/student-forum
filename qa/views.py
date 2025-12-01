@@ -1,5 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.decorators.http import require_http_methods
+from .utils import filter_questions_by_community_access
+from django.views.decorators.http import require_http_methods
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from .models import Question, Answer, Bounty, Reputation, ProtectQuestion, PostShare, PostLike, CommentQ
@@ -1315,6 +1317,26 @@ def ReOpenVotesAjax(request, question_id):
 # @cache_page(60 * 15)
 def questionDetailView(request, pk,):  # slug):
     data = get_object_or_404(Question, pk=pk)
+    
+    # Check community access
+    if data.community and data.community.is_private:
+        if not request.user.is_authenticated:
+            from django.contrib.auth import REDIRECT_FIELD_NAME
+            from django.contrib.auth.views import redirect_to_login
+            path = request.build_absolute_uri()
+            return redirect_to_login(path, login_url='account_login')
+            
+        is_member = data.community.members.filter(
+            user=request.user,
+            is_active=True
+        ).exists()
+        
+        if not is_member:
+            from django.contrib import messages
+            from django.shortcuts import redirect
+            messages.error(request, 'You must be a member of this private community to view this question')
+            return redirect('community:community_detail', slug=data.community.slug)
+    
     answers_of_questions = data.answer_set.all().exclude(is_deleted=True)
 
     STORING_THE_ORIGINAL = []
@@ -3852,6 +3874,45 @@ def answer_upvote_downvote(request, answer_id):
 
 
 @login_required
+@require_http_methods(['POST'])
+def delete_comment(request, comment_type, comment_id):
+    """
+    View to delete a comment (question or answer comment) via AJAX.
+    comment_type should be either 'question' or 'answer'
+    """
+    if not request.user.is_authenticated:
+        return JsonResponse({
+            'success': False,
+            'error': 'You must be logged in to delete a comment.'
+        }, status=403)
+    
+    try:
+        comment = get_object_or_404(CommentQ, id=comment_id)
+        
+        # Check if the user is the owner of the comment or a moderator
+        if request.user != comment.commented_by and not request.user.is_staff:
+            return JsonResponse({
+                'success': False,
+                'error': 'You do not have permission to delete this comment.'
+            }, status=403)
+        
+        # Soft delete the comment by setting deleted=True
+        comment.deleted = True
+        comment.save(update_fields=['deleted'])
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Comment deleted successfully.',
+            'comment_id': comment_id
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)
+
+
 def edit_comment(request, comment_id):
     if request.method == 'POST' and is_ajax(request):
         comment = get_object_or_404(CommentQ, id=comment_id)
@@ -4242,6 +4303,9 @@ def BountiedQuestions(request, query=None):
             is_bountied=True,
             is_deleted=False
         )
+    
+    # Apply community access filtering
+    questions = filter_questions_by_community_access(questions, request.user)
 
     page = request.GET.get('page', 1)
     paginator = Paginator(questions, 5)
@@ -4272,6 +4336,9 @@ def unansweredQuestions(request, query=None):
             is_bountied=False).filter(
             Q(answer__answer_owner=None)
         ).distinct()
+    
+    # Apply community access filtering
+    questions = filter_questions_by_community_access(questions, request.user)
 
     page = request.GET.get('page', 1)
     paginator = Paginator(questions, 5)
@@ -4292,12 +4359,15 @@ def unansweredQuestions(request, query=None):
 def activeQuestions(request, query=None):
     if query == 'None':
         questions = Question.objects.filter(
-            is_deleted=False, is_bountied=False).order_by('active_date')
+            is_deleted=False, is_bountied=False)
     else:
         questions = Question.objects.filter(
             tags__name__icontains=query,
             is_deleted=False,
-            is_bountied=False).order_by('active_date').distinct()
+            is_bountied=False).distinct()
+    
+    # Apply community access filtering and order by active_date
+    questions = filter_questions_by_community_access(questions, request.user).order_by('active_date')
 
     page = request.GET.get('page', 1)
     paginator = Paginator(questions, 5)
@@ -4315,8 +4385,9 @@ def activeQuestions(request, query=None):
 # @loggedOutFromAllDevices
 def questions(request):
     
-    questions = Question.objects.all().exclude(
-        is_bountied=True, is_deleted=True).order_by('-date')
+    # Get base queryset and filter by community access
+    questions = Question.objects.exclude(is_deleted=True).order_by('-date')
+    questions = filter_questions_by_community_access(questions, request.user)
 
 # Damn so use lot of logics But I don't care, I will build this UP !
 
@@ -4348,25 +4419,31 @@ def questions(request):
                 if bool_1 and bool_2 == False and bool_3 == False:
                     print("Only First is True")
                     questions = Question.objects.filter(
-                        tags__name__icontains=query).annotate(
-                        answers=Count('answer')).filter(
-                        answers=0,
-                        is_deleted=False).order_by('-active_date')
+                        tags__name__icontains=query,
+                        is_deleted=False
+                    ).annotate(
+                        answers=Count('answer')
+                    ).filter(answers=0)
+                    questions = filter_questions_by_community_access(questions, request.user).order_by('-active_date')
 
                 # No Accepted Answer
                 if bool_2 and bool_1 == False and bool_3 == False:
                     print("Only Second is True")
                     questions = Question.objects.filter(
-                        tags__name__icontains=query).filter(
+                        tags__name__icontains=query,
                         answer__accepted=False,
-                        is_deleted=False).distinct().order_by('-active_date')
+                        is_deleted=False
+                    ).distinct()
+                    questions = filter_questions_by_community_access(questions, request.user).order_by('-active_date')
 
                 # Has Bounty
                 if bool_3 and bool_1 == False and bool_2 == False:
                     questions = Question.objects.filter(
                         tags__name__icontains=query,
                         is_bountied=True,
-                        is_deleted=False).order_by('-active_date')
+                        is_deleted=False
+                    )
+                    questions = filter_questions_by_community_access(questions, request.user).order_by('-active_date')
                     print("Only Third is True")
 
                 # No Answers and No Accepted Answer
@@ -4374,9 +4451,11 @@ def questions(request):
                     questions = Question.objects.filter(
                         tags__name__icontains=query,
                         answer__accepted=False,
-                        is_deleted=False).annotate(
-                        answers=Count('answer')).filter(
-                        answers=0).order_by('-active_date')
+                        is_deleted=False
+                    ).annotate(
+                        answers=Count('answer')
+                    ).filter(answers=0)
+                    questions = filter_questions_by_community_access(questions, request.user).order_by('-active_date')
                     print("First and Second is True")
 
                 # No Answers and Bounty
@@ -4384,9 +4463,11 @@ def questions(request):
                     questions = Question.objects.filter(
                         tags__name__icontains=query,
                         is_bountied=True,
-                        is_deleted=False).annotate(
-                        answers=Count('answer')).filter(
-                        answers=0).order_by('-active_date')
+                        is_deleted=False
+                    ).annotate(
+                        answers=Count('answer')
+                    ).filter(answers=0)
+                    questions = filter_questions_by_community_access(questions, request.user).order_by('-active_date')
                     print("First and Third is True")
 
                 # No Accepted Answers and Bounty
@@ -4395,7 +4476,9 @@ def questions(request):
                         tags__name__icontains=query,
                         is_bountied=True,
                         answer__accepted=False,
-                        is_deleted=False).order_by('-active_date')
+                        is_deleted=False
+                    )
+                    questions = filter_questions_by_community_access(questions, request.user).order_by('-active_date')
                     print("Second and Third is True")
 
                 # ALl Filters are True
@@ -4404,15 +4487,20 @@ def questions(request):
                         tags__name__icontains=query,
                         is_bountied=True,
                         answer__accepted=False,
-                        is_deleted=False).annotate(
-                        answers=Count('answer')).filter(
-                        answer=0).order_by('-active_date')
+                        is_deleted=False
+                    ).annotate(
+                        answers=Count('answer')
+                    ).filter(answers=0)
+                    questions = filter_questions_by_community_access(questions, request.user).order_by('-active_date')
                     print("All Are True")
 
                 # Clear Filters
                 if bool_1 == False and bool_2 == False and bool_3 == False:
                     questions = Question.objects.filter(
-                        tags__name__icontains=query, is_deleted=False).order_by('-active_date')
+                        tags__name__icontains=query, 
+                        is_deleted=False
+                    )
+                    questions = filter_questions_by_community_access(questions, request.user).order_by('-active_date')
 
             else:
                 if "NoAnswers" in getCheckBoxes:
@@ -5101,10 +5189,15 @@ def search_questions(request):
             )
             answer_qs = Answer.objects.filter(body__icontains=query)
             answer_question_ids = answer_qs.values_list('questionans_id', flat=True)
+            
+            # Get all matching questions first
             results = Question.objects.filter(
                 Q(id__in=answer_question_ids) |
                 Q(id__in=question_matches.values_list('id', flat=True))
             )
+            
+            # Apply community access filtering
+            results = filter_questions_by_community_access(results, request.user)
             result_type = 'questions'
 
     context = {
