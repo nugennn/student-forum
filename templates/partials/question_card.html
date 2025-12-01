@@ -1,6 +1,7 @@
 {% load static %}
 {% load humanize %}
 {% load qa_tags %}
+{% load martortags %}
 
 <style>
 .action-btn {
@@ -80,42 +81,47 @@
 
 <!-- Reusable Question Card with Voting, Comments, and Share -->
 <div class="question-summary narrow" id="question-summary-{{question.id}}" style="display: flex; flex-direction: column; gap: 18px;">
-    <!-- Title Section -->
-    <div>
-        <h3 style="margin: 0;"><a href="{{question.get_absolute_url}}" class="question-hyperlink">{{question.title}}</a></h3>
-    </div>
+    <!-- Clickable Content Area -->
+    <a href="{{question.get_absolute_url}}" style="text-decoration: none; color: inherit; cursor: pointer;">
+        <!-- Title Section -->
+        <div>
+            <h3 style="margin: 0;"><span class="question-hyperlink">{{question.title}}</span></h3>
+        </div>
 
-    <!-- Tags Section -->
-    <div class="tags d-flex gs4 fw-wrap" style="gap: 8px; flex-wrap: wrap;">
-        {% if question.community %}
-        <span class="post-tag flex--item" style="background: #f0fdf4 !important; color: #15803d !important; border-color: #bbf7d0 !important; font-weight: 600;" title="Community: {{question.community.name}}">
-            📍 {{question.community.name}}
-        </span>
-        {% endif %}
-        {% for tag in question.tags.all %}
-        <a href="{% url 'tagbadge:taggedItemsFrom_All' tag.id %}" class="post-tag flex--item" rel="tag">{{tag}}</a>
-        {% endfor %}
-    </div>
-
-    <!-- Image Preview Section -->
-    {% if question.body %}
-        {% load martortags %}
-        {% with body_html=question.body|safe_markdown %}
-            {% if "img" in body_html %}
-                <div class="question-card-image" style="max-height: 280px; overflow: hidden; border-radius: 10px; background: #f5f5f5; display: flex; align-items: center; justify-content: center;">
-                    <div style="width: 100%; display: flex; align-items: center; justify-content: center;">
-                        {% with img_start=body_html|slice:"0:body_html.find('</p>')" %}
-                            {% if "<img" in img_start %}
-                                {{ img_start|safe }}
-                            {% else %}
-                                {{ body_html|safe }}
-                            {% endif %}
-                        {% endwith %}
-                    </div>
-                </div>
+        <!-- Tags Section -->
+        <div class="tags d-flex gs4 fw-wrap" style="gap: 8px; flex-wrap: wrap;">
+            {% if question.community %}
+            <span class="post-tag flex--item" style="background: #f0fdf4 !important; color: #15803d !important; border-color: #bbf7d0 !important; font-weight: 600;" title="Community: {{question.community.name}}">
+                📍 {{question.community.name}}
+            </span>
             {% endif %}
-        {% endwith %}
-    {% endif %}
+            {% for tag in question.tags.all %}
+            <span class="post-tag flex--item" style="background: #f8f9fa !important; border: 1px solid #e8eaed !important; color: #2c3e50 !important;">{{tag}}</span>
+            {% endfor %}
+        </div>
+
+        <!-- Body Text Preview - 150 character limit (plain text, no markdown) -->
+        {% if question.body %}
+        <div style="color: #64748b; font-size: 14px; line-height: 1.5; margin-top: 12px;">
+            {% with text=question.body|safe_markdown|striptags %}
+                {{text|truncatechars:150}}
+            {% endwith %}
+        </div>
+        {% endif %}
+
+        <!-- Image Preview Section -->
+        {% if question.body %}
+            {% with body_html=question.body|safe_markdown %}
+                {% if "img" in body_html %}
+                    <div class="question-card-image" style="max-height: 280px; overflow: hidden; border-radius: 10px; background: #f5f5f5; display: flex; align-items: center; justify-content: center; margin-top: 12px;">
+                        <div style="width: 100%; display: flex; align-items: center; justify-content: center;">
+                            {{ body_html|safe }}
+                        </div>
+                    </div>
+                {% endif %}
+            {% endwith %}
+        {% endif %}
+    </a>
 
     <!-- Stats and Actions Row -->
     <div style="display: flex; align-items: center; justify-content: space-between; padding-top: 18px; border-top: 1px solid #e8eaed; gap: 24px; flex-wrap: wrap;">
