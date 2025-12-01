@@ -251,7 +251,7 @@
 
 
         <div class="s-prose js-post-body" itemprop="text">      
-            <p>{{data.body|safe_markdown|fix_markdown_images}}</p>
+            {{data.body|safe_markdown|fix_markdown_images|safe}}
         </div>
 
         <div class="mt24 mb12">
@@ -672,7 +672,7 @@
 </aside>
 {% endif %}
 
-            <div class="s-prose js-post-body" itemprop="text"><p>{{answer.body|safe_markdown|fix_markdown_images}}</p></div>
+            <div class="s-prose js-post-body" itemprop="text">{{answer.body|safe_markdown|fix_markdown_images|safe}}</div>
             <div class="mt24">
                 <div class="d-flex fw-wrap ai-start jc-end gs8 gsy">
                     <time itemprop="dateCreated" datetime="2021-12-08T09:53:01"></time>
