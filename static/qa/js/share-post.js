@@ -1,6 +1,7 @@
 /**
  * Post Share Feature
  * Handles sharing posts via multiple channels
+ * Updated: 2025-12-01 - Fixed URL path for homepage sharing
  */
 
 let currentShareData = {
@@ -17,17 +18,17 @@ function openShareModal(postType, postId) {
     currentShareData.postType = postType;
     currentShareData.postId = postId;
     
-    // Build post URL
+    // Build post URL - Use /questionDetailView/ (without /qa/ prefix, same as detail page)
     const baseUrl = window.location.origin;
     if (postType === 'question') {
-        currentShareData.postUrl = `${baseUrl}/qa/questionDetailView/${postId}/`;
+        currentShareData.postUrl = `${baseUrl}/questionDetailView/${postId}/`;
         // Get the question title from the page
         const titleElement = document.querySelector('h1');
         currentShareData.postTitle = titleElement ? titleElement.innerText : 'Check out this question';
     } else if (postType === 'answer') {
         // For answers, use the current question URL with anchor
         const questionId = document.querySelector('[data-question-id]')?.getAttribute('data-question-id');
-        currentShareData.postUrl = `${baseUrl}/qa/questionDetailView/${questionId}/#answer-${postId}`;
+        currentShareData.postUrl = `${baseUrl}/questionDetailView/${questionId}/#answer-${postId}`;
         currentShareData.postTitle = 'Check out this answer';
     }
     

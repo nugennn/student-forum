@@ -582,25 +582,30 @@ def send_link(request):
         if not link_url:
             return JsonResponse({'error': 'No URL provided'}, status=400)
         
-        # Fetch link metadata
-        try:
-            headers = {'User-Agent': 'Mozilla/5.0'}
-            response = requests.get(link_url, headers=headers, timeout=5)
-            soup = BeautifulSoup(response.content, 'html.parser')
-            
-            link_title = soup.find('meta', property='og:title')
-            link_title = link_title['content'] if link_title else soup.title.string if soup.title else link_url
-            
-            link_description = soup.find('meta', property='og:description')
-            link_description = link_description['content'] if link_description else ''
-            
-            link_image = soup.find('meta', property='og:image')
-            link_image = link_image['content'] if link_image else None
+        # Fetch link metadata - NEVER make HTTP requests, only use database
+        link_title = link_url
+        link_description = ''
+        link_image = None
         
-        except:
-            link_title = link_url
-            link_description = ''
-            link_image = None
+        import re
+        
+        # For question detail URLs, get data directly from database
+        # Handle URLs like /questionDetailView/22/ or http://127.0.0.1:8000/questionDetailView/22/
+        if 'questionDetailView' in link_url:
+            match = re.search(r'questionDetailView/(\d+)/', link_url)
+            if match:
+                question_id = int(match.group(1))
+                try:
+                    from qa.models import Question
+                    question = Question.objects.get(id=question_id)
+                    link_title = question.title
+                    link_description = question.body[:150] if question.body else ''
+                except:
+                    # Question not found, use generic title
+                    link_title = 'Question'
+                    link_description = ''
+        # For other internal URLs, just use the URL as title (don't fetch)
+        # For external URLs, we would need to fetch, but for now just use URL
         
         if chat_type == 'private':
             recipient_id = data.get('chat_id')
