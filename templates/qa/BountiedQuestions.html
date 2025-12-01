@@ -2,6 +2,7 @@
 {% load humanize %}
 {% load static %}
 {% load qa_tags %}
+{% load martortags %}
 {% load community_tags %}
 
 {% block css %}
@@ -465,8 +466,21 @@
                         <div class="summary">
                             <h3><a href="{{question.get_absolute_url}}" class="question-hyperlink">{{question.title}}</a></h3>
                             <div class="excerpt">
-                                {{question.body|truncatechars:200}}
+                                {% with text=question.body|safe_markdown|striptags %}
+                                    {{text|truncatechars:200}}
+                                {% endwith %}
                             </div>
+                            
+                            <!-- Image Preview -->
+                            {% if question.body %}
+                                {% with body_html=question.body|safe_markdown|fix_markdown_images %}
+                                    {% if "<img" in body_html %}
+                                        <div style="max-height: 200px; overflow: hidden; border-radius: 8px; background: #f5f5f5; display: flex; align-items: center; justify-content: center; margin-top: 12px;">
+                                            {{ body_html|safe }}
+                                        </div>
+                                    {% endif %}
+                                {% endwith %}
+                            {% endif %}
 
                             <div class="d-flex ai-start fw-wrap">
                                 <div class="flex--item">
