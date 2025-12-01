@@ -275,28 +275,32 @@
         overflow-wrap: break-word;
     }
     
-    /* --- Image Container Responsive Styles --- */
-    .summary > div[style*="max-height: 200px"] {
+    /* --- Image Container Responsive Styles (Unanswered Only) --- */
+    .unanswered-questions-page .summary > div[style*="max-height: 200px"] {
         width: 100%;
         max-width: 100%;
         box-sizing: border-box;
         font-size: 0; /* Hide all text */
+        line-height: 0; /* Collapse text height */
     }
     
-    .summary > div[style*="max-height: 200px"] img {
+    .unanswered-questions-page .summary > div[style*="max-height: 200px"] img {
         max-width: 100%;
         height: auto;
         display: block;
         max-height: 200px;
         object-fit: contain;
+        font-size: 14px; /* Reset font size for image */
+        line-height: 1.5; /* Reset line height for image */
     }
     
-    /* Hide all text nodes and non-image elements */
-    .summary > div[style*="max-height: 200px"] p,
-    .summary > div[style*="max-height: 200px"] span,
-    .summary > div[style*="max-height: 200px"] div,
-    .summary > div[style*="max-height: 200px"] a {
-        display: none !important;
+    /* Hide all text and non-image elements but keep images visible */
+    .unanswered-questions-page .summary > div[style*="max-height: 200px"] * {
+        font-size: 0;
+    }
+    
+    .unanswered-questions-page .summary > div[style*="max-height: 200px"] img {
+        font-size: 14px;
     }
 
     .summary .tags { 
@@ -448,7 +452,7 @@
 {% endblock css %}
 
 {% block content %}
-<div id="content" class="snippet-hidden">
+<div id="content" class="snippet-hidden unanswered-questions-page">
     <div id="mainbar" role="main" aria-labelledby="h-all-questions">
             <div class="d-flex ai-center jc-space-between mb24">
                 <h1 class="fs-headline1">All Questions</h1>
