@@ -191,12 +191,15 @@ function markAchievementsAsRead() {
             'X-CSRFToken': getCookie('csrftoken')
         },
         success: function(response) {
-            // Remove the reputation badge
-            $('.unseen-reputation').fadeOut(300, function() {
-                $(this).remove();
-            });
+            // Remove the reputation badge immediately
+            $('.unseen-reputation').remove();
+            $('.unseen-reputation').hide();
             // Update the unread count
-            $('.js-unread-count._positive').text('+0');
+            $('.js-unread-count._positive').text('+0').hide();
+            // Also hide via display none
+            document.querySelectorAll('.unseen-reputation').forEach(el => {
+                el.style.display = 'none';
+            });
         },
         error: function(error) {
             console.log('Error marking achievements as read:', error);

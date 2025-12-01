@@ -7,6 +7,17 @@
 
 {% block css %}
 <style>
+    /* --- Global Overflow Prevention --- */
+    * {
+        box-sizing: border-box;
+    }
+    
+    html, body {
+        width: 100%;
+        max-width: 100%;
+        overflow-x: hidden;
+    }
+
     /* --- Base Variables and Body Style --- */
     :root {
       --primary: #6366f1;
@@ -26,6 +37,9 @@
       color: var(--text-primary);
       line-height: 1.6;
       font-size: 15px;
+      width: 100%;
+      max-width: 100%;
+      overflow-x: hidden;
     }
 
     .container {
@@ -33,6 +47,9 @@
         margin: 0 auto;
         background: transparent !important;
         box-shadow: none !important;
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
     }
 
     /* --- Main Content Area --- */
@@ -41,6 +58,8 @@
         min-height: calc(100vh - 100px);
         width: 100%;
         max-width: 100%;
+        overflow-x: hidden;
+        box-sizing: border-box;
     }
 
     #mainbar { 
@@ -49,6 +68,8 @@
         min-width: 0;
         width: 100%;
         max-width: 100%;
+        box-sizing: border-box;
+        overflow-x: hidden;
     }
 
     .fs-headline1 { 
@@ -217,6 +238,7 @@
         margin-top: auto; 
     }
 
+    /* Style existing summary */
     .summary { 
         flex-grow: 1; 
         min-width: 0; 
@@ -231,23 +253,59 @@
         font-size: 18px !important;
         font-weight: 600 !important;
         text-decoration: none !important;
-        line-height: 1.4 !important;
         transition: color 0.2s !important;
+        line-height: 1.5 !important;
     }
 
-    .summary .question-hyperlink:hover {
-        color: var(--primary) !important;
+    .summary .question-hyperlink:hover { 
+        color: var(--primary) !important; 
     }
 
     .summary .excerpt {
-        color: var(--text-secondary);
         font-size: 14px;
+        color: var(--text-secondary);
         line-height: 1.6;
         margin-bottom: 12px;
+        overflow: hidden;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        line-clamp: 2;
+        -webkit-box-orient: vertical;
+        word-break: break-word;
+        overflow-wrap: break-word;
+    }
+    
+    /* --- Image Container Responsive Styles --- */
+    .summary > div[style*="max-height: 200px"] {
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
+        font-size: 0; /* Hide all text */
+    }
+    
+    .summary > div[style*="max-height: 200px"] img {
+        max-width: 100%;
+        height: auto;
+        display: block;
+        max-height: 200px;
+        object-fit: contain;
+    }
+    
+    /* Hide all text nodes and non-image elements */
+    .summary > div[style*="max-height: 200px"] p,
+    .summary > div[style*="max-height: 200px"] span,
+    .summary > div[style*="max-height: 200px"] div,
+    .summary > div[style*="max-height: 200px"] a {
+        display: none !important;
     }
 
-    .summary .tags {
-        margin-bottom: 12px;
+    .summary .tags { 
+        margin-bottom: 12px; 
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        width: 100%;
+        max-width: 100%;
     }
 
     .summary .post-tag {
@@ -258,9 +316,10 @@
         border-radius: 6px !important;
         font-size: 13px !important;
         font-weight: 500 !important;
-        text-decoration: none !important;
         transition: all 0.2s !important;
-        display: inline-block;
+        text-decoration: none !important;
+        white-space: nowrap;
+        flex-shrink: 1;
     }
 
     .summary .post-tag:hover {
@@ -270,11 +329,10 @@
     }
 
     .summary .started {
+        margin-top: 0 !important;
         display: flex;
         align-items: center;
         justify-content: flex-end;
-        gap: 8px;
-        margin-top: 8px;
     }
 
     .summary .user-info { 
@@ -471,10 +529,10 @@
                                 {% endwith %}
                             </div>
                             
-                            <!-- Image Preview -->
+                            <!-- Image Preview - Only if image exists -->
                             {% if question.body %}
                                 {% with body_html=question.body|safe_markdown|fix_markdown_images %}
-                                    {% if "<img" in body_html %}
+                                    {% if 'src=' in body_html and "<img" in body_html %}
                                         <div style="max-height: 200px; overflow: hidden; border-radius: 8px; background: #f5f5f5; display: flex; align-items: center; justify-content: center; margin-top: 12px;">
                                             {{ body_html|safe }}
                                         </div>

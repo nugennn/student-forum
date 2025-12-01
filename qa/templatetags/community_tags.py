@@ -14,7 +14,7 @@ def is_community_member(user, community):
     ).exists()
 
 @register.filter
-def can_view_community_question(user, question):
+def can_view_community_question(question, user):
     if not question.community:
         return True
     if not question.community.is_private:
