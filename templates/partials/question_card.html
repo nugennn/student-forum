@@ -35,98 +35,157 @@
 .action-btn i.inactive {
     color: #999 !important;
 }
+
+/* Image preview styling */
+.question-card-image img {
+    max-width: 100% !important;
+    height: auto !important;
+    display: block !important;
+    object-fit: cover !important;
+}
+
+/* Question card styling - Modern, spacious design */
+.question-summary.narrow {
+    background: #ffffff !important;
+    border: 1px solid #e8eaed !important;
+    border-radius: 10px !important;
+    padding: 24px !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08) !important;
+    transition: all 0.2s ease !important;
+    margin-bottom: 24px !important;
+}
+
+.question-summary.narrow:hover {
+    border-color: #d1d5db !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12) !important;
+    transform: translateY(-2px) !important;
+}
+
+/* Post card title styling */
+.question-summary.narrow h3 {
+    margin-bottom: 16px !important;
+}
+
+/* Post card title link */
+.question-summary.narrow .question-hyperlink {
+    font-size: 17px !important;
+    line-height: 1.6 !important;
+    color: #1a1a1a !important;
+}
+
+.question-summary.narrow .question-hyperlink:hover {
+    color: #0084ff !important;
+}
 </style>
 
 <!-- Reusable Question Card with Voting, Comments, and Share -->
-<div class="question-summary narrow" id="question-summary-{{question.id}}">
-    <div onclick="window.location.href='{{question.get_absolute_url}}'" class="cp">
-        <div class="votes">
-            <div class="mini-counts">
-                <span title="{{question.count_upvotes}} upvotes" style="color: #28a745; font-weight: bold;">+{{question.count_upvotes}}</span>
-                <span style="margin: 0 4px; color: #999;">/</span>
-                <span title="{{question.count_downvotes}} downvotes" style="color: #dc3545; font-weight: bold;">-{{question.count_downvotes}}</span>
-            </div>
-            <div>votes</div>
-        </div>
-
-        <div class="status unanswered">
-            <div class="mini-counts"><span title="{{question.count_answers}} responses">{{question.count_answers}}</span></div>
-            <div>replies</div>
-        </div>
-
-        <div class="views">
-            <div class="mini-counts"><span title="{{question.calculate_viewers}} views">{{question.calculate_viewers}}</span></div>
-            <div>views</div>
-        </div>
+<div class="question-summary narrow" id="question-summary-{{question.id}}" style="display: flex; flex-direction: column; gap: 18px;">
+    <!-- Title Section -->
+    <div>
+        <h3 style="margin: 0;"><a href="{{question.get_absolute_url}}" class="question-hyperlink">{{question.title}}</a></h3>
     </div>
 
-    <div class="summary">
-        <h3><a href="{{question.get_absolute_url}}" class="question-hyperlink">{{question.title}}</a></h3>
-        <div class="tags d-flex gs4 fw-wrap mt2 float-none lh-unset">
-            {% if question.community %}
-            <span class="post-tag flex--item" style="background: #f0fdf4 !important; color: #15803d !important; border-color: #bbf7d0 !important; font-weight: 600;" title="Community: {{question.community.name}}">
-                📍 {{question.community.name}}
-            </span>
-            {% endif %}
-            {% for tag in question.tags.all %}
-            <a href="{% url 'tagbadge:taggedItemsFrom_All' tag.id %}" class="post-tag flex--item" rel="tag">{{tag}}</a>
-            {% endfor %}
+    <!-- Tags Section -->
+    <div class="tags d-flex gs4 fw-wrap" style="gap: 8px; flex-wrap: wrap;">
+        {% if question.community %}
+        <span class="post-tag flex--item" style="background: #f0fdf4 !important; color: #15803d !important; border-color: #bbf7d0 !important; font-weight: 600;" title="Community: {{question.community.name}}">
+            📍 {{question.community.name}}
+        </span>
+        {% endif %}
+        {% for tag in question.tags.all %}
+        <a href="{% url 'tagbadge:taggedItemsFrom_All' tag.id %}" class="post-tag flex--item" rel="tag">{{tag}}</a>
+        {% endfor %}
+    </div>
 
-            <!-- Action Buttons -->
-            <div style="display: flex; gap: 12px; margin-top: 16px; padding-top: 16px; border-top: 1px solid #e2e8f0; align-items: center; flex-wrap: wrap;">
-                <div id="id_likes{{ question.id }}">
-                    <form method="GET" class="likeForm" action="{% url 'qa:question_upvote_downvote' question.id %}" data-pk="{{ question.id }}" style="display: inline;">
-                        {% csrf_token %}
-                        <button name='submit' type='submit' value="like" class="action-btn">
-                            {% if request.user in question.qupvote_set.all %}
-                            <i class="fas active fa-arrow-up"></i>
+    <!-- Image Preview Section -->
+    {% if question.body %}
+        {% load martortags %}
+        {% with body_html=question.body|safe_markdown %}
+            {% if "img" in body_html %}
+                <div class="question-card-image" style="max-height: 280px; overflow: hidden; border-radius: 10px; background: #f5f5f5; display: flex; align-items: center; justify-content: center;">
+                    <div style="width: 100%; display: flex; align-items: center; justify-content: center;">
+                        {% with img_start=body_html|slice:"0:body_html.find('</p>')" %}
+                            {% if "<img" in img_start %}
+                                {{ img_start|safe }}
                             {% else %}
-                            <i class="fas inactive fa-arrow-up"></i>
+                                {{ body_html|safe }}
                             {% endif %}
-                            <span class="vote-count">{{question.calculate_UpVote_DownVote}}</span>
-                        </button>
-                    </form>
+                        {% endwith %}
+                    </div>
                 </div>
-                <div id="id_dislikes{{ question.id }}">
-                    <form method="GET" class="dislikeForm" action="{% url 'qa:question_upvote_downvote' question.id %}" data-pk="{{ question.id }}" style="display: inline;">
-                        {% csrf_token %}
-                        <button name='submit' type='submit' value="downVote" class="action-btn">
-                            {% if request.user in question.qdownvote_set.all %}
-                            <i class="fas active fa-arrow-down"></i>
-                            {% else %}
-                            <i class="fas inactive fa-arrow-down"></i>
-                            {% endif %}
-                        </button>
-                    </form>
-                </div>
-                
-                <!-- Comment Button -->
-                <a href="{{question.get_absolute_url}}#comments" class="action-btn">
-                    <i class="fas fa-comment"></i>
-                    <span>{{question.comment_set.count}}</span>
-                </a>
-                
-                <!-- Share Button -->
-                <button class="action-btn" onclick="openShareModal('question', {{question.id}})">
-                    <i class="fas fa-share-alt"></i>
-                </button>
+            {% endif %}
+        {% endwith %}
+    {% endif %}
+
+    <!-- Stats and Actions Row -->
+    <div style="display: flex; align-items: center; justify-content: space-between; padding-top: 18px; border-top: 1px solid #e8eaed; gap: 24px; flex-wrap: wrap;">
+        <!-- Left: Views with Eye Icon -->
+        <div style="display: flex; align-items: center; gap: 6px; color: #64748b; font-size: 13px;">
+            <i class="fas fa-eye" style="color: #64748b; font-size: 14px;"></i>
+            <span style="font-weight: 500;">{{question.calculate_viewers}}</span>
+        </div>
+
+        <!-- Middle: Action Buttons -->
+        <div style="display: flex; gap: 12px; align-items: center;">
+            <div id="id_likes{{ question.id }}">
+                <form method="GET" class="likeForm" action="{% url 'qa:question_upvote_downvote' question.id %}" data-pk="{{ question.id }}" style="display: inline;">
+                    {% csrf_token %}
+                    <button name='submit' type='submit' value="like" class="action-btn">
+                        {% if request.user in question.qupvote_set.all %}
+                        <i class="fas active fa-arrow-up"></i>
+                        {% else %}
+                        <i class="fas inactive fa-arrow-up"></i>
+                        {% endif %}
+                        <span class="vote-count">{{question.calculate_UpVote_DownVote}}</span>
+                    </button>
+                </form>
+            </div>
+            <div id="id_dislikes{{ question.id }}">
+                <form method="GET" class="dislikeForm" action="{% url 'qa:question_upvote_downvote' question.id %}" data-pk="{{ question.id }}" style="display: inline;">
+                    {% csrf_token %}
+                    <button name='submit' type='submit' value="downVote" class="action-btn">
+                        {% if request.user in question.qdownvote_set.all %}
+                        <i class="fas active fa-arrow-down"></i>
+                        {% else %}
+                        <i class="fas inactive fa-arrow-down"></i>
+                        {% endif %}
+                    </button>
+                </form>
             </div>
             
-            <div class="flex--item started ml-auto mt0 as-center d-flex ai-center">
-                <div class="user-avatar" style="width: 24px; height: 24px; border-radius: 50%; overflow: hidden; margin-right: 8px;">
-                    <img src="{% if question.post_owner.profile.profile_photo %}{{ question.post_owner.profile.profile_photo.url }}{% else %}{% static 'default.jpg' %}{% endif %}" alt="" width="24" height="24" style="object-fit: cover; width: 100%; height: 100%;">
-                </div>
-                <a href="{% url 'profile:activityPageTabProfile' question.post_owner.id question.post_owner.username %}" style="color: var(--text-primary); font-weight: 500;">
+            <!-- Answers Button - Show count only if > 0 -->
+            <a href="{{question.get_absolute_url}}" class="action-btn">
+                <i class="fas fa-comments"></i>
+                {% if question.count_answers > 0 %}
+                <span>{{question.count_answers}}</span>
+                {% endif %}
+            </a>
+            
+            <!-- Share Button -->
+            <button class="action-btn" onclick="openShareModal('question', {{question.id}})">
+                <i class="fas fa-share-alt"></i>
+            </button>
+        </div>
+
+        <!-- Right: User Info - Bottom Right Alignment -->
+        <div style="display: flex; align-items: center; gap: 10px; margin-left: auto; flex-shrink: 0;">
+            <div style="width: 32px; height: 32px; border-radius: 50%; overflow: hidden; flex-shrink: 0;">
+                <img src="{% if question.post_owner.profile.profile_photo %}{{ question.post_owner.profile.profile_photo.url }}{% else %}{% static 'default.jpg' %}{% endif %}" alt="" width="32" height="32" style="object-fit: cover; width: 100%; height: 100%;">
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 2px; min-width: 0;">
+                <a href="{% url 'profile:activityPageTabProfile' question.post_owner.id question.post_owner.username %}" style="color: #1a1a1a; font-weight: 500; font-size: 13px; text-decoration: none;">
                     {% if question.post_owner.profile.full_name %}
                         {{ question.post_owner.profile.full_name }}
                     {% else %}
                         {{ question.post_owner }}
                     {% endif %}
                 </a>
-                <span class="reputation-score" dir="ltr">{{question.post_owner|calculate_reputation}}</span>
-                <a href="{{question.get_absolute_url}}" class="started-link" style="margin-left: 8px;">
-                    <span class="relativetime">{{question.date|naturaltime}}</span>
-                </a>
+                <div style="display: flex; gap: 6px; align-items: center; font-size: 11px;">
+                    <span class="reputation-score" style="background: #f1f5f9; color: #64748b; padding: 2px 6px; border-radius: 3px;">{{question.post_owner|calculate_reputation}}</span>
+                    <a href="{{question.get_absolute_url}}" class="started-link" style="color: #64748b; text-decoration: none; font-size: 11px;">
+                        <span class="relativetime">{{question.date|naturaltime}}</span>
+                    </a>
+                </div>
             </div>
         </div>
     </div>
