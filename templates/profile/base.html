@@ -251,44 +251,45 @@
                 </a>
             </li>
 
-            <li class="-item chat-button-item chatSVGOuter chatThisIsOuter" style="display: flex; align-items: center; position: relative;">
+            <li class="-item chat-button-item chatSVGOuter chatThisIsOuter" style="display: flex; align-items: center; position: relative; margin-left: 4px;">
                 <a href="{% url 'chat:chat_list' %}" class="-link" style="display: flex; align-items: center; justify-content: center; padding: 8px; cursor: pointer; position: relative;" title="Messages">
                     <i class="fa fa-comments fa-lg iconChat chatSVG" aria-hidden="true" style="font-size: 18px;"></i>
                     {% if countUnreadChats %}<span class="unread-chat-badge" style="position: absolute; top: 2px; right: 2px; background: #5eba7d; color: white; border-radius: 3px; font-size: 10px; padding: 2px 4px; font-weight: 500;">{{countUnreadChats}}</span>{% endif %}
                 </a>
             </li>
 
-            <li class="-item achievements-button-item achieveSVGOuter achThisIsOuter" style="display: flex; align-items: center; position: relative;">
+            <li class="-item achievements-button-item achieveSVGOuter achThisIsOuter" style="display: flex; align-items: center; position: relative; margin-left: 4px;">
                 <a href="#" class="-link readPrivNotification" onclick="openAchievementInbox();" style="display: flex; align-items: center; justify-content: center; padding: 8px; cursor: pointer; position: relative;">
                     <i class="fa fa-trophy fa-lg iconAchievements achieveSVG" aria-hidden="true" style="font-size: 18px;"></i>
                     {% if countUnreadPrivNotifications_1 and countUnreadPrivNotifications.countTheUnRead_Rep > 0 %}<span class="unseen-reputation" style="position: absolute; top: 2px; right: 2px; background: #5eba7d; color: white; border-radius: 3px; font-size: 10px; padding: 2px 4px; font-weight: 500;">+{{countUnreadPrivNotifications.countTheUnRead_Rep}}</span>{% endif %}
                 </a>
             </li>
 
-            {% if request.user.profile.access_review_queues %}
-            <li class="-item review-button-item reviewSVGOuter revThisIsOuter" style="display: flex; align-items: center;">
-                <a href="#" class="-link svg-icon iconReviewQueue" onclick="openReviewInbox();" style="display: flex; align-items: center; justify-content: center; padding: 8px; cursor: pointer;">
-                    <i class="fa fa-tasks fa-lg iconReviewQueue reviewSVG" aria-hidden="true" style="font-size: 18px;"></i>
+            <li class="-item" style="display: flex; align-items: center; margin-left: 4px;">
+                <a href="#" onclick="confirmLogout()" class="-link" style="display: flex; align-items: center; justify-content: center; padding: 8px; cursor: pointer;" title="Logout">
+                    <i class="fas fa-sign-out-alt fa-lg" aria-hidden="true" style="font-size: 18px;"></i>
                 </a>
+                <script>
+                function confirmLogout() {
+                    if (confirm('Are you sure you want to log out?')) {
+                        window.location.href = "{% url 'users:logout_view' %}";
+                    }
+                }
+                </script>
             </li>
-            {% endif %}
 
-            <li class="-item logout-button-item" style="display: flex; align-items: center;">
-                <a href="{% url 'users:logout_view' %}" class="-link logout-link" style="display: flex; align-items: center; justify-content: center; padding: 8px; cursor: pointer;" title="Logout" onclick="return confirm('Are you sure you want to logout?');">
-                    <i class="fa fa-sign-out fa-lg" aria-hidden="true" style="font-size: 18px; color: #ef4444;"></i>
-                </a>
-            </li>
+            </ol>
 
-        </ol>
+            <style>
+            .top-bar .-item {
+                margin: 0 2px;
+            }
 
-        <style>
-        .top-bar .-item {
-            margin: 0;
-        }
-
-        .top-bar .-link {
-            color: #525960;
-            transition: background-color 0.1s, color 0.1s;
+            .top-bar .-link {
+                color: #525960;
+                transition: background-color 0.1s, color 0.1s;
+                border-radius: 3px;
+            }
             border-radius: 3px;
         }
 
@@ -427,7 +428,7 @@
                                         </div>
                                         <div class="item-location">
                                             {% if notification.type_of_noti == "community_join_request" %}
-                                                <strong>{{ notification.noti_sender.username }}</strong> wants to join <strong>{{ notification.extra_data }}</strong>
+                                                {{ notification.extra_data|safe }}
                                             {% elif notification.question_noti %}
                                                 {{notification.question_noti.title}}
                                             {% else %}

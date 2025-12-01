@@ -632,6 +632,17 @@ def approve_join_request(request, slug, request_id):
     community.member_count = community.members.filter(is_active=True).count()
     community.save()
     
+    # Send notification to the user who requested to join
+    admin_name = request.user.profile.full_name or request.user.username
+    Notification.objects.create(
+        noti_receiver=join_request.user,
+        noti_sender=request.user,
+        type_of_noti='community_join_request',
+        url=f'/community/{community.slug}/',
+        extra_data=f'{admin_name} has accepted your join request for {community.name}.',
+        is_read=False
+    )
+    
     return JsonResponse({'success': True, 'message': f'{join_request.user.username} has been added to the community'})
 
 
@@ -662,5 +673,16 @@ def reject_join_request(request, slug, request_id):
     join_request.status = 'rejected'
     join_request.reviewed_by = request.user
     join_request.save()
+    
+    # Send notification to the user who requested to join
+    admin_name = request.user.profile.full_name or request.user.username
+    Notification.objects.create(
+        noti_receiver=join_request.user,
+        noti_sender=request.user,
+        type_of_noti='community_join_request',
+        url=f'/community/{community.slug}/',
+        extra_data=f'{admin_name} has rejected your join request for {community.name}.',
+        is_read=False
+    )
     
     return JsonResponse({'success': True, 'message': 'Join request rejected'})
