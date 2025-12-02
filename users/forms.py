@@ -1,5 +1,5 @@
 from django import forms
-from django.contrib.auth.forms import UserCreationForm, SetPasswordForm, AuthenticationForm
+from django.contrib.auth.forms import UserCreationForm, SetPasswordForm, AuthenticationForm, PasswordResetForm
 from django.contrib.auth.models import User
 from django.forms import ModelForm
 from django.core.exceptions import ValidationError
@@ -62,3 +62,23 @@ class ForcePasswordChangeForm(SetPasswordForm):
     class Meta:
         model = User
         fields = ('new_password1', 'new_password2')
+
+class CustomPasswordResetForm(PasswordResetForm):
+    """Custom password reset form with institutional email validation"""
+    email = forms.EmailField(
+        label='Email Address',
+        max_length=254,
+        widget=forms.EmailInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Enter your institutional email',
+            'autofocus': True
+        }),
+        validators=[validate_khec_email]
+    )
+    
+    def clean_email(self):
+        """Validate that email exists in the system"""
+        email = self.cleaned_data.get('email')
+        if not User.objects.filter(email=email).exists():
+            raise ValidationError('No account found with this email address.')
+        return email

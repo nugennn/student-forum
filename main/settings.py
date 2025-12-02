@@ -1,5 +1,9 @@
 from pathlib import Path
 import os
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -284,3 +288,11 @@ CSRF_COOKIE_HTTPONLY = False  # Allow JavaScript to read CSRF token from cookies
 CSRF_COOKIE_SECURE = False  # Set to True in production with HTTPS
 CSRF_TRUSTED_ORIGINS = ['http://localhost:8000', 'http://127.0.0.1:8000']
 CSRF_COOKIE_SAMESITE = 'Lax'  # Prevent CSRF attacks while allowing form submissions
+
+# Email Configuration for Password Reset
+# Console Backend - Emails print to terminal (perfect for development)
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+DEFAULT_FROM_EMAIL = 'Campus Forum <noreply@campusforum.com>'
+
+# Password reset settings
+PASSWORD_RESET_TIMEOUT = 86400  # 24 hours in seconds

@@ -1,8 +1,8 @@
 from django.shortcuts import render,redirect
 from django.contrib.auth import login,authenticate,update_session_auth_hash
-from . forms import SignUpForm, ForcePasswordChangeForm, EmailAuthenticationForm
+from . forms import SignUpForm, ForcePasswordChangeForm, EmailAuthenticationForm, CustomPasswordResetForm
 from django.contrib import messages
-from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.forms import UserCreationForm, SetPasswordForm
 from django.contrib.auth.models import User
 from profile.models import Profile
 from django.urls import reverse_lazy
@@ -10,6 +10,13 @@ from django.http import HttpResponseRedirect, HttpResponse
 from django.contrib import messages
 from django.contrib.auth import logout
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.views import PasswordResetView, PasswordResetDoneView, PasswordResetConfirmView, PasswordResetCompleteView
+from django.contrib.auth.tokens import default_token_generator
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.utils.encoding import force_bytes
+from django.template.loader import render_to_string
+from django.core.mail import send_mail
+from django.conf import settings
 
 def signup_view(request):
     """Admin-only view for creating new student accounts"""
@@ -119,4 +126,36 @@ def force_password_change(request):
         form = ForcePasswordChangeForm(request.user)
     
     return render(request, 'registration/force_password_change.html', {'form': form})
+
+# Password Reset Views
+class CustomPasswordResetView(PasswordResetView):
+    """Custom password reset view with institutional email validation"""
+    form_class = CustomPasswordResetForm
+    template_name = 'registration/password_reset_form.html'
+    email_template_name = 'registration/password_reset_email.txt'
+    subject_template_name = 'registration/password_reset_subject.txt'
+    success_url = reverse_lazy('users:password_reset_done')
+    
+    def form_valid(self, form):
+        """Override to add custom success message"""
+        messages.success(self.request, 'Password reset email has been sent to your email address.')
+        return super().form_valid(form)
+
+class CustomPasswordResetDoneView(PasswordResetDoneView):
+    """View shown after password reset email is sent"""
+    template_name = 'registration/password_reset_done.html'
+
+class CustomPasswordResetConfirmView(PasswordResetConfirmView):
+    """View for confirming password reset with token"""
+    template_name = 'registration/password_reset_confirm.html'
+    success_url = reverse_lazy('users:password_reset_complete')
+    
+    def form_valid(self, form):
+        """Override to add custom success message"""
+        messages.success(self.request, 'Your password has been reset successfully.')
+        return super().form_valid(form)
+
+class CustomPasswordResetCompleteView(PasswordResetCompleteView):
+    """View shown after password reset is complete"""
+    template_name = 'registration/password_reset_complete.html'
 
