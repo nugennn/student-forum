@@ -764,17 +764,23 @@ def create_group_chat(request):
 @login_required
 @require_http_methods(["POST"])
 def add_group_member(request, group_id):
-    """Add a member to a group chat"""
+    """Add a member to a group chat - any member can add"""
     try:
         group = get_object_or_404(GroupChat, id=group_id)
         
-        if request.user != group.creator and request.user not in group.members.all():
-            return JsonResponse({'error': 'Unauthorized'}, status=403)
+        # Check if user is a member of the group
+        if request.user not in group.members.all():
+            return JsonResponse({'error': 'You must be a member of this group to add members'}, status=403)
         
         data = json.loads(request.body)
         user_id = data.get('user_id')
         
         user = get_object_or_404(User, id=user_id)
+        
+        # Check if user is already a member
+        if user in group.members.all():
+            return JsonResponse({'error': f'{user.username} is already a member of this group'}, status=400)
+        
         group.members.add(user)
         
         return JsonResponse({
@@ -942,28 +948,40 @@ def get_unread_count(request):
 @login_required
 @require_http_methods(["GET"])
 def get_users(request):
-    """Get list of all users except current user for group creation"""
+    """Get list of all users except current user for group creation or member search"""
     try:
-        users = User.objects.exclude(id=request.user.id).values('id', 'username')
+        query = request.GET.get('q', '').strip()
+        
+        # Build the queryset
+        from django.db.models import Q
+        users = User.objects.exclude(id=request.user.id).only('id', 'username', 'first_name', 'last_name')
+        
+        # Filter by search query if provided
+        if query:
+            users = users.filter(
+                Q(username__icontains=query) | 
+                Q(first_name__icontains=query) | 
+                Q(last_name__icontains=query)
+            )
+        
+        # Limit results to avoid large queries
+        users = users[:20]
+        
         users_list = []
         for user in users:
-            try:
-                profile = user.profile if hasattr(user, 'profile') else None
-                full_name = profile.full_name if profile else None
-            except:
-                full_name = None
+            full_name = f"{user.first_name} {user.last_name}".strip() or user.username
             
             users_list.append({
-                'id': user['id'],
-                'username': user['username'],
-                'full_name': full_name or user['username']
+                'id': user.id,
+                'username': user.username,
+                'full_name': full_name
             })
         
         return JsonResponse({'users': users_list})
     except Exception as e:
         logger = logging.getLogger(__name__)
         logger.error(f"Error getting users: {str(e)}")
-        return JsonResponse({'error': str(e)}, status=400)
+        return JsonResponse({'error': str(e), 'users': []}, status=200)
 
 
 @login_required

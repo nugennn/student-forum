@@ -137,25 +137,26 @@ If you don't want to use postgresql then remove comment of sqlite's configuratio
 comment in the postgresql configuration
 """
 
+# SQLite Configuration (Development)
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
         'OPTIONS': {
-            'timeout': 20,  # Increase timeout to 20 seconds to prevent "database is locked" errors
+            'timeout': 30,  # Increased timeout for better concurrency
         }
     }
 }
 
-# PostgreSQL Configuration (uncomment to use PostgreSQL)
+# PostgreSQL Configuration (Production - uncomment when ready)
 # DATABASES = {
 #     'default': {
 #         'ENGINE': 'django.db.backends.postgresql',
-#         'NAME': 'postgres',        # your DB name from pgAdmin
-#         'USER': 'postgres',      # your PostgreSQL user
-#         'PASSWORD': '1234',     # your PostgreSQL password
-#         'HOST': 'localhost',
-#         'PORT': '5432',
+#         'NAME': os.getenv('DB_NAME', 'student_forum'),
+#         'USER': os.getenv('DB_USER', 'postgres'),
+#         'PASSWORD': os.getenv('DB_PASSWORD', 'postgres'),
+#         'HOST': os.getenv('DB_HOST', 'localhost'),
+#         'PORT': os.getenv('DB_PORT', '5432'),
 #     }
 # }
 

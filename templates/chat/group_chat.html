@@ -522,7 +522,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             <small>{{ members.count }} members</small>
                         </div>
                     </div>
-                    <button type="button" class="btn btn-sm btn-light" id="infoBtn" data-bs-toggle="modal" data-bs-target="#groupInfoModal" onclick="showGroupInfo()">
+                    <button type="button" class="btn btn-sm btn-light" id="infoBtn" data-bs-toggle="modal" data-bs-target="#groupInfoModal">
                         <i class="fas fa-info-circle"></i> Info
                     </button>
                 </div>
@@ -648,6 +648,9 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
             <div class="modal-body">
                 <h6>Members ({{ members.count }})</h6>
+                <button type="button" class="btn btn-sm btn-primary mb-3" onclick="showAddMemberModal()">
+                    <i class="fas fa-user-plus"></i> Add Member
+                </button>
                 <div class="list-group">
                     {% for member in members %}
                         <div class="list-group-item d-flex justify-content-between align-items-center">
@@ -669,6 +672,27 @@ document.addEventListener('DOMContentLoaded', function() {
     </div>
 </div>
 
+<!-- Add Member Modal -->
+<div class="modal fade" id="addMemberModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add Member to Group</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="userSearch" class="form-label">Search User</label>
+                    <input type="text" id="userSearch" class="form-control" placeholder="Search by name or username..." autocomplete="off">
+                </div>
+                <div id="userSearchResults" class="list-group" style="max-height: 300px; overflow-y: auto;">
+                    <!-- Results will be populated here -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Hidden file inputs -->
 <input type="file" id="imageInput" accept="image/*" style="display: none;">
 <input type="file" id="fileInput" style="display: none;">
@@ -676,6 +700,11 @@ document.addEventListener('DOMContentLoaded', function() {
 <script>
 const groupId = {{ group.id }};
 const chatType = 'group';
+const currentMembers = [
+    {% for member in members %}
+        { id: {{ member.id }}, username: '{{ member.username }}' }{% if not forloop.last %},{% endif %}
+    {% endfor %}
+];
 
 function getCsrfToken() {
     return document.querySelector('[name=csrfmiddlewaretoken]')?.value || 
@@ -894,15 +923,6 @@ document.addEventListener('click', function(event) {
     }
 });
 
-// Show group info modal
-function showGroupInfo() {
-    const modal = document.getElementById('groupInfoModal');
-    if (modal) {
-        const bsModal = new bootstrap.Modal(modal);
-        bsModal.show();
-    }
-}
-
 // Switch between chats seamlessly
 function switchChat(event, chatId, chatType) {
     event.preventDefault();
@@ -961,6 +981,121 @@ function initializeChatListeners() {
 function handleMessageSubmit(e) {
     e.preventDefault();
     sendMessage();
+}
+
+// Info Button Handler
+document.addEventListener('DOMContentLoaded', function() {
+    const infoBtn = document.getElementById('infoBtn');
+    if (infoBtn) {
+        infoBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const modal = new bootstrap.Modal(document.getElementById('groupInfoModal'));
+            modal.show();
+        });
+    }
+});
+
+// Add Member Functions
+function showAddMemberModal() {
+    const modal = new bootstrap.Modal(document.getElementById('addMemberModal'));
+    modal.show();
+    const searchInput = document.getElementById('userSearch');
+    if (searchInput) {
+        searchInput.focus();
+        searchInput.value = '';
+        document.getElementById('userSearchResults').innerHTML = '';
+    }
+}
+
+// Initialize user search when DOM is ready
+document.addEventListener('DOMContentLoaded', function() {
+    const userSearchInput = document.getElementById('userSearch');
+    if (userSearchInput) {
+        userSearchInput.addEventListener('input', function(e) {
+            const query = e.target.value.trim();
+            const resultsContainer = document.getElementById('userSearchResults');
+            
+            if (query.length < 2) {
+                resultsContainer.innerHTML = '';
+                return;
+            }
+            
+            resultsContainer.innerHTML = '<div class="list-group-item text-muted"><i class="fas fa-spinner fa-spin"></i> Searching...</div>';
+            
+            fetch(`/chat/get-users/?q=${encodeURIComponent(query)}`, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                resultsContainer.innerHTML = '';
+                
+                if (data.users && data.users.length > 0) {
+                    data.users.forEach(user => {
+                        // Check if user is already a member
+                        const isMember = currentMembers.some(m => m.id === user.id);
+                        
+                        const userItem = document.createElement('button');
+                        userItem.type = 'button';
+                        userItem.className = 'list-group-item list-group-item-action d-flex justify-content-between align-items-center';
+                        userItem.innerHTML = `
+                            <div>
+                                <strong>${user.full_name || user.username}</strong>
+                                <br>
+                                <small class="text-muted">@${user.username}</small>
+                            </div>
+                            <span class="badge ${isMember ? 'bg-secondary' : 'bg-primary'}">
+                                ${isMember ? 'Already Member' : 'Add'}
+                            </span>
+                        `;
+                        
+                        if (!isMember) {
+                            userItem.onclick = () => addMemberToGroup(user.id, user.username);
+                        } else {
+                            userItem.disabled = true;
+                        }
+                        
+                        resultsContainer.appendChild(userItem);
+                    });
+                } else if (data.error) {
+                    resultsContainer.innerHTML = '<div class="list-group-item text-warning"><i class="fas fa-exclamation-triangle"></i> Database busy, please try again</div>';
+                } else {
+                    resultsContainer.innerHTML = '<div class="list-group-item text-muted">No users found</div>';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                resultsContainer.innerHTML = '<div class="list-group-item text-danger"><i class="fas fa-exclamation-circle"></i> Error searching users. Please try again.</div>';
+            });
+        });
+    }
+});
+
+function addMemberToGroup(userId, username) {
+    fetch(`/chat/group/${groupId}/add-member/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCsrfToken()
+        },
+        body: JSON.stringify({
+            user_id: userId
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(`${username} has been added to the group!`);
+            location.reload();
+        } else {
+            alert('Error: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error adding member');
+    });
 }
 </script>
 
