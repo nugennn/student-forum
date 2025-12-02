@@ -537,11 +537,18 @@ document.addEventListener('DOMContentLoaded', function() {
                         {% for chat in recent_chats %}
                             {% if chat.type == 'private' %}
                             <a href="#" class="chat-sidebar-item {% if chat.is_current %}active{% endif %}" data-chat-type="private" data-chat-id="{{ chat.user_id }}" onclick="switchChat(event, {{ chat.user_id }}, 'private')">
-                                {% if chat.photo %}
-                                    <img src="{{ chat.photo }}" alt="{{ chat.name }}">
-                                {% else %}
-                                    <img src="https://ui-avatars.com/api/?name={{ chat.name }}&background=667eea&color=fff" alt="{{ chat.name }}">
-                                {% endif %}
+                                <div style="position: relative; display: inline-block;">
+                                    {% if chat.photo %}
+                                        <img src="{{ chat.photo }}" alt="{{ chat.name }}">
+                                    {% else %}
+                                        <img src="https://ui-avatars.com/api/?name={{ chat.name }}&background=667eea&color=fff" alt="{{ chat.name }}">
+                                    {% endif %}
+                                    {% if chat.is_teacher %}
+                                        <div style="position: absolute; bottom: -2px; right: -2px; background: #667eea; border: 2px solid white; border-radius: 50%; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; color: white; font-size: 10px; font-weight: bold;" title="Verified Teacher">
+                                            <i class="fas fa-check" style="font-size: 8px;"></i>
+                                        </div>
+                                    {% endif %}
+                                </div>
                                 <span class="chat-name">{{ chat.name }}</span>
                             </a>
                             {% elif chat.type == 'group' %}
@@ -582,12 +589,19 @@ function getCsrfToken() {
                 <!-- Chat Header -->
                 <div class="chat-header-modern">
                     <div class="chat-header-info">
-                        {% if chat_photo %}
-                            <img src="{{ chat_photo }}" alt="{{ chat_name }}" 
-                                 onerror="this.src='https://ui-avatars.com/api/?name={{ chat_name }}&background=667eea&color=fff'">
-                        {% else %}
-                            <img src="https://ui-avatars.com/api/?name={{ chat_name }}&background=667eea&color=fff" alt="{{ chat_name }}">
-                        {% endif %}
+                        <div style="position: relative; display: inline-block;">
+                            {% if chat_photo %}
+                                <img src="{{ chat_photo }}" alt="{{ chat_name }}" 
+                                     onerror="this.src='https://ui-avatars.com/api/?name={{ chat_name }}&background=667eea&color=fff'">
+                            {% else %}
+                                <img src="https://ui-avatars.com/api/?name={{ chat_name }}&background=667eea&color=fff" alt="{{ chat_name }}">
+                            {% endif %}
+                            {% if chat_type == 'private' and other_user_is_teacher %}
+                                <div style="position: absolute; bottom: -2px; right: -2px; background: #667eea; border: 3px solid white; border-radius: 50%; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; color: white; font-size: 10px; font-weight: bold;" title="Verified Teacher">
+                                    <i class="fas fa-check" style="font-size: 10px;"></i>
+                                </div>
+                            {% endif %}
+                        </div>
                         <div class="chat-header-text">
                             <h6>{{ chat_name }}</h6>
                             {% if chat_type == 'private' %}

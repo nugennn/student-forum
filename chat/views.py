@@ -270,6 +270,8 @@ def private_chat(request, user_id):
         if hasattr(other, 'profile') and other.profile and other.profile.profile_photo:
             photo_url = other.profile.profile_photo.url
         
+        is_teacher = hasattr(other, 'profile') and other.profile.is_teacher
+        
         recent_chats.append({
             'type': 'private',
             'user_id': other.id,
@@ -279,6 +281,7 @@ def private_chat(request, user_id):
             'photo': photo_url,
             'is_current': other.id == other_user.id,
             'last_message_time': latest_msg.created_at,
+            'is_teacher': is_teacher,
         })
     
     # Add group chats with their latest message time
@@ -303,6 +306,9 @@ def private_chat(request, user_id):
     if hasattr(other_user, 'profile') and other_user.profile and other_user.profile.profile_photo:
         other_photo = other_user.profile.profile_photo.url
     
+    # Check if other user is a teacher
+    other_user_is_teacher = hasattr(other_user, 'profile') and other_user.profile.is_teacher
+    
     context = {
         'chat': chat,
         'other_user': other_user,
@@ -312,6 +318,7 @@ def private_chat(request, user_id):
         'chat_name': other_user.get_full_name() or other_user.username,
         'chat_photo': other_photo,
         'members': None,  # No members for private chat
+        'other_user_is_teacher': other_user_is_teacher,
     }
     
     return render(request, 'chat/private_chat.html', context)
@@ -364,6 +371,8 @@ def group_chat(request, group_id):
         if hasattr(other, 'profile') and other.profile and other.profile.profile_photo:
             photo_url = other.profile.profile_photo.url
         
+        is_teacher = hasattr(other, 'profile') and other.profile.is_teacher
+        
         recent_chats.append({
             'type': 'private',
             'user_id': other.id,
@@ -373,6 +382,7 @@ def group_chat(request, group_id):
             'photo': photo_url,
             'is_current': False,
             'last_message_time': latest_msg.created_at,
+            'is_teacher': is_teacher,
         })
     
     # Add group chats with their latest message time
