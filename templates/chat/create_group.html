@@ -20,7 +20,7 @@
                 <!-- Select Members -->
                 <div class="mb-4">
                     <label class="form-label fw-bold">Select Members</label>
-                    <div class="border rounded p-3" style="max-height: 400px; overflow-y: auto; background: #f8f9fa;">
+                    <div class="rounded p-3" style="max-height: 400px; overflow-y: auto; background: white; border: 3px solid #667eea; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);">
                         {% if users %}
                             {% for user in users %}
                             <div class="form-check mb-3">
@@ -144,6 +144,14 @@ document.getElementById('createGroupForm').addEventListener('submit', function(e
     height: 20px;
     cursor: pointer;
     margin-top: 4px;
+    border: 2px solid #667eea;
+    accent-color: #667eea;
+}
+
+.form-check-input:checked {
+    background-color: #667eea;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.25);
 }
 
 .form-check-label {
