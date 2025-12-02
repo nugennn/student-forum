@@ -118,20 +118,6 @@
                             </div>
 
 
-                            <div id="div_id_full_name" class="form-group">
-                                <label for="id_full_name" class="requiredField">
-                                    Full name<span class="asteriskField">*</span>
-                                </label>
-                                <div class="">
-                                    <input type="text" name="full_name" 
-                                           value="{% if request.user.first_name and request.user.last_name %}{{ request.user.first_name }} {{ request.user.last_name }}{% else %}{{ request.user.get_full_name }}{% endif %}" 
-                                           class="textinput textInput form-control" 
-                                           id="id_full_name" 
-                                           disabled>
-                                    <small class="form-text text-muted">Full name is set by the admin and cannot be changed here.</small>
-                                </div>
-                            </div>
-
 
                             <div id="div_id_location" class="form-group"> <label for="id_location"
                                     class=" requiredField">
@@ -141,10 +127,11 @@
                                         class="textinput textInput form-control" required id="id_location"> </div>
                             </div>
 
-                            <div id="div_id_title" class="form-group"> <label for="id_title" class=" requiredField">
-                                    Title<span class="asteriskField">*</span> </label>
+                            <div id="div_id_bio" class="form-group"> <label for="id_bio" class="">
+                                    Bio
+                                </label>
                                 <div class=""> <input type="text" name="title" value="{{request.user.profile.title}}"
-                                        maxlength="30" class="textinput textInput form-control" required id="id_title">
+                                        maxlength="30" class="textinput textInput form-control" id="id_bio">
                                 </div>
                             </div>
 
