@@ -3123,7 +3123,7 @@ def question_upvote_downvote(request, question_id):
                 )
 
             rewardPrivielege(request, post.post_owner)
-            return JsonResponse({'action': 'undislike_and_like'})
+            return JsonResponse({'action': 'undislike_and_like', 'upvotes': post.count_upvotes, 'downvotes': post.count_downvotes})
 
         elif QUpvote.objects.filter(upvote_by_q=request.user, upvote_question_of=post).exists():
             # Allow vote change without time restriction
@@ -3164,7 +3164,7 @@ def question_upvote_downvote(request, question_id):
                     question_rep_C=10,
                     reputation_on_what='MY_QUESTION_UPVOTE_REP_P').delete()
             rewardPrivielege(request, post.post_owner)
-            return JsonResponse({'action': 'unlike'})
+            return JsonResponse({'action': 'unlike', 'upvotes': post.count_upvotes, 'downvotes': post.count_downvotes})
 
         else:
             if request.user == post.post_owner:
@@ -3285,7 +3285,7 @@ def question_upvote_downvote(request, question_id):
                         )
                     rewardPrivielege(request, post.post_owner)
 
-                return JsonResponse({'action': 'like_only'})
+                return JsonResponse({'action': 'like_only', 'upvotes': post.count_upvotes, 'downvotes': post.count_downvotes})
     # DownVote
     elif request.GET.get('submit') == 'downVote':
         if QUpvote.objects.filter(
@@ -3339,7 +3339,7 @@ def question_upvote_downvote(request, question_id):
                         question_rep_C=10,
                         reputation_on_what='MY_QUESTION_UPVOTE_REP_P').delete()
             rewardPrivielege(request, post.post_owner)
-            return JsonResponse({'action': 'unlike_and_dislike'})
+            return JsonResponse({'action': 'unlike_and_dislike', 'upvotes': post.count_upvotes, 'downvotes': post.count_downvotes})
         # if request.user in post.q_vote_ups.all():
 
         #     if voted_time > upvote_time_limit or edited_time > voted_time:
@@ -3365,7 +3365,7 @@ def question_upvote_downvote(request, question_id):
                     question_rep_C=-2,
                     reputation_on_what='QUESTION_DOWNVOTE').delete()
             rewardPrivielege(request, post.post_owner)
-            return JsonResponse({'action': 'undislike'})
+            return JsonResponse({'action': 'undislike', 'upvotes': post.count_upvotes, 'downvotes': post.count_downvotes})
 
         else:
             if request.user == post.post_owner:
@@ -3410,7 +3410,7 @@ def question_upvote_downvote(request, question_id):
                         question_rep_C=-2,
                         reputation_on_what='QUESTION_DOWNVOTE')
                 rewardPrivielege(request, post.post_owner)
-                return JsonResponse({'action': 'dislike_only'})
+                return JsonResponse({'action': 'dislike_only', 'upvotes': post.count_upvotes, 'downvotes': post.count_downvotes})
 
     else:
         messages.error(request, 'Something went wrong')
@@ -3697,109 +3697,106 @@ def answer_upvote_downvote(request, answer_id):
         elif request.user == post.answer_owner:
             return JsonResponse({'action': 'cannotLikeOwnPost'})
         else:
-            # UPVOTE
-            if request.user.profile.voteUpPriv:
-                post.a_reputation += 10
-                # post.date = timezone.now()
-                post.save()
-                post.a_vote_ups.add(request.user)
-                if getQuestion.reversal_monitor and post.a_vote_ups.all().count() >= 20:
-                    TagBadge.objects.get_or_create(
-                        awarded_to_user=post.answer_owner,
-                        badge_type="GOLD",
-                        tag_name="Reversal",
-                        bade_position="BADGE",
-                        answerIf_TagOf_A=post)
-                    PrivRepNotification.objects.get_or_create(
-                        for_user=post.answer_owner,
-                        type_of_PrivNotify="BADGE_EARNED",
-                        url=question_URL,
-                        for_if="Reversal",
-                        description="Provide an answer of +20 score to a question of -5 score")
+            # UPVOTE - Allow all authenticated users
+            post.a_reputation += 10
+            # post.date = timezone.now()
+            post.save()
+            post.a_vote_ups.add(request.user)
+            if getQuestion.reversal_monitor and post.a_vote_ups.all().count() >= 20:
+                TagBadge.objects.get_or_create(
+                    awarded_to_user=post.answer_owner,
+                    badge_type="GOLD",
+                    tag_name="Reversal",
+                    bade_position="BADGE",
+                    answerIf_TagOf_A=post)
                 PrivRepNotification.objects.get_or_create(
                     for_user=post.answer_owner,
-                    is_read=False,
+                    type_of_PrivNotify="BADGE_EARNED",
                     url=question_URL,
-                    type_of_PrivNotify="ANSWER_ACCEPT_REP_P",
-                    missingReputation=10)
+                    for_if="Reversal",
+                    description="Provide an answer of +20 score to a question of -5 score")
+            PrivRepNotification.objects.get_or_create(
+                for_user=post.answer_owner,
+                is_read=False,
+                url=question_URL,
+                type_of_PrivNotify="ANSWER_ACCEPT_REP_P",
+                missingReputation=10)
 
-                Reputation.objects.get_or_create(
-                    awarded_to=post.answer_owner,
-                    answer_O=post,
-                    answer_rep_C=10,
-                    reputation_on_what="MY_ANSWER_UPVOTE_REP_P")
+            Reputation.objects.get_or_create(
+                awarded_to=post.answer_owner,
+                answer_O=post,
+                answer_rep_C=10,
+                reputation_on_what="MY_ANSWER_UPVOTE_REP_P")
+            PrivRepNotification.objects.get_or_create(
+                for_user=post.answer_owner,
+                type_of_PrivNotify="MY_ANSWER_UPVOTE_REP_P",
+                url=question_URL,
+                for_if="",
+                description="",
+                # question_priv_noti=post,
+                answer_priv_noti=post,
+            )
+
+            if post.a_vote_ups.all().count() >= 10:
+                TagBadge.objects.get_or_create(
+                    awarded_to_user=post.answer_owner,
+                    badge_type="BRONZE",
+                    tag_name="Nice Answer",
+                    bade_position="BADGE",
+                    answerIf_TagOf_A=post)
                 PrivRepNotification.objects.get_or_create(
                     for_user=post.answer_owner,
-                    type_of_PrivNotify="MY_ANSWER_UPVOTE_REP_P",
+                    type_of_PrivNotify="BADGE_EARNED",
                     url=question_URL,
-                    for_if="",
-                    description="",
-                    # question_priv_noti=post,
-                    answer_priv_noti=post,
+                    for_if="Nice Answer",
+                    description="Answer score of 10 or more"
+                )
+            if post.a_vote_ups.all().count() >= 25:
+                TagBadge.objects.get_or_create(
+                    awarded_to_user=post.answer_owner,
+                    badge_type="SILVER",
+                    tag_name="Good Answer",
+                    bade_position="BADGE",
+                    answerIf_TagOf_A=post)
+                PrivRepNotification.objects.get_or_create(
+                    for_user=post.answer_owner,
+                    type_of_PrivNotify="BADGE_EARNED",
+                    url=question_URL,
+                    for_if="Good Answer",
+                    description="Answer score of 25 or more"
+                )
+            if post.a_vote_ups.all().count() >= 100:
+                TagBadge.objects.get_or_create(
+                    awarded_to_user=post.answer_owner,
+                    badge_type="GOLD",
+                    tag_name="Great Answer",
+                    bade_position="BADGE",
+                    answerIf_TagOf_A=post)
+                PrivRepNotification.objects.get_or_create(
+                    for_user=post.answer_owner,
+                    type_of_PrivNotify="BADGE_EARNED",
+                    url=question_URL,
+                    for_if="Great Answer",
+                    description="Answer score of 100 or more"
                 )
 
-                if post.a_vote_ups.all().count() >= 10:
-                    TagBadge.objects.get_or_create(
-                        awarded_to_user=post.answer_owner,
-                        badge_type="BRONZE",
-                        tag_name="Nice Answer",
-                        bade_position="BADGE",
-                        answerIf_TagOf_A=post)
-                    PrivRepNotification.objects.get_or_create(
-                        for_user=post.answer_owner,
-                        type_of_PrivNotify="BADGE_EARNED",
-                        url=question_URL,
-                        for_if="Nice Answer",
-                        description="Answer score of 10 or more"
-                    )
-                if post.a_vote_ups.all().count() >= 25:
-                    TagBadge.objects.get_or_create(
-                        awarded_to_user=post.answer_owner,
-                        badge_type="SILVER",
-                        tag_name="Good Answer",
-                        bade_position="BADGE",
-                        answerIf_TagOf_A=post)
-                    PrivRepNotification.objects.get_or_create(
-                        for_user=post.answer_owner,
-                        type_of_PrivNotify="BADGE_EARNED",
-                        url=question_URL,
-                        for_if="Good Answer",
-                        description="Answer score of 25 or more"
-                    )
-                if post.a_vote_ups.all().count() >= 100:
-                    TagBadge.objects.get_or_create(
-                        awarded_to_user=post.answer_owner,
-                        badge_type="GOLD",
-                        tag_name="Great Answer",
-                        bade_position="BADGE",
-                        answerIf_TagOf_A=post)
-                    PrivRepNotification.objects.get_or_create(
-                        for_user=post.answer_owner,
-                        type_of_PrivNotify="BADGE_EARNED",
-                        url=question_URL,
-                        for_if="Great Answer",
-                        description="Answer score of 100 or more"
-                    )
+            if post == Answer.objects.filter(
+                    a_vote_ups=request.user).first():
+                TagBadge.objects.get_or_create(
+                    awarded_to_user=request.user,
+                    badge_type="BRONZE",
+                    tag_name="Supporter",
+                    bade_position="BADGE")
+                PrivRepNotification.objects.get_or_create(
+                    for_user=request.user,
+                    type_of_PrivNotify="BADGE_EARNED",
+                    url=question_URL,
+                    for_if="Supporter",
+                    description="First up vote"
+                )
 
-                if post == Answer.objects.filter(
-                        a_vote_ups=request.user).first():
-                    TagBadge.objects.get_or_create(
-                        awarded_to_user=request.user,
-                        badge_type="BRONZE",
-                        tag_name="Supporter",
-                        bade_position="BADGE")
-                    PrivRepNotification.objects.get_or_create(
-                        for_user=request.user,
-                        type_of_PrivNotify="BADGE_EARNED",
-                        url=question_URL,
-                        for_if="Supporter",
-                        description="First up vote"
-                    )
-
-                rewardPrivielege(request, post.answer_owner)
-                return JsonResponse({'action': 'upv'})
-            else:
-                return JsonResponse({'action': 'lackOfPrivelege'})
+            rewardPrivielege(request, post.answer_owner)
+            return JsonResponse({'action': 'upv'})
 
     elif request.GET.get('submit') == 'ansDownVote':
         # Remove Upvote and Downvote
@@ -3842,21 +3839,18 @@ def answer_upvote_downvote(request, answer_id):
         elif request.user == post.answer_owner:
             return JsonResponse({'action': 'cannotLikeOwnPost'})
         else:
-            # Down Vote
-            if request.user.profile.voteDownPriv:
-                print("Sixth Statement is Excecuting")
-                post.a_vote_downs.add(request.user)
-                # post.date = timezone.now()
-                post.save()
-                Reputation.objects.get_or_create(
-                    awarded_to=post.answer_owner,
-                    answer_O=post,
-                    answer_rep_C=-2,
-                    reputation_on_what="DOWN_VOTE_ANSWER_REP_M")
-                rewardPrivielege(request, post.answer_owner)
-                return JsonResponse({'action': 'downVoteOnly'})
-            else:
-                return JsonResponse({'action': 'lackOfPrivelege'})
+            # Down Vote - Allow all authenticated users
+            print("Sixth Statement is Excecuting")
+            post.a_vote_downs.add(request.user)
+            # post.date = timezone.now()
+            post.save()
+            Reputation.objects.get_or_create(
+                awarded_to=post.answer_owner,
+                answer_O=post,
+                answer_rep_C=-2,
+                reputation_on_what="DOWN_VOTE_ANSWER_REP_M")
+            rewardPrivielege(request, post.answer_owner)
+            return JsonResponse({'action': 'downVoteOnly'})
     else:
         messages.error(request, 'Something went wrong')
         return redirect('profile:posts')
@@ -5475,6 +5469,7 @@ def martor_upload_image(request):
     """
     Handle direct file uploads for media section.
     Uploads files to the media directory and returns the URL.
+    Uses reliable file system approach with proper directory creation.
     """
     if request.method == 'POST' and request.FILES.get('image'):
         try:
@@ -5496,15 +5491,27 @@ def martor_upload_image(request):
                     'error': f'File type .{file_ext} not allowed. Allowed: {", ".join(allowed_extensions)}'
                 })
             
-            # Save file to media directory
-            from django.core.files.storage import default_storage
+            # Create upload directory if it doesn't exist
+            import os
+            from pathlib import Path
             
-            # Create unique filename
-            filename = f"martor_uploads/{timezone.now().strftime('%Y%m%d_%H%M%S')}_{image.name}"
-            path = default_storage.save(filename, image)
+            upload_dir = os.path.join(settings.MEDIA_ROOT, 'martor_uploads')
+            Path(upload_dir).mkdir(parents=True, exist_ok=True)
             
-            # Get the full URL
-            file_url = default_storage.url(path)
+            # Create unique filename with timestamp and random string
+            import uuid
+            timestamp = timezone.now().strftime('%Y%m%d_%H%M%S')
+            unique_id = str(uuid.uuid4())[:8]
+            file_name = f"{timestamp}_{unique_id}_{image.name}"
+            file_path = os.path.join(upload_dir, file_name)
+            
+            # Save file directly to file system
+            with open(file_path, 'wb+') as destination:
+                for chunk in image.chunks():
+                    destination.write(chunk)
+            
+            # Construct the URL for the uploaded file
+            file_url = f"{settings.MEDIA_URL}martor_uploads/{file_name}"
             
             return JsonResponse({
                 'status': 200,
@@ -5512,10 +5519,17 @@ def martor_upload_image(request):
                 'link': file_url
             })
             
-        except Exception as e:
+        except IOError as io_error:
             return JsonResponse({
                 'status': 400,
-                'error': str(e)
+                'error': f'File system error: {str(io_error)}'
+            })
+        except Exception as e:
+            import traceback
+            error_msg = f'{str(e)} | {traceback.format_exc()}'
+            return JsonResponse({
+                'status': 400,
+                'error': error_msg
             })
     
     return JsonResponse({

@@ -124,44 +124,111 @@ def count_question_from_tag(tag):
 @register.filter
 def fix_markdown_images(html_content):
     """
-    Fix markdown image URLs by adding /media/ prefix to relative paths.
-    Converts image src attributes to proper media URLs.
+    Fix markdown image URLs by ensuring they point to /media/martor_uploads/.
+    Handles various image URL formats and ensures consistent display.
     """
     if not html_content:
         return html_content
     
-    # Fix image src attributes - convert relative paths to /media/ URLs
+    # Fix image src attributes - convert relative paths to proper media URLs
     def fix_img_src(match):
         img_tag = match.group(0)
         src_match = re.search(r'src=["\']([^"\']+)["\']', img_tag)
         
-        if src_match:
-            src = src_match.group(1)
-            
-            # Skip if already has /media/ or is absolute URL
-            if src.startswith('/media/') or src.startswith('http'):
-                return img_tag
-            
-            # Skip if it's a data URL
-            if src.startswith('data:'):
-                return img_tag
-            
-            # Add /media/ prefix to relative paths
-            if not src.startswith('/'):
-                src = '/media/' + src
+        if not src_match:
+            return img_tag
+        
+        src = src_match.group(1)
+        original_src = src
+        
+        # Skip if it's a data URL or external URL
+        if src.startswith('data:') or src.startswith('http://') or src.startswith('https://'):
+            return img_tag
+        
+        # If already has correct /media/martor_uploads/ path, return as is
+        if src.startswith('/media/martor_uploads/'):
+            return img_tag
+        
+        # If has /media/ but not martor_uploads, fix it
+        if src.startswith('/media/'):
+            # Check if it's already a martor upload
+            if 'martor_uploads' not in src:
+                # Extract filename and rebuild path
+                filename = src.split('/')[-1]
+                src = f'/media/martor_uploads/{filename}'
+        # If relative path without /media/
+        elif not src.startswith('/'):
+            # Check if it looks like a martor upload filename
+            if '_' in src and '.' in src:  # Likely a martor upload (has timestamp_uuid_name format)
+                src = f'/media/martor_uploads/{src}'
             else:
-                src = '/media' + src
-            
-            # Replace src in the img tag
-            return img_tag.replace(src_match.group(1), src)
+                src = f'/media/{src}'
+        else:
+            # Absolute path without /media/
+            src = f'/media{src}'
+        
+        # Replace src in the img tag
+        new_img_tag = img_tag.replace(original_src, src)
+        
+        # Add error handling and fallback styling
+        if 'onerror' not in new_img_tag:
+            new_img_tag = new_img_tag.replace('>', ' onerror="this.style.display=\'none\'" />', 1)
+        
+        return new_img_tag
+    
+    # Find and fix all img tags
+    html_content = re.sub(r'<img[^>]*/?>', fix_img_src, html_content)
+    
+    # Clean up any double slashes in media paths
+    html_content = html_content.replace('/media//media/', '/media/')
+    html_content = html_content.replace('/media//', '/media/')
+    html_content = html_content.replace('/media/martor_uploads//', '/media/martor_uploads/')
+    
+    return html_content
+
+
+@register.filter
+def ensure_image_urls(html_content):
+    """
+    Additional filter to ensure all image URLs are properly formatted.
+    Use this as a fallback or in combination with fix_markdown_images.
+    """
+    if not html_content:
+        return html_content
+    
+    # Find all img tags and ensure they have proper src attributes
+    def ensure_img_src(match):
+        img_tag = match.group(0)
+        
+        # Check if img tag has src attribute
+        if 'src=' not in img_tag:
+            return img_tag
+        
+        # Extract src value
+        src_match = re.search(r'src=["\']([^"\']+)["\']', img_tag)
+        if not src_match:
+            return img_tag
+        
+        src = src_match.group(1)
+        
+        # If src is empty or just whitespace, try to find alt text or data attributes
+        if not src or src.isspace():
+            # Try to extract from data-src
+            data_src_match = re.search(r'data-src=["\']([^"\']+)["\']', img_tag)
+            if data_src_match:
+                data_src = data_src_match.group(1)
+                img_tag = img_tag.replace(f'src="{src}"', f'src="{data_src}"')
+        
+        # Add loading="lazy" for better performance
+        if 'loading=' not in img_tag:
+            img_tag = img_tag.replace('>', ' loading="lazy">', 1)
+        
+        # Add alt text if missing
+        if 'alt=' not in img_tag:
+            img_tag = img_tag.replace('>', ' alt="Image">', 1)
         
         return img_tag
     
-    # Find and fix all img tags
-    html_content = re.sub(r'<img[^>]*>', fix_img_src, html_content)
-    
-    # Fix double slashes in media paths
-    html_content = html_content.replace('/media//media/', '/media/')
-    html_content = html_content.replace('/media//', '/media/')
+    html_content = re.sub(r'<img[^>]*/?>', ensure_img_src, html_content)
     
     return html_content

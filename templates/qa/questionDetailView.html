@@ -16,6 +16,27 @@
         margin: 1em 0;
         border-radius: 4px;
         box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        background-color: #f5f5f5;
+        min-height: 50px;
+        object-fit: contain;
+        border: 1px solid #e0e0e0;
+    }
+    
+    /* Handle broken images */
+    .s-prose img:broken {
+        display: none;
+    }
+    
+    /* Lazy loading support */
+    .s-prose img[loading="lazy"] {
+        background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+        background-size: 200% 100%;
+        animation: loading 1.5s infinite;
+    }
+    
+    @keyframes loading {
+        0% { background-position: 200% 0; }
+        100% { background-position: -200% 0; }
     }
     
     /* Style for attachment links */
@@ -146,12 +167,12 @@
                         {% endif %}
                         {% if request.user.profile.established_user_Priv == False %}
                         <div class="flex--item d-flex fd-column ai-center color-black fs-title">
-                            <div class="showVoteCount">{{data.calculate_UpVote_DownVote}}</div>
+                            <div class="showVoteCount">+{{data.count_upvotes}}</div>
                         </div>
                         {% elif request.user.profile.established_user_Priv %}
                         <div class="flex--item d-flex fd-column ai-center color-black fs-title">
                             <div class="showVotesDiv" data-load-url="{% url 'qa:load_question_upvotes_downvotes' data.id %}">
-                                <div class="showVoteCount hideThisDiv">{{data.calculate_UpVote_DownVote}}</div>
+                                <div class="showVoteCount hideThisDiv">+{{data.count_upvotes}}</div>
                             </div>
                         </div>
                         {% endif %}
@@ -166,6 +187,15 @@
                         <button name='submit' type='submit' value="dislike"><i class="fas voteDownActive fa-sort-down fa-4x"></i></button> 
                         {% else %}
                         <button name='submit' type='submit' value="dislike"><i class="fas voteDownInActive fa-sort-down fa-4x"></i></button> 
+                        {% endif %}
+                        {% if request.user.profile.established_user_Priv == False %}
+                        <div class="flex--item d-flex fd-column ai-center color-black fs-title">
+                            <div class="showDownVoteCount">-{{data.count_downvotes}}</div>
+                        </div>
+                        {% elif request.user.profile.established_user_Priv %}
+                        <div class="flex--item d-flex fd-column ai-center color-black fs-title">
+                            <div class="showDownVoteCount">-{{data.count_downvotes}}</div>
+                        </div>
                         {% endif %}
                     </div>
                 </form>
@@ -251,7 +281,7 @@
 
 
         <div class="s-prose js-post-body" itemprop="text">      
-            {{data.body|safe_markdown|fix_markdown_images|safe}}
+            {{data.body|safe_markdown|fix_markdown_images|ensure_image_urls|safe}}
         </div>
 
         <div class="mt24 mb12">
@@ -580,18 +610,18 @@
                 <form method="GET" class="ansLikeForm" action="{% url 'qa:answer_upvote_downvote' answer.id %}" data-pk="{{ answer.id }}">
                     <div id="id_Ans_UpVote{{answer.id}}">
                         {% if user in answer.a_vote_ups.all %}
-                        <button name='submit' type='submit' value="voteAns"><i class="fas active fa-sort-up fa-4x"></i></button> 
+                        <button name='submit' type='submit' value="like"><i class="fas active fa-sort-up fa-4x"></i></button> 
                         {% else %}
-                        <button name='submit' type='submit' value="voteAns"><i class="fas inactive fa-sort-up fa-4x"></i></button> 
+                        <button name='submit' type='submit' value="like"><i class="fas inactive fa-sort-up fa-4x"></i></button> 
                         {% endif %}
-                       {% if request.user.profile.established_user_Priv == False %}
+                        {% if request.user.profile.established_user_Priv == False %}
                         <div class="flex--item d-flex fd-column ai-center color-black fs-title">
-                            <div class="showVoteCount-answer">{{answer.countAllTheVotes}}</div>
+                            <div class="showVoteCount-answer">+{{answer.a_vote_ups.all.count}}</div>
                         </div>
                         {% elif request.user.profile.established_user_Priv %}
                         <div class="flex--item d-flex fd-column ai-center color-black fs-title">
                             <div class="showanswer-VotesDiv" data-load-url="{% url 'qa:load_answer_upvotes_downvotes' answer.id %}">
-                                <div class="showVoteCount-answer hideThis-answer-Div">{{answer.countAllTheVotes}}</div>
+                                <div class="showVoteCount-answer hideThis-answer-Div">+{{answer.a_vote_ups.all.count}}</div>
                             </div>
                         </div>
                         {% endif %}
@@ -603,9 +633,18 @@
                 <form action="{% url 'qa:answer_upvote_downvote' answer.id  %}" method="GET" class="ansDislikeForm" data-pk="{{ answer.id }}">
                     <div id="id_Ans_DownVote{{answer.id}}">
                         {% if user in answer.a_vote_downs.all %}
-                        <button name='submit' type='submit' value="downVoteAns"><i class="fas voteDownActive fa-sort-down fa-4x"></i></button> 
+                        <button name='submit' type='submit' value="dislike"><i class="fas voteDownActive fa-sort-down fa-4x"></i></button> 
                         {% else %}
-                        <button name='submit' type='submit' value="downVoteAns"><i class="fas voteDownInActive fa-sort-down fa-4x"></i></button> 
+                        <button name='submit' type='submit' value="dislike"><i class="fas voteDownInActive fa-sort-down fa-4x"></i></button> 
+                        {% endif %}
+                        {% if request.user.profile.established_user_Priv == False %}
+                        <div class="flex--item d-flex fd-column ai-center color-black fs-title">
+                            <div class="showDownVoteCount-answer">-{{answer.a_vote_downs.all.count}}</div>
+                        </div>
+                        {% elif request.user.profile.established_user_Priv %}
+                        <div class="flex--item d-flex fd-column ai-center color-black fs-title">
+                            <div class="showDownVoteCount-answer">-{{answer.a_vote_downs.all.count}}</div>
+                        </div>
                         {% endif %}
                     </div>
                 </form>
@@ -672,7 +711,7 @@
 </aside>
 {% endif %}
 
-            <div class="s-prose js-post-body" itemprop="text">{{answer.body|safe_markdown|fix_markdown_images|safe}}</div>
+            <div class="s-prose js-post-body" itemprop="text">{{answer.body|safe_markdown|fix_markdown_images|ensure_image_urls|safe}}</div>
             <div class="mt24">
                 <div class="d-flex fw-wrap ai-start jc-end gs8 gsy">
                     <time itemprop="dateCreated" datetime="2021-12-08T09:53:01"></time>

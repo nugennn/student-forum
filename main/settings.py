@@ -239,9 +239,10 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # Martor Configuration
 MARTOR_THEME = 'bootstrap'  # semantic
 MARTOR_ENABLE_LABEL = True
+MARTOR_UPLOAD_PATH = 'martor_uploads/'  # Upload path for martor
 MARTOR_ENABLE_CONFIGS = {
     'emoji': 'true',        # to enable/disable emoji icons.
-    'imgur': 'true',        # to enable/disable imgur/custom uploader.
+    'imgur': 'false',       # to enable/disable imgur/custom uploader (use custom uploader).
     'mention': 'true',      # to enable/disable mention
     'jquery': 'true',       # to include/revoke jquery (require for admin default django)
     'living': 'true',      # to enable/disable live updates in preview

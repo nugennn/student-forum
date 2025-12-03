@@ -614,6 +614,9 @@ $(document).ready(function() {
         if (thisElement.data('voting')) return false;
         thisElement.data('voting', true);
         let pk = thisElement.attr('data-pk');
+        let dislikeForm = $(`.dislikeForm[data-pk="${pk}"]`);
+        let upvoteCountSpan = thisElement.find('.vote-count');
+        let downvoteCountSpan = dislikeForm.find('.vote-count');
         $.ajax({
             url: thisElement.attr('action'),
             data: {
@@ -623,24 +626,20 @@ $(document).ready(function() {
             method: 'get',
             success: function(response) {
                 thisElement.data('voting', false);
-                let voteCountSpan = thisElement.find('.vote-count');
-                let likes = parseInt(voteCountSpan.text());
                 
                 if (response.action == 'undislike_and_like') {
-                    let upvoteSpans = $(`#question-summary-${pk} .votes .mini-counts span`);
-                    let upvoteCount = parseInt(upvoteSpans.eq(0).text().replace('+', '')) + 1;
-                    let downvoteCount = parseInt(upvoteSpans.eq(2).text().replace('-', '')) - 1;
-                    upvoteSpans.eq(0).text('+' + upvoteCount);
-                    upvoteSpans.eq(2).text('-' + downvoteCount);
-                    voteCountSpan.text(upvoteCount);
+                    // Switching from downvote to upvote: upvote +1, downvote -1
+                    let upvoteCount = parseInt(upvoteCountSpan.text()) + 1;
+                    let downvoteCount = parseInt(downvoteCountSpan.text()) - 1;
+                    upvoteCountSpan.text(upvoteCount);
+                    downvoteCountSpan.text(downvoteCount);
                     thisElement.find('i').removeClass('inactive').addClass('active');
-                    $(`.dislikeForm[data-pk="${pk}"] i`).removeClass('active').addClass('inactive');
+                    dislikeForm.find('i').removeClass('active').addClass('inactive');
 
                 } else if (response.action == 'unlike') {
-                    let upvoteSpans = $(`#question-summary-${pk} .votes .mini-counts span`);
-                    let upvoteCount = parseInt(upvoteSpans.eq(0).text().replace('+', '')) - 1;
-                    upvoteSpans.eq(0).text('+' + upvoteCount);
-                    voteCountSpan.text(upvoteCount);
+                    // Removing upvote: upvote -1
+                    let upvoteCount = parseInt(upvoteCountSpan.text()) - 1;
+                    upvoteCountSpan.text(upvoteCount);
                     thisElement.find('i').removeClass('active').addClass('inactive');
 
                 } else if (response.action == 'voteError') {
@@ -650,10 +649,9 @@ $(document).ready(function() {
                 } else if (response.action == 'cannotLikeOwnPost') {
                     showToastNotification('You cannot vote for your own post', 'error');
                 } else if (response.action == 'like_only') {
-                    let upvoteSpans = $(`#question-summary-${pk} .votes .mini-counts span`);
-                    let upvoteCount = parseInt(upvoteSpans.eq(0).text().replace('+', '')) + 1;
-                    upvoteSpans.eq(0).text('+' + upvoteCount);
-                    voteCountSpan.text(upvoteCount);
+                    // First upvote: upvote +1
+                    let upvoteCount = parseInt(upvoteCountSpan.text()) + 1;
+                    upvoteCountSpan.text(upvoteCount);
                     thisElement.find('i').removeClass('inactive').addClass('active');
                 }
             }
@@ -669,6 +667,8 @@ $(document).ready(function() {
         thisElement.data('voting', true);
         let pk = thisElement.attr('data-pk');
         let likeForm = $(`.likeForm[data-pk="${pk}"]`);
+        let downvoteCountSpan = thisElement.find('.vote-count');
+        let upvoteCountSpan = likeForm.find('.vote-count');
         $.ajax({
             url: thisElement.attr('action'),
             data: {
@@ -679,23 +679,20 @@ $(document).ready(function() {
             async: false,
             success: function(response) {
                 thisElement.data('voting', false);
-                let voteCountSpan = likeForm.find('.vote-count');
-                let likes = parseInt(voteCountSpan.text());
                 
                 if (response.action == 'unlike_and_dislike') {
-                    let upvoteSpans = $(`#question-summary-${pk} .votes .mini-counts span`);
-                    let upvoteCount = parseInt(upvoteSpans.eq(0).text().replace('+', '')) - 1;
-                    let downvoteCount = parseInt(upvoteSpans.eq(2).text().replace('-', '')) + 1;
-                    upvoteSpans.eq(0).text('+' + upvoteCount);
-                    upvoteSpans.eq(2).text('-' + downvoteCount);
-                    voteCountSpan.text(upvoteCount);
+                    // Switching from upvote to downvote: upvote -1, downvote +1
+                    let upvoteCount = parseInt(upvoteCountSpan.text()) - 1;
+                    let downvoteCount = parseInt(downvoteCountSpan.text()) + 1;
+                    upvoteCountSpan.text(upvoteCount);
+                    downvoteCountSpan.text(downvoteCount);
                     likeForm.find('i').removeClass('active').addClass('inactive');
                     thisElement.find('i').removeClass('inactive').addClass('active');
 
                 } else if (response.action == 'undislike') {
-                    let upvoteSpans = $(`#question-summary-${pk} .votes .mini-counts span`);
-                    let downvoteCount = parseInt(upvoteSpans.eq(2).text().replace('-', '')) - 1;
-                    upvoteSpans.eq(2).text('-' + downvoteCount);
+                    // Removing downvote: downvote -1
+                    let downvoteCount = parseInt(downvoteCountSpan.text()) - 1;
+                    downvoteCountSpan.text(downvoteCount);
                     thisElement.find('i').removeClass('active').addClass('inactive');
 
                 } else if (response.action == 'voteError') {
@@ -705,9 +702,9 @@ $(document).ready(function() {
                 } else if (response.action == 'cannotLikeOwnPost') {
                     showToastNotification('You cannot vote for your own post', 'error');
                 } else if (response.action == 'dislike_only') {
-                    let upvoteSpans = $(`#question-summary-${pk} .votes .mini-counts span`);
-                    let downvoteCount = parseInt(upvoteSpans.eq(2).text().replace('-', '')) + 1;
-                    upvoteSpans.eq(2).text('-' + downvoteCount);
+                    // First downvote: downvote +1
+                    let downvoteCount = parseInt(downvoteCountSpan.text()) + 1;
+                    downvoteCountSpan.text(downvoteCount);
                     thisElement.find('i').removeClass('inactive').addClass('active');
                 }
             }
