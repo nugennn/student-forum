@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from .models import Profile,Position
+from community.models import CommunityMember
 import datetime
 from django.utils import timezone
 from datetime import timedelta
@@ -2175,6 +2176,11 @@ def activityPageTabProfile(request,user_id,username):
     # Peoples Reached
     getAllTheViewsOfAllTheQuestion = Question.objects.filter(post_owner=profileData.user).annotate(total_views=Count('viewers')).aggregate(Sum('total_views'))
 
+    # Get user's communities
+    user_communities = CommunityMember.objects.filter(
+        user=profileData.user,
+        is_active=True
+    ).select_related('community').order_by('-joined_at')
 
     context = {
         'online_user_activity':online_user_activity,
@@ -2188,6 +2194,7 @@ def activityPageTabProfile(request,user_id,username):
         'bronzeBadges':bronzeBadges,
         'questions':questions,
         'answers':answers,
+        'user_communities': user_communities,
     }
     return render(request, 'profile/UserProfile_Profile_ActivityTab.html', context)
 

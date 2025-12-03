@@ -178,25 +178,32 @@ function ThirdTab_Q() {
             <div class="flex--item fs-title">
                 Communities
             </div>
-
         </div>
         <div class="s-card bar-md">
-            <ul class="list-reset d-flex fd-column gs12 gsy">
+            {% if user_communities %}
+                <ul class="list-reset d-flex fd-column gs12 gsy">
+                    {% for membership in user_communities %}
                         <li class="flex--item">
-                            <a class="d-flex gs4 gsx ai-center" href="#" title="KHEC Forum">
+                            <a class="d-flex gs4 gsx ai-center" href="{% url 'community:community_detail' membership.community.slug %}" title="{{ membership.community.name }}">
                                 <div class="flex--item fl-shrink0" style="width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;">
-                                    <i class="fas fa-graduation-cap" style="color: #6366f1; font-size: 18px;"></i>
+                                    <i class="fas fa-users" style="color: #6366f1; font-size: 18px;"></i>
                                 </div>
                                 <div class="flex--item fl-grow1 wmn0 pr4">
-                                    <div class="truncate">KhEC Forum</div>
+                                    <div class="truncate">{{ membership.community.name }}</div>
                                 </div>
                                 <div class="flex--item fl-shrink0 ml-auto fc-light">
-                                    
-                                    {{profileData.user|calculate_reputation}}
+                                    {{ membership.community.member_count }} member{{ membership.community.member_count|pluralize }}
                                 </div>
                             </a>
                         </li>
-            </ul>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <div class="p12 ta-center">
+                    <p class="fc-light">Not a member of any communities yet.</p>
+                    <a href="{% url 'community:community_list' %}" class="s-btn s-btn__primary mt8">Browse Communities</a>
+                </div>
+            {% endif %}
         </div>
     </div>
                 </div>
