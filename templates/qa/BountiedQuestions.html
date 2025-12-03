@@ -683,6 +683,9 @@
 <script src="{% static 'qa/js/share-post.js' %}"></script>
 <script>
 $(document).ready(function() {
+    // Restore vote states on page load
+    restoreVoteStates();
+    
     // Like Form
     $('.likeForm').submit(function(e) {
         e.preventDefault();
@@ -690,6 +693,7 @@ $(document).ready(function() {
         if (thisElement.data('voting')) return false;
         thisElement.data('voting', true);
         let pk = thisElement.attr('data-pk');
+        let dislikeForm = $(`.dislikeForm[data-pk="${pk}"]`);
         $.ajax({
             url: thisElement.attr('action'),
             data: {
@@ -699,21 +703,24 @@ $(document).ready(function() {
             method: 'get',
             success: function(response) {
                 thisElement.data('voting', false);
-                let voteCountSpan = thisElement.find('.vote-count');
-                let likes = parseInt(voteCountSpan.text());
                 
                 if (response.action == 'undislike_and_like') {
-                    location.reload();
+                    saveVoteState(pk, 'like');
+                    thisElement.find('i').removeClass('inactive').addClass('active');
+                    dislikeForm.find('i').removeClass('active').addClass('inactive');
+                    thisElement.find('.vote-count').text(response.upvotes);
+                    dislikeForm.find('.vote-count').text(response.downvotes);
                 } else if (response.action == 'unlike') {
-                    location.reload();
-                } else if (response.action == 'voteError') {
-                    showToastNotification('Your vote is locked for 5 minutes. Wait or ask the author to edit the question to unlock it.', 'error');
-                } else if (response.action == 'lackOfPrivelege') {
-                    showToastNotification('You need at least 15 Reputation to upvote', 'error');
-                } else if (response.action == 'cannotLikeOwnPost') {
-                    showToastNotification('You cannot vote for your own post', 'error');
+                    removeVoteState(pk);
+                    thisElement.find('i').removeClass('active').addClass('inactive');
+                    thisElement.find('.vote-count').text(response.upvotes);
                 } else if (response.action == 'like_only') {
-                    location.reload();
+                    saveVoteState(pk, 'like');
+                    thisElement.find('i').removeClass('inactive').addClass('active');
+                    dislikeForm.find('i').removeClass('active').addClass('inactive');
+                    thisElement.find('.vote-count').text(response.upvotes);
+                } else if (response.action == 'voteError' || response.action == 'lackOfPrivelege' || response.action == 'cannotLikeOwnPost') {
+                    showToastNotification(response.action, 'error');
                 }
             }
         });
@@ -738,21 +745,24 @@ $(document).ready(function() {
             async: false,
             success: function(response) {
                 thisElement.data('voting', false);
-                let voteCountSpan = likeForm.find('.vote-count');
-                let likes = parseInt(voteCountSpan.text());
                 
                 if (response.action == 'unlike_and_dislike') {
-                    location.reload();
+                    saveVoteState(pk, 'dislike');
+                    likeForm.find('i').removeClass('active').addClass('inactive');
+                    thisElement.find('i').removeClass('inactive').addClass('active');
+                    likeForm.find('.vote-count').text(response.upvotes);
+                    thisElement.find('.vote-count').text(response.downvotes);
                 } else if (response.action == 'undislike') {
-                    location.reload();
-                } else if (response.action == 'voteError') {
-                    showToastNotification('Your vote is locked for 5 minutes. Wait or ask the author to edit the question to unlock it.', 'error');
-                } else if (response.action == 'lackOfPrivelege') {
-                    showToastNotification('You need at least 15 Reputation to downvote', 'error');
-                } else if (response.action == 'cannotLikeOwnPost') {
-                    showToastNotification('You cannot vote for your own post', 'error');
+                    removeVoteState(pk);
+                    thisElement.find('i').removeClass('active').addClass('inactive');
+                    thisElement.find('.vote-count').text(response.downvotes);
                 } else if (response.action == 'dislike_only') {
-                    location.reload();
+                    saveVoteState(pk, 'dislike');
+                    thisElement.find('i').removeClass('inactive').addClass('active');
+                    likeForm.find('i').removeClass('active').addClass('inactive');
+                    thisElement.find('.vote-count').text(response.downvotes);
+                } else if (response.action == 'voteError' || response.action == 'lackOfPrivelege' || response.action == 'cannotLikeOwnPost') {
+                    showToastNotification(response.action, 'error');
                 }
             }
         });
@@ -796,6 +806,39 @@ function showToastNotification(message, type) {
     
     container.appendChild(toastDiv);
     setTimeout(() => toastDiv.remove(), 5000);
+}
+
+// Restore vote states from localStorage on page load
+function restoreVoteStates() {
+    let voteStates = JSON.parse(localStorage.getItem('questionVoteStates') || '{}');
+    
+    for (let questionId in voteStates) {
+        let voteType = voteStates[questionId];
+        let likeForm = $(`.likeForm[data-pk="${questionId}"]`);
+        let dislikeForm = $(`.dislikeForm[data-pk="${questionId}"]`);
+        
+        if (voteType === 'like') {
+            likeForm.find('i').removeClass('inactive').addClass('active');
+            dislikeForm.find('i').removeClass('active').addClass('inactive');
+        } else if (voteType === 'dislike') {
+            dislikeForm.find('i').removeClass('inactive').addClass('active');
+            likeForm.find('i').removeClass('active').addClass('inactive');
+        }
+    }
+}
+
+// Save vote state to localStorage
+function saveVoteState(questionId, voteType) {
+    let voteStates = JSON.parse(localStorage.getItem('questionVoteStates') || '{}');
+    voteStates[questionId] = voteType;
+    localStorage.setItem('questionVoteStates', JSON.stringify(voteStates));
+}
+
+// Remove vote state from localStorage
+function removeVoteState(questionId) {
+    let voteStates = JSON.parse(localStorage.getItem('questionVoteStates') || '{}');
+    delete voteStates[questionId];
+    localStorage.setItem('questionVoteStates', JSON.stringify(voteStates));
 }
 </script>
 

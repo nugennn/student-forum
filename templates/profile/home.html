@@ -607,6 +607,9 @@
 </style>
 <script>
 $(document).ready(function() {
+    // Restore vote states on page load
+    restoreVoteStates();
+    
     // Like Form
     $('.likeForm').submit(function(e) {
         e.preventDefault();
@@ -628,31 +631,25 @@ $(document).ready(function() {
                 thisElement.data('voting', false);
                 
                 if (response.action == 'undislike_and_like') {
-                    // Switching from downvote to upvote: upvote +1, downvote -1
+                    saveVoteState(pk, 'like');
                     let upvoteCount = parseInt(upvoteCountSpan.text()) + 1;
                     let downvoteCount = parseInt(downvoteCountSpan.text()) - 1;
                     upvoteCountSpan.text(upvoteCount);
                     downvoteCountSpan.text(downvoteCount);
                     thisElement.find('i').removeClass('inactive').addClass('active');
                     dislikeForm.find('i').removeClass('active').addClass('inactive');
-
                 } else if (response.action == 'unlike') {
-                    // Removing upvote: upvote -1
+                    removeVoteState(pk);
                     let upvoteCount = parseInt(upvoteCountSpan.text()) - 1;
                     upvoteCountSpan.text(upvoteCount);
                     thisElement.find('i').removeClass('active').addClass('inactive');
-
-                } else if (response.action == 'voteError') {
-                    showToastNotification('Your vote is now locked. It will be unlocked unless the Question is edited.', 'error');
-                } else if (response.action == 'lackOfPrivelege') {
-                    showToastNotification('You need at least 15 Reputation to upvote', 'error');
-                } else if (response.action == 'cannotLikeOwnPost') {
-                    showToastNotification('You cannot vote for your own post', 'error');
                 } else if (response.action == 'like_only') {
-                    // First upvote: upvote +1
+                    saveVoteState(pk, 'like');
                     let upvoteCount = parseInt(upvoteCountSpan.text()) + 1;
                     upvoteCountSpan.text(upvoteCount);
                     thisElement.find('i').removeClass('inactive').addClass('active');
+                } else if (response.action == 'voteError' || response.action == 'lackOfPrivelege' || response.action == 'cannotLikeOwnPost') {
+                    showToastNotification(response.action, 'error');
                 }
             }
         });
@@ -681,31 +678,25 @@ $(document).ready(function() {
                 thisElement.data('voting', false);
                 
                 if (response.action == 'unlike_and_dislike') {
-                    // Switching from upvote to downvote: upvote -1, downvote +1
+                    saveVoteState(pk, 'dislike');
                     let upvoteCount = parseInt(upvoteCountSpan.text()) - 1;
                     let downvoteCount = parseInt(downvoteCountSpan.text()) + 1;
                     upvoteCountSpan.text(upvoteCount);
                     downvoteCountSpan.text(downvoteCount);
                     likeForm.find('i').removeClass('active').addClass('inactive');
                     thisElement.find('i').removeClass('inactive').addClass('active');
-
                 } else if (response.action == 'undislike') {
-                    // Removing downvote: downvote -1
+                    removeVoteState(pk);
                     let downvoteCount = parseInt(downvoteCountSpan.text()) - 1;
                     downvoteCountSpan.text(downvoteCount);
                     thisElement.find('i').removeClass('active').addClass('inactive');
-
-                } else if (response.action == 'voteError') {
-                    showToastNotification('Your vote is now locked. It will be unlocked unless the Question is edited.', 'error');
-                } else if (response.action == 'lackOfPrivelege') {
-                    showToastNotification('You need at least 15 Reputation to downvote', 'error');
-                } else if (response.action == 'cannotLikeOwnPost') {
-                    showToastNotification('You cannot vote for your own post', 'error');
                 } else if (response.action == 'dislike_only') {
-                    // First downvote: downvote +1
+                    saveVoteState(pk, 'dislike');
                     let downvoteCount = parseInt(downvoteCountSpan.text()) + 1;
                     downvoteCountSpan.text(downvoteCount);
                     thisElement.find('i').removeClass('inactive').addClass('active');
+                } else if (response.action == 'voteError' || response.action == 'lackOfPrivelege' || response.action == 'cannotLikeOwnPost') {
+                    showToastNotification(response.action, 'error');
                 }
             }
         });
@@ -749,6 +740,39 @@ function showToastNotification(message, type) {
     
     container.appendChild(toastDiv);
     setTimeout(() => toastDiv.remove(), 8000);
+}
+
+// Restore vote states from localStorage on page load
+function restoreVoteStates() {
+    let voteStates = JSON.parse(localStorage.getItem('homeVoteStates') || '{}');
+    
+    for (let questionId in voteStates) {
+        let voteType = voteStates[questionId];
+        let likeForm = $(`.likeForm[data-pk="${questionId}"]`);
+        let dislikeForm = $(`.dislikeForm[data-pk="${questionId}"]`);
+        
+        if (voteType === 'like') {
+            likeForm.find('i').removeClass('inactive').addClass('active');
+            dislikeForm.find('i').removeClass('active').addClass('inactive');
+        } else if (voteType === 'dislike') {
+            dislikeForm.find('i').removeClass('inactive').addClass('active');
+            likeForm.find('i').removeClass('active').addClass('inactive');
+        }
+    }
+}
+
+// Save vote state to localStorage
+function saveVoteState(questionId, voteType) {
+    let voteStates = JSON.parse(localStorage.getItem('homeVoteStates') || '{}');
+    voteStates[questionId] = voteType;
+    localStorage.setItem('homeVoteStates', JSON.stringify(voteStates));
+}
+
+// Remove vote state from localStorage
+function removeVoteState(questionId) {
+    let voteStates = JSON.parse(localStorage.getItem('homeVoteStates') || '{}');
+    delete voteStates[questionId];
+    localStorage.setItem('homeVoteStates', JSON.stringify(voteStates));
 }
 </script>
 

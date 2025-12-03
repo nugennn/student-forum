@@ -580,6 +580,9 @@
 </style>
 <script>
 $(document).ready(function() {
+    // Restore vote states on page load
+    restoreVoteStates();
+    
     // Like Form
     $('.likeForm').submit(function(e) {
         e.preventDefault();
@@ -600,29 +603,23 @@ $(document).ready(function() {
                 let likes = parseInt(voteCountSpan.text());
                 
                 if (response.action == 'undislike_and_like') {
+                    saveVoteState(pk, 'like');
                     likes += 2;
                     voteCountSpan.text(likes);
-                    $(`#question-summary-${pk} .votes .mini-counts span`).first().text(likes);
                     thisElement.find('i').removeClass('inactive').addClass('active');
                     $(`.dislikeForm[data-pk="${pk}"] i`).removeClass('active').addClass('inactive');
-
                 } else if (response.action == 'unlike') {
+                    removeVoteState(pk);
                     likes -= 1;
                     voteCountSpan.text(likes);
-                    $(`#question-summary-${pk} .votes .mini-counts span`).first().text(likes);
                     thisElement.find('i').removeClass('active').addClass('inactive');
-
-                } else if (response.action == 'voteError') {
-                    showToastNotification('Your vote is now locked. It will be unlocked unless the Question is edited.', 'error');
-                } else if (response.action == 'lackOfPrivelege') {
-                    showToastNotification('You need at least 15 Reputation to upvote', 'error');
-                } else if (response.action == 'cannotLikeOwnPost') {
-                    showToastNotification('You cannot vote for your own post', 'error');
                 } else if (response.action == 'like_only') {
+                    saveVoteState(pk, 'like');
                     likes++;
                     voteCountSpan.text(likes);
-                    $(`#question-summary-${pk} .votes .mini-counts span`).text(likes);
                     thisElement.find('i').removeClass('inactive').addClass('active');
+                } else if (response.action == 'voteError' || response.action == 'lackOfPrivelege' || response.action == 'cannotLikeOwnPost') {
+                    showToastNotification(response.action, 'error');
                 }
             }
         });
@@ -647,36 +644,19 @@ $(document).ready(function() {
             async: false,
             success: function(response) {
                 thisElement.data('voting', false);
-                let voteCountSpan = likeForm.find('.vote-count');
-                let likes = parseInt(voteCountSpan.text());
                 
                 if (response.action == 'unlike_and_dislike') {
-                    let upvoteSpans = $(`#question-summary-${pk} .votes .mini-counts span`);
-                    let upvoteCount = parseInt(upvoteSpans.eq(0).text().replace('+', '')) - 1;
-                    let downvoteCount = parseInt(upvoteSpans.eq(2).text().replace('-', '')) + 1;
-                    upvoteSpans.eq(0).text('+' + upvoteCount);
-                    upvoteSpans.eq(2).text('-' + downvoteCount);
-                    voteCountSpan.text(upvoteCount);
+                    saveVoteState(pk, 'dislike');
                     likeForm.find('i').removeClass('active').addClass('inactive');
                     thisElement.find('i').removeClass('inactive').addClass('active');
-
                 } else if (response.action == 'undislike') {
-                    let upvoteSpans = $(`#question-summary-${pk} .votes .mini-counts span`);
-                    let downvoteCount = parseInt(upvoteSpans.eq(2).text().replace('-', '')) - 1;
-                    upvoteSpans.eq(2).text('-' + downvoteCount);
+                    removeVoteState(pk);
                     thisElement.find('i').removeClass('active').addClass('inactive');
-
-                } else if (response.action == 'voteError') {
-                    showToastNotification('Your vote is now locked. It will be unlocked unless the Question is edited.', 'error');
-                } else if (response.action == 'lackOfPrivelege') {
-                    showToastNotification('You need at least 15 Reputation to downvote', 'error');
-                } else if (response.action == 'cannotLikeOwnPost') {
-                    showToastNotification('You cannot vote for your own post', 'error');
                 } else if (response.action == 'dislike_only') {
-                    let upvoteSpans = $(`#question-summary-${pk} .votes .mini-counts span`);
-                    let downvoteCount = parseInt(upvoteSpans.eq(2).text().replace('-', '')) + 1;
-                    upvoteSpans.eq(2).text('-' + downvoteCount);
+                    saveVoteState(pk, 'dislike');
                     thisElement.find('i').removeClass('inactive').addClass('active');
+                } else if (response.action == 'voteError' || response.action == 'lackOfPrivelege' || response.action == 'cannotLikeOwnPost') {
+                    showToastNotification(response.action, 'error');
                 }
             }
         });
