@@ -4349,8 +4349,8 @@ def activeQuestions(request, query=None):
             is_deleted=False,
             is_bountied=False).distinct()
     
-    # Apply community access filtering and order by active_date
-    questions = filter_questions_by_community_access(questions, request.user).order_by('active_date')
+    # Apply community access filtering and order by active_date (most recent first)
+    questions = filter_questions_by_community_access(questions, request.user).order_by('-active_date')
 
     page = request.GET.get('page', 1)
     paginator = Paginator(questions, 5)
