@@ -338,10 +338,8 @@
 {% block content %}
 <div class="container">
     <!-- Community Header -->
-    <div class="community-header card mb-4 border-0 shadow-sm">
-        <div class="card-body">
-            <div class="d-flex align-items-center">
-                <div class="community-icon-large me-4">
+    <div class="community-header mb-4">
+        <div class="community-icon-large me-4">
                     {% if community.icon %}
                         <img src="{{ community.icon.url }}" alt="{{ community.name }}" class="img-fluid rounded-circle">
                     {% else %}
@@ -405,8 +403,6 @@
                         {% endif %}
                     </div>
                 </div>
-            </div>
-        </div>
     </div>
 
     <div class="row g-4">
@@ -519,8 +515,6 @@
                                     </div>
                                 </div>
                             </div>
-                                </div>
-                            </div>
                         </div>
                     {% endfor %}
 
@@ -577,74 +571,76 @@
                         {% endif %}
                     </div>
                 {% endif %}
-                {% endif %}
             </div> <!-- Close community-questions -->
+            {% endif %} <!-- Close is_restricted if -->
         </div> <!-- Close col-lg-8 -->
 
         <!-- Sidebar -->
         <div class="col-lg-4">
             <div class="community-sidebar">
-        <div class="sidebar-card">
-            <div class="stats">
-                <div class="stat">
-                    <div class="stat-value">{{ community.member_count }}</div>
-                    <div class="stat-label">Members</div>
+                <div class="sidebar-card">
+                    <div class="stats">
+                        <div class="stat">
+                            <div class="stat-value">{{ community.member_count }}</div>
+                            <div class="stat-label">Members</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-value">{{ community.created_at|date:"M d, Y" }}</div>
+                            <div class="stat-label">Created</div>
+                        </div>
+                    </div>
                 </div>
-                <div class="stat">
-                    <div class="stat-value">{{ community.created_at|date:"M d, Y" }}</div>
-                    <div class="stat-label">Created</div>
-                </div>
-            </div>
-        </div>
 
-        {% if members %}
-            <div class="sidebar-card">
-                <h3>Recent Members</h3>
-                <ul class="member-list">
-                    {% for member in members %}
-                        <li class="member-item">
-                            <div class="member-avatar">
-                                {% if member.user.profile.profile_photo %}
-                                    <img src="{{ member.user.profile.profile_photo.url }}" 
-                                         alt="{{ member.user.username }}" 
-                                         class="rounded-circle" 
-                                         width="32" 
-                                         height="32"
-                                         onerror="this.onerror=null; this.textContent='{{ member.user.username|first|upper }}'; this.style.display='flex'; this.style.alignItems='center'; this.style.justifyContent='center'; this.style.backgroundColor='#f0f0f0'; this.style.borderRadius='50%'; this.style.width='32px'; this.style.height='32px'; this.style.fontWeight='bold';">
-                                {% else %}
-                                    <div style="width: 32px; height: 32px; border-radius: 50%; background-color: #f0f0f0; display: flex; align-items: center; justify-content: center; font-weight: bold;">
-                                        {{ member.user.username|first|upper }}
+                {% if members %}
+                    <div class="sidebar-card">
+                        <h3>Recent Members</h3>
+                        <ul class="member-list">
+                            {% for member in members %}
+                                <li class="member-item">
+                                    <div class="member-avatar">
+                                        {% if member.user.profile.profile_photo %}
+                                            <img src="{{ member.user.profile.profile_photo.url }}" 
+                                                 alt="{{ member.user.username }}" 
+                                                 class="rounded-circle" 
+                                                 width="32" 
+                                                 height="32"
+                                                 onerror="this.onerror=null; this.textContent='{{ member.user.username|first|upper }}'; this.style.display='flex'; this.style.alignItems='center'; this.style.justifyContent='center'; this.style.backgroundColor='#f0f0f0'; this.style.borderRadius='50%'; this.style.width='32px'; this.style.height='32px'; this.style.fontWeight='bold';">
+                                        {% else %}
+                                            <div style="width: 32px; height: 32px; border-radius: 50%; background-color: #f0f0f0; display: flex; align-items: center; justify-content: center; font-weight: bold;">
+                                                {{ member.user.username|first|upper }}
+                                            </div>
+                                        {% endif %}
                                     </div>
-                                {% endif %}
-                            </div>
-                            <a href="{% url 'profile:activityPageTabProfile' member.user.id member.user.username %}" class="member-name">
-                                {% if member.user.profile.full_name %}{{ member.user.profile.full_name }}{% else %}{{ member.user.username }}{% endif %}
+                                    <a href="{% url 'profile:activityPageTabProfile' member.user.id member.user.username %}" class="member-name">
+                                        {% if member.user.profile.full_name %}{{ member.user.profile.full_name }}{% else %}{{ member.user.username }}{% endif %}
+                                    </a>
+                                    {% if member.role != 'member' %}
+                                        <span class="member-role">{{ member.role|title }}</span>
+                                    {% endif %}
+                                </li>
+                            {% endfor %}
+                        </ul>
+                        {% if community.member_count > 10 %}
+                            <a href="{% url 'community:community_members' community.slug %}" class="view-all-members">
+                                View all members →
                             </a>
-                            {% if member.role != 'member' %}
-                                <span class="member-role">{{ member.role|title }}</span>
-                            {% endif %}
-                        </li>
-                    {% endfor %}
-                </ul>
-                {% if community.member_count > 10 %}
-                    <a href="{% url 'community:community_members' community.slug %}" class="view-all-members">
-                        View all members →
-                    </a>
+                        {% endif %}
+                    </div>
+                {% endif %}
+
+                {% if is_member and member_role == 'admin' %}
+                    <div class="sidebar-card">
+                        <h3>Admin Options</h3>
+                        <a href="{% url 'community:edit_community' slug=community.slug %}" style="display: block; padding: 8px; color: #0066cc; text-decoration: none; font-size: 13px;">
+                            <i class="fas fa-edit" style="margin-right: 8px;"></i>Edit Community
+                        </a>
+                        <a href="{% url 'community:community_members' slug=community.slug %}" style="display: block; padding: 8px; color: #0066cc; text-decoration: none; font-size: 13px;">
+                            <i class="fas fa-users-cog" style="margin-right: 8px;"></i>Manage Members
+                        </a>
+                    </div>
                 {% endif %}
             </div>
-        {% endif %}
-
-        {% if is_member and member_role == 'admin' %}
-            <div class="sidebar-card">
-                <h3>Admin Options</h3>
-                <a href="{% url 'community:edit_community' slug=community.slug %}" style="display: block; padding: 8px; color: #0066cc; text-decoration: none; font-size: 13px;">
-                    <i class="fas fa-edit" style="margin-right: 8px;"></i>Edit Community
-                </a>
-                <a href="{% url 'community:community_members' slug=community.slug %}" style="display: block; padding: 8px; color: #0066cc; text-decoration: none; font-size: 13px;">
-                    <i class="fas fa-users-cog" style="margin-right: 8px;"></i>Manage Members
-                </a>
-            </div>
-        {% endif %}
+        </div>
     </div>
 </div>
 
