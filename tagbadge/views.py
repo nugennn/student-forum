@@ -1,4 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from taggit.models import Tag
 import datetime
 from django.utils import timezone
@@ -7,11 +8,28 @@ from .models import TagBadge
 from qa.models import Question
 
 def badges(request):
-    tags = TagBadge.objects.filter(preBuild=True).exclude(awarded_to_user__isnull=False)
+    # Paginate pre-built badges
+    tags_list = TagBadge.objects.filter(preBuild=True).exclude(awarded_to_user__isnull=False)
+    
+    # Paginate with 15 items per page
+    page = request.GET.get('page', 1)
+    paginator = Paginator(tags_list, 15)  # 15 items per page
+    
+    try:
+        tags = paginator.page(page)
+    except PageNotAnInteger:
+        tags = paginator.page(1)
+    except EmptyPage:
+        tags = paginator.page(paginator.num_pages)
+    
+    # Get recent badges (limit to 10 most recent)
+    recentsEarned_badges = TagBadge.objects.filter(preBuild=False).order_by('-date')[:10]
 
-    recentsEarned_badges = TagBadge.objects.filter(preBuild=False).order_by('-date')
-
-    context = {'tags':tags,'recentsEarned_badges':recentsEarned_badges}
+    context = {
+        'tags': tags,
+        'recentsEarned_badges': recentsEarned_badges,
+        'page_obj': tags,  # For pagination controls
+    }
     return render(request, 'tagbadge/badges.html', context)
 
 # It will show only tags which are posted by user_id

@@ -178,25 +178,39 @@ function ThirdTab_Q() {
             <div class="flex--item fs-title">
                 Communities
             </div>
-
         </div>
         <div class="s-card bar-md">
-            <ul class="list-reset d-flex fd-column gs12 gsy">
+            {% if user_communities %}
+                <ul class="list-reset d-flex fd-column gs12 gsy">
+                    {% for community in user_communities %}
                         <li class="flex--item">
-                            <a class="d-flex gs4 gsx ai-center" href="#" title="KHEC Forum">
+                            <a class="d-flex gs4 gsx ai-center" href="{% url 'community:community_detail' community.id %}" title="{{ community.name }}">
                                 <div class="flex--item fl-shrink0" style="width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;">
-                                    <i class="fas fa-graduation-cap" style="color: #6366f1; font-size: 18px;"></i>
+                                    {% if community.icon %}
+                                        <img src="{{ community.icon.url }}" alt="{{ community.name }}" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">
+                                    {% else %}
+                                        <i class="fas fa-users" style="color: #6366f1; font-size: 18px;"></i>
+                                    {% endif %}
                                 </div>
                                 <div class="flex--item fl-grow1 wmn0 pr4">
-                                    <div class="truncate">KhEC Forum</div>
+                                    <div class="truncate">{{ community.name }}</div>
                                 </div>
                                 <div class="flex--item fl-shrink0 ml-auto fc-light">
-                                    
-                                    {{profileData.user|calculate_reputation}}
+                                    {{ community.members.count }} members
                                 </div>
                             </a>
                         </li>
-            </ul>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <div class="fs-caption fc-light p12">
+                    {% if request.user == profileData.user %}
+                        You haven't joined any communities yet. <a href="{% url 'community:community_list' %}">Browse communities</a>
+                    {% else %}
+                        {{ profileData.user.get_full_name|default:profileData.user.username }} hasn't joined any communities yet.
+                    {% endif %}
+                </div>
+            {% endif %}
         </div>
     </div>
                 </div>

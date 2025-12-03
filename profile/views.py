@@ -2141,6 +2141,10 @@ def activityPageTabProfile(request,user_id,username):
     goldBadges = TagBadge.objects.filter(awarded_to_user=profileData.user,badge_type="GOLD")[:3]
     silverBadges = TagBadge.objects.filter(awarded_to_user=profileData.user,badge_type="SILVER")[:3]
     bronzeBadges = TagBadge.objects.filter(awarded_to_user=profileData.user,badge_type="BRONZE")[:3]
+    
+    # Get user's communities
+    from community.models import Community
+    user_communities = Community.objects.filter(members__user=profileData.user).order_by('name')
 
     if request.user.is_authenticated:
         topTags = Tag.objects.filter(question__post_owner=request.user).annotate(countTheVotes=Count('question__qupvote')).filter(countTheVotes__gte=2)
@@ -2188,6 +2192,7 @@ def activityPageTabProfile(request,user_id,username):
         'bronzeBadges':bronzeBadges,
         'questions':questions,
         'answers':answers,
+        'user_communities': user_communities,  # Add user's communities to context
     }
     return render(request, 'profile/UserProfile_Profile_ActivityTab.html', context)
 
