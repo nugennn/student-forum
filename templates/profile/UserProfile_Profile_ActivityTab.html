@@ -182,20 +182,27 @@ function ThirdTab_Q() {
         </div>
         <div class="s-card bar-md">
             <ul class="list-reset d-flex fd-column gs12 gsy">
+                {% if user_communities %}
+                    {% for community in user_communities %}
                         <li class="flex--item">
-                            <a class="d-flex gs4 gsx ai-center" href="#" title="KHEC Forum">
+                            <a class="d-flex gs4 gsx ai-center" href="{% url 'community:community_detail' community.id %}" title="{{ community.name }}">
                                 <div class="flex--item fl-shrink0" style="width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;">
-                                    <i class="fas fa-graduation-cap" style="color: #6366f1; font-size: 18px;"></i>
+                                    <i class="fas fa-users" style="color: #6366f1; font-size: 18px;"></i>
                                 </div>
                                 <div class="flex--item fl-grow1 wmn0 pr4">
-                                    <div class="truncate">KhEC Forum</div>
+                                    <div class="truncate">{{ community.name }}</div>
                                 </div>
                                 <div class="flex--item fl-shrink0 ml-auto fc-light">
-                                    
-                                    {{profileData.user|calculate_reputation}}
+                                    {{ community.members.count }}
                                 </div>
                             </a>
                         </li>
+                    {% endfor %}
+                {% else %}
+                    <li class="flex--item" style="text-align: center; padding: 12px; color: #999;">
+                        Not a member of any communities yet
+                    </li>
+                {% endif %}
             </ul>
         </div>
     </div>

@@ -2175,6 +2175,9 @@ def activityPageTabProfile(request,user_id,username):
     # Peoples Reached
     getAllTheViewsOfAllTheQuestion = Question.objects.filter(post_owner=profileData.user).annotate(total_views=Count('viewers')).aggregate(Sum('total_views'))
 
+    # Get user's communities
+    from community.models import Community
+    user_communities = Community.objects.filter(members__user=profileData.user).order_by('name')
 
     context = {
         'online_user_activity':online_user_activity,
@@ -2188,6 +2191,7 @@ def activityPageTabProfile(request,user_id,username):
         'bronzeBadges':bronzeBadges,
         'questions':questions,
         'answers':answers,
+        'user_communities':user_communities,
     }
     return render(request, 'profile/UserProfile_Profile_ActivityTab.html', context)
 
