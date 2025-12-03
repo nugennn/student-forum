@@ -141,8 +141,77 @@ def get_suggested_users(user, limit=10):
 
 
 @login_required
+def all_chats(request):
+    """Display all chats (private and group) - full page view"""
+    user = request.user
+    
+    # Get all private chats for the user
+    private_chats = PrivateChat.objects.filter(participants=user).prefetch_related('participants')
+    
+    # Get all group chats for the user
+    group_chats = GroupChat.objects.filter(members=user)
+    
+    # Combine and sort by most recent activity
+    all_chats = []
+    
+    for chat in private_chats:
+        other_user = chat.get_other_user(user)
+        if not other_user:
+            continue  # Skip chats with no other participant
+        
+        # Get user's full name safely
+        if hasattr(other_user, 'profile') and other_user.profile and other_user.profile.full_name:
+            display_name = other_user.profile.full_name
+        else:
+            display_name = other_user.get_full_name() or other_user.username
+        
+        # Get profile photo safely
+        photo_url = None
+        if hasattr(other_user, 'profile') and other_user.profile and other_user.profile.profile_photo:
+            photo_url = other_user.profile.profile_photo.url
+        
+        is_teacher = hasattr(other_user, 'profile') and other_user.profile.is_teacher
+        latest_msg = chat.get_latest_message()
+        
+        all_chats.append({
+            'type': 'private',
+            'id': chat.id,
+            'user_id': other_user.id,
+            'name': display_name,
+            'photo': photo_url,
+            'latest_message': latest_msg.content if latest_msg else 'No messages yet',
+            'latest_message_time': latest_msg.created_at if latest_msg else None,
+            'unread_count': ChatNotification.objects.filter(user=user, message__private_chat=chat, is_read=False).count(),
+            'is_teacher': is_teacher,
+        })
+    
+    for chat in group_chats:
+        latest_msg = chat.get_latest_message()
+        all_chats.append({
+            'type': 'group',
+            'id': chat.id,
+            'name': chat.name,
+            'photo': chat.profile_photo.url if chat.profile_photo else None,
+            'latest_message': latest_msg.content if latest_msg else 'No messages yet',
+            'latest_message_time': latest_msg.created_at if latest_msg else None,
+            'unread_count': ChatNotification.objects.filter(user=user, message__group_chat=chat, is_read=False).count(),
+        })
+    
+    # Sort by latest message time
+    all_chats.sort(key=lambda x: x['latest_message_time'] or timezone.now(), reverse=True)
+    
+    context = {
+        'chats': all_chats,
+        'private_chats_count': private_chats.count(),
+        'group_chats_count': group_chats.count(),
+    }
+    
+    return render(request, 'chat/all_chats.html', context)
+
+
+@login_required
 def chat_list(request):
-    """Display list of all chats (private and group)"""
+    """Display list of recent chats (private and group)"""
     user = request.user
     
     # Get all private chats for the user
@@ -1063,4 +1132,27 @@ def get_chat_recipients(request):
     except Exception as e:
         logger = logging.getLogger(__name__)
         logger.error(f"Error getting chat recipients: {str(e)}")
+        return JsonResponse({'error': str(e)}, status=400)
+
+
+@login_required
+@require_http_methods(["POST"])
+def delete_private_chat(request, chat_id):
+    """Delete a private chat conversation - both participants can delete"""
+    try:
+        chat = get_object_or_404(PrivateChat, id=chat_id)
+        
+        # Check if user is a participant
+        if request.user not in chat.participants.all():
+            return JsonResponse({'error': 'You are not a participant of this chat'}, status=403)
+        
+        # Delete the chat and all its messages
+        chat.delete()
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Chat conversation deleted successfully'
+        })
+    
+    except Exception as e:
         return JsonResponse({'error': str(e)}, status=400)
