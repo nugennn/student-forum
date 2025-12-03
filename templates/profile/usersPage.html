@@ -28,9 +28,14 @@
                         <a href="{% url 'profile:activityPageTabProfile' user.id user.username %}"><div class="gravatar-wrapper-48"><img src="{% if user.profile.profile_photo %}{{user.profile.profile_photo.url}}{% endif %}" alt="" width="48" height="48" class="bar-sm"></div></a>
                     </div>
                     <div class="user-details">
-                        <a href="{% url 'profile:activityPageTabProfile' user.id user.username %}">{{user.username}}</a>
-                        <span class="user-location">{{user.profile.location}}
-                        </span>
+                        <a href="{% url 'profile:activityPageTabProfile' user.id user.username %}">
+                            {% if user.profile.full_name %}
+                                {{ user.profile.full_name }}
+                            {% else %}
+                                {{ user.username }}
+                            {% endif %}
+                        </a>
+                        <span class="user-location">{{user.profile.location}}</span>
                         <div class="-flair">
                             <span class="reputation-score" title="reputation this week: {{user|calculate_reputation}} total reputation: 65,129" dir="ltr">{{user|calculate_reputation}}</span>
                         </div>
@@ -65,9 +70,10 @@
                         <a href="/activityPageTabProfile/${result.id}/${result.user_name}/"><div class="gravatar-wrapper-48"><img src="${result.photo}" alt="" width="48" height="48" class="bar-sm"></div></a>
                     </div>
                     <div class="user-details">
-                        <a href="/activityPageTabProfile/${result.id}/${result.user_name}/">${user_name}</a>
-                        <span class="user-location">${user_name}
-                        </span>
+                        <a href="/activityPageTabProfile/${result.id}/${result.user_name}/">
+                            ${result.full_name ? result.full_name : user_name}
+                        </a>
+                        <span class="user-location">${result.location || ''}</span>
                     </div>
                 </div>` ).join("")} </div>`)
 
