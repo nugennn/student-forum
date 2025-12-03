@@ -604,10 +604,12 @@
                                 </button>
                             </form>
                             
-                            <!-- Comment Button -->
-                            <a href="{{question.get_absolute_url}}#comments" class="action-btn">
-                                <i class="fas fa-comment"></i>
-                                <span>{{question.comment_set.count}}</span>
+                            <!-- Answers Button - Show count only if > 0 -->
+                            <a href="{{question.get_absolute_url}}#answers" class="action-btn">
+                                <i class="fas fa-comments"></i>
+                                {% if question.count_answers > 0 %}
+                                <span>{{question.count_answers}}</span>
+                                {% endif %}
                             </a>
                             
                             <!-- Share Button -->
