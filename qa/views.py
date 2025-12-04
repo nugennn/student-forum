@@ -3413,8 +3413,7 @@ def question_upvote_downvote(request, question_id):
                 return JsonResponse({'action': 'dislike_only', 'upvotes': post.count_upvotes, 'downvotes': post.count_downvotes})
 
     else:
-        messages.error(request, 'Something went wrong')
-        return redirect('profile:posts')
+        return JsonResponse({'action': 'error', 'message': 'Something went wrong'})
 
 
 """
@@ -3852,8 +3851,7 @@ def answer_upvote_downvote(request, answer_id):
             rewardPrivielege(request, post.answer_owner)
             return JsonResponse({'action': 'downVoteOnly', 'upvotes': post.a_vote_ups.all().count(), 'downvotes': post.a_vote_downs.all().count()})
     else:
-        messages.error(request, 'Something went wrong')
-        return redirect('profile:posts')
+        return JsonResponse({'action': 'error', 'message': 'Something went wrong'})
 
 
 @login_required
