@@ -322,21 +322,25 @@
     <span class="d-none" itemprop="commentCount">1</span>
 
     <div class="post-layout--right js-post-comments-component" style="margin-top: -8px; padding-top: 12px; padding-left: 16px; border-top: 1px solid #e5e7eb;">
-        <h3 style="font-size: 16px; font-weight: 700; margin: 0 0 12px 0; color: #1a1a1a;">{% if getAllTheComments|length == 0 %}0 Comments{% else %}Comments{% endif %}</h3>
+        <h3 style="font-size: 16px; font-weight: 700; margin: 0 0 12px 0; color: #1a1a1a;">Comments</h3>
         <div id="comments-{{data.id}}" class="comments js-comments-container" data-post-id="{{data.id}}" data-min-length="15" style="padding: 0; padding-left: 0;">
-        <ul class="comments-list js-comments-list" style="list-style: none; padding: 0; margin: 0;">
+        <ul class="comments-list js-comments-list" style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px;">
             {% for comment in getAllTheComments %}
             {% if not comment.deleted %}
-            <li id="comment-{{comment.id}}" class="comment js-comment" data-comment-id="{{comment.id}}" data-comment-owner-id="{{comment.commented_by.id}}" data-comment-score="0" style="padding: 12px 0; border-bottom: 1px solid #f3f4f6; display: flex; gap: 12px; align-items: flex-start; transition: background-color 0.2s ease;">
+            <li id="comment-{{comment.id}}" class="comment js-comment" data-comment-id="{{comment.id}}" data-comment-owner-id="{{comment.commented_by.id}}" data-comment-score="0" style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; transition: all 0.2s ease;" onmouseover="this.style.backgroundColor='#f3f4f6'" onmouseout="this.style.backgroundColor='#f9fafb'">
                 <div class="comment-text js-comment-text-and-form" style="flex: 1; min-width: 0;">
-                    <div class="comment-body js-comment-edit-hide" style="font-size: 13px; line-height: 1.6;">
-                        <span class="comment-copy" style="display: block; margin-bottom: 8px; color: #2c3e50; word-wrap: break-word;">{{comment.comment}}</span>
-                        <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap; font-size: 12px; color: #718096;">
-                            <a href="{% url 'profile:activityPageTabProfile' comment.commented_by.id comment.commented_by.username %}" title="{{comment.commented_by|calculate_reputation}} reputation" class="comment-user" style="color: #0084ff; text-decoration: none; font-weight: 500;">{{comment.commented_by.get_full_name|default:comment.commented_by.username}}</a>
-                            <span class="comment-date" dir="ltr" title="{{comment.date|date:'Y-m-d H:i:s'}}" style="color: #a0aec0;">{{comment.date|naturaltime}}</span>
+                    <div class="comment-body js-comment-edit-hide">
+                        <span class="comment-copy" style="display: block; margin-bottom: 10px; color: #2c3e50; word-wrap: break-word; font-size: 13px; line-height: 1.6;">{{comment.comment}}</span>
+                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                            <div style="display: flex; gap: 12px; align-items: center; font-size: 12px; color: #718096;">
+                                <a href="{% url 'profile:activityPageTabProfile' comment.commented_by.id comment.commented_by.username %}" title="{{comment.commented_by|calculate_reputation}} reputation" class="comment-user" style="color: #0084ff; text-decoration: none; font-weight: 500;">{{comment.commented_by.get_full_name|default:comment.commented_by.username}}</a>
+                                <span class="comment-date" dir="ltr" title="{{comment.date|date:'Y-m-d H:i:s'}}" style="color: #a0aec0;">{{comment.date|naturaltime}}</span>
+                            </div>
                             {% if request.user == comment.commented_by %}
-                            <a href="#" class="js-edit-comment" data-comment-id="{{comment.id}}" style="color: #0084ff; text-decoration: none; font-size: 11px; font-weight: 500; transition: opacity 0.2s ease;" onmouseover="this.style.opacity='0.7'" onmouseout="this.style.opacity='1'">edit</a>
-                            <a href="#" class="js-delete-comment" data-comment-id="{{comment.id}}" style="color: #e53e3e; text-decoration: none; font-size: 11px; font-weight: 500; transition: opacity 0.2s ease;" onmouseover="this.style.opacity='0.7'" onmouseout="this.style.opacity='1'">delete</a>
+                            <div style="display: flex; gap: 12px; font-size: 12px;">
+                                <a href="#" class="js-edit-comment" data-comment-id="{{comment.id}}" style="color: #0084ff; text-decoration: none; font-weight: 500; transition: opacity 0.2s ease;" onmouseover="this.style.opacity='0.7'" onmouseout="this.style.opacity='1'">edit</a>
+                                <a href="#" class="js-delete-comment" data-comment-id="{{comment.id}}" style="color: #e53e3e; text-decoration: none; font-weight: 500; transition: opacity 0.2s ease;" onmouseover="this.style.opacity='0.7'" onmouseout="this.style.opacity='1'">delete</a>
+                            </div>
                             {% endif %}
                         </div>
                     </div>
@@ -377,6 +381,10 @@
             x.style.display = "none";
           }else {
             x.style.display = "block";
+            // Scroll to the comment box smoothly
+            setTimeout(function() {
+              x.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 100);
           }
         }
         </script>
@@ -2239,46 +2247,22 @@ function submitQuote() {
                         if(response.bool){
                             $(".comment-text-" + questionId).val("");
                             
-                            // Create new comment HTML with delete button and full name
+                            // Create new comment HTML with card styling
                             var newCommentHtml = `
-                                <li id="comment-${response.comment_id}" class="comment js-comment" data-comment-id="${response.comment_id}" data-comment-owner-id="${response.user_id}" data-comment-score="0">
-                                    <div class="js-comment-actions comment-actions">
-                                        <div class="comment-score js-comment-edit-hide"></div>
-                                        <form method="GET" class="commentVoteForm" action="{% url 'qa:upvote_comment' 0 %}".replace('0', response.comment_id) data-pk="${response.comment_id}">
-                                            <span id="id_commentVote${response.comment_id}">
-                                                <div class="move-to-left">${response.upvote_count}</div>
-                                                <button name='submit' type='submit' value="upVoteCommentIt"><i class="fas upvote-comment-inactive fa-sort-up fa-2x"></i></button>
-                                            </span>
-                                        </form>
-                                        <div class="comment-flagging js-comment-edit-hide">
-                                            <button class="js-comment-flag s-btn s-btn__unset bg-transparent c-pointer fc-black-300 o40 h:fc-red-500 h:o100" aria-label="Flag Comment" aria-pressed="false" title="Flag this comment for serious problems or moderator attention">
-                                                <svg aria-hidden="true" class="svg-icon iconFlag" width="18" height="18" viewBox="0 0 18 18"><path d="M3 2v14h2v-6h3.6l.4 1h6V3H9.5L9 2H3Z"/></svg>
-                                            </button>
-                                        </div>
-                                    </div>
-                                    <div class="comment-text js-comment-text-and-form">
+                                <li id="comment-${response.comment_id}" class="comment js-comment" data-comment-id="${response.comment_id}" data-comment-owner-id="${response.user_id}" data-comment-score="0" style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; transition: all 0.2s ease;">
+                                    <div class="comment-text js-comment-text-and-form" style="flex: 1; min-width: 0;">
                                         <div class="comment-body js-comment-edit-hide">
-                                            <span class="comment-copy">${response.comment_text}</span>
-                                            <div class="d-inline-flex ai-center">&ndash;&nbsp;
-                                                <a href="/profile/${response.user_id}/${response.username}/" class="comment-user">${response.full_name}</a>
+                                            <span class="comment-copy" style="display: block; margin-bottom: 10px; color: #2c3e50; word-wrap: break-word; font-size: 13px; line-height: 1.6;">${response.comment_text}</span>
+                                            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                                                <div style="display: flex; gap: 12px; align-items: center; font-size: 12px; color: #718096;">
+                                                    <a href="/profile/${response.user_id}/${response.username}/" style="color: #0084ff; text-decoration: none; font-weight: 500;">${response.full_name}</a>
+                                                    <span class="comment-date" dir="ltr" style="color: #a0aec0;">just now</span>
+                                                </div>
+                                                <div style="display: flex; gap: 12px; font-size: 12px;">
+                                                    <a href="#" class="js-edit-comment" data-comment-id="${response.comment_id}" style="color: #0084ff; text-decoration: none; font-weight: 500; transition: opacity 0.2s ease;">edit</a>
+                                                    <a href="#" class="js-delete-comment" data-comment-id="${response.comment_id}" style="color: #e53e3e; text-decoration: none; font-weight: 500; transition: opacity 0.2s ease;">delete</a>
+                                                </div>
                                             </div>
-                                            <span class="comment-date" dir="ltr">
-                                                <span class="relativetime-clean">just now</span>
-                                            </span>
-                                            <span class="comment-edit" title="Edit comment">
-                                                <a href="#" class="js-edit-comment" data-comment-id="${response.comment_id}">
-                                                    <svg aria-hidden="true" class="va-text-bottom o50 svg-icon iconPencilSm" width="14" height="14" viewBox="0 0 14 14">
-                                                        <path d="m11.1 1.71 1.13 1.12c.2.2.2.51 0 .71L11.1 4.7 9.21 2.86l1.17-1.15c.2-.2.51-.2.71 0ZM2 10.12l6.37-6.43 1.88 1.88L3.88 12H2v-1.88Z"/>
-                                                    </svg>
-                                                </a>
-                                            </span>
-                                            <span class="comment-delete" title="Delete comment">
-                                                <a href="#" class="js-delete-comment" data-comment-id="${response.comment_id}">
-                                                    <svg aria-hidden="true" class="va-text-bottom o50 svg-icon iconTrash" width="14" height="14" viewBox="0 0 14 14">
-                                                        <path d="M11 3h-1.5l-.5-1h-4l-.5 1H3v1h8V3ZM4 5v7a1 1 0 0 0 1 1h4a1 1 0 0 0 1-1V5H4Z"/>
-                                                    </svg>
-                                                </a>
-                                            </span>
                                         </div>
                                     </div>
                                 </li>
