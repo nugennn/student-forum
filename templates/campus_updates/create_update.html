@@ -3,6 +3,10 @@
 
 {% block css %}
 <style>
+    * {
+        box-sizing: border-box;
+    }
+
     .form-container {
         background: white;
         border: 1px solid #e1e4e8;
@@ -10,6 +14,14 @@
         padding: 32px;
         max-width: 800px;
         margin: 30px auto;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    }
+
+    .page-title {
+        font-size: 28px;
+        font-weight: 700;
+        color: #0c0d0e;
+        margin-bottom: 24px;
     }
 
     .form-group {
@@ -26,21 +38,38 @@
 
     .form-group input[type="text"],
     .form-group input[type="datetime-local"],
-    .form-group select,
-    .form-group textarea {
+    .form-group textarea,
+    .form-group input[type="file"],
+    .form-group select {
         width: 100%;
         padding: 12px;
         border: 1px solid #d0d7de;
         border-radius: 6px;
         font-size: 14px;
         font-family: inherit;
-        transition: border-color 0.2s;
+        transition: all 0.2s ease;
+        appearance: none;
+        background-color: white;
+    }
+
+    .form-group select {
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23333' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 12px center;
+        padding-right: 36px;
+        cursor: pointer;
+    }
+
+    .form-group select option {
+        padding: 8px;
+        background-color: white;
+        color: #0c0d0e;
     }
 
     .form-group input[type="text"]:focus,
     .form-group input[type="datetime-local"]:focus,
-    .form-group select:focus,
-    .form-group textarea:focus {
+    .form-group textarea:focus,
+    .form-group select:focus {
         outline: none;
         border-color: #0074cc;
         box-shadow: 0 0 0 3px rgba(0, 116, 204, 0.1);
@@ -55,31 +84,46 @@
         padding: 8px;
     }
 
-    .form-group input[type="checkbox"] {
-        width: 18px;
-        height: 18px;
-        cursor: pointer;
-        margin-right: 10px;
-    }
-
-    .checkbox-label {
-        display: flex;
-        align-items: center;
-        font-weight: 400;
-        cursor: pointer;
-        gap: 10px;
-    }
-
-    .form-check-input {
-        margin-right: 10px;
-        width: 18px;
-        height: 18px;
-    }
-
     .form-row {
         display: grid;
         grid-template-columns: 1fr 1fr;
         gap: 20px;
+    }
+
+    .form-check-group {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 24px;
+    }
+
+    .form-check-input {
+        width: 18px;
+        height: 18px;
+        cursor: pointer;
+        margin: 0;
+        accent-color: #0074cc;
+    }
+
+    .form-check-label {
+        font-weight: 400;
+        cursor: pointer;
+        margin: 0;
+    }
+
+    .help-text {
+        font-size: 12px;
+        color: #6a737d;
+        margin-top: 4px;
+    }
+
+    .error-message {
+        background: #f8d7da;
+        color: #721c24;
+        padding: 12px;
+        border-radius: 6px;
+        margin-bottom: 20px;
+        border: 1px solid #f5c6cb;
     }
 
     .form-actions {
@@ -124,26 +168,19 @@
         background: #5a6268;
     }
 
-    .help-text {
-        font-size: 12px;
-        color: #6a737d;
-        margin-top: 4px;
-    }
+    @media (max-width: 768px) {
+        .form-container {
+            padding: 24px;
+        }
 
-    .error-message {
-        background: #f8d7da;
-        color: #721c24;
-        padding: 12px;
-        border-radius: 6px;
-        margin-bottom: 20px;
-        border: 1px solid #f5c6cb;
-    }
+        .form-row {
+            grid-template-columns: 1fr;
+            gap: 16px;
+        }
 
-    .page-title {
-        font-size: 28px;
-        font-weight: 700;
-        color: #0c0d0e;
-        margin-bottom: 24px;
+        .page-title {
+            font-size: 24px;
+        }
     }
 </style>
 {% endblock css %}
@@ -191,8 +228,16 @@
             <!-- Category and Priority -->
             <div class="form-row">
                 <div class="form-group">
-                    <label for="{{ form.category.id_for_label }}">{{ form.category.label }}</label>
-                    {{ form.category }}
+                    <label for="id_category">Category</label>
+                    <select name="category" id="id_category" required>
+                        <option value="">-- Select Category --</option>
+                        <option value="academic">Academic</option>
+                        <option value="event">Event</option>
+                        <option value="maintenance">Maintenance</option>
+                        <option value="holiday">Holiday</option>
+                        <option value="announcement">Announcement</option>
+                        <option value="other">Other</option>
+                    </select>
                     {% if form.category.errors %}
                         <div class="error-message" style="margin-top: 8px;">
                             {{ form.category.errors }}
@@ -201,8 +246,14 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="{{ form.priority.id_for_label }}">{{ form.priority.label }}</label>
-                    {{ form.priority }}
+                    <label for="id_priority">Priority Level</label>
+                    <select name="priority" id="id_priority" required>
+                        <option value="">-- Select Priority --</option>
+                        <option value="low">Low</option>
+                        <option value="medium">Medium</option>
+                        <option value="high">High</option>
+                        <option value="urgent">Urgent</option>
+                    </select>
                     {% if form.priority.errors %}
                         <div class="error-message" style="margin-top: 8px;">
                             {{ form.priority.errors }}
@@ -236,20 +287,17 @@
             </div>
 
             <!-- Publish Checkbox -->
-            <div class="form-group">
-                <div style="display: flex; align-items: center; gap: 10px;">
-                    <input type="checkbox" 
-                           name="{{ form.is_published.name }}" 
-                           id="{{ form.is_published.id_for_label }}" 
-                           class="form-check-input"
-                           style="width: 18px; height: 18px; margin: 0px;"
-                           {% if form.is_published.value or not form.is_published.value is None and form.is_published.value %}checked{% endif %}>
-                    <label for="{{ form.is_published.id_for_label }}" style="margin: 20px; font-weight: normal; cursor: pointer;">
-                        Publish this Notice
-                    </label>
-                </div>
-                <div class="help-text" style="margin-top: 8px;">Uncheck to save as draft without publishing</div>
+            <div class="form-check-group">
+                <input type="checkbox" 
+                       name="is_published" 
+                       id="id_is_published" 
+                       class="form-check-input"
+                       checked>
+                <label for="id_is_published" class="form-check-label">
+                    Publish this Notice
+                </label>
             </div>
+            <div class="help-text">Uncheck to save as draft without publishing</div>
 
             <!-- Form Actions -->
             <div class="form-actions">

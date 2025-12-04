@@ -3,6 +3,10 @@
 
 {% block css %}
 <style>
+    * {
+        box-sizing: border-box;
+    }
+
     .form-container {
         background: white;
         border: 1px solid #e1e4e8;
@@ -10,6 +14,14 @@
         padding: 32px;
         max-width: 800px;
         margin: 30px auto;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    }
+
+    .page-title {
+        font-size: 28px;
+        font-weight: 700;
+        color: #0c0d0e;
+        margin-bottom: 24px;
     }
 
     .form-group {
@@ -26,21 +38,38 @@
 
     .form-group input[type="text"],
     .form-group input[type="datetime-local"],
-    .form-group select,
-    .form-group textarea {
+    .form-group textarea,
+    .form-group input[type="file"],
+    .form-group select {
         width: 100%;
         padding: 12px;
         border: 1px solid #d0d7de;
         border-radius: 6px;
         font-size: 14px;
         font-family: inherit;
-        transition: border-color 0.2s;
+        transition: all 0.2s ease;
+        appearance: none;
+        background-color: white;
+    }
+
+    .form-group select {
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23333' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 12px center;
+        padding-right: 36px;
+        cursor: pointer;
+    }
+
+    .form-group select option {
+        padding: 8px;
+        background-color: white;
+        color: #0c0d0e;
     }
 
     .form-group input[type="text"]:focus,
     .form-group input[type="datetime-local"]:focus,
-    .form-group select:focus,
-    .form-group textarea:focus {
+    .form-group textarea:focus,
+    .form-group select:focus {
         outline: none;
         border-color: #0074cc;
         box-shadow: 0 0 0 3px rgba(0, 116, 204, 0.1);
@@ -55,24 +84,57 @@
         padding: 8px;
     }
 
-    .form-group input[type="checkbox"] {
-        width: 18px;
-        height: 18px;
-        cursor: pointer;
-        margin-right: 8px;
-    }
-
-    .checkbox-label {
-        display: flex;
-        align-items: center;
-        font-weight: 400;
-        cursor: pointer;
-    }
-
     .form-row {
         display: grid;
         grid-template-columns: 1fr 1fr;
         gap: 20px;
+    }
+
+    .form-check-group {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 24px;
+    }
+
+    .form-check-input {
+        width: 18px;
+        height: 18px;
+        cursor: pointer;
+        margin: 0;
+        accent-color: #0074cc;
+    }
+
+    .form-check-label {
+        font-weight: 400;
+        cursor: pointer;
+        margin: 0;
+    }
+
+    .help-text {
+        font-size: 12px;
+        color: #6a737d;
+        margin-top: 4px;
+    }
+
+    .error-message {
+        background: #f8d7da;
+        color: #721c24;
+        padding: 12px;
+        border-radius: 6px;
+        margin-bottom: 20px;
+        border: 1px solid #f5c6cb;
+    }
+
+    .current-image {
+        margin-top: 12px;
+        max-width: 200px;
+    }
+
+    .current-image img {
+        max-width: 100%;
+        border-radius: 6px;
+        border: 1px solid #e1e4e8;
     }
 
     .form-actions {
@@ -136,37 +198,19 @@
         background: #c82333;
     }
 
-    .help-text {
-        font-size: 12px;
-        color: #6a737d;
-        margin-top: 4px;
-    }
+    @media (max-width: 768px) {
+        .form-container {
+            padding: 24px;
+        }
 
-    .error-message {
-        background: #f8d7da;
-        color: #721c24;
-        padding: 12px;
-        border-radius: 6px;
-        margin-bottom: 20px;
-        border: 1px solid #f5c6cb;
-    }
+        .form-row {
+            grid-template-columns: 1fr;
+            gap: 16px;
+        }
 
-    .page-title {
-        font-size: 28px;
-        font-weight: 700;
-        color: #0c0d0e;
-        margin-bottom: 24px;
-    }
-
-    .current-image {
-        margin-top: 12px;
-        max-width: 200px;
-    }
-
-    .current-image img {
-        max-width: 100%;
-        border-radius: 6px;
-        border: 1px solid #e1e4e8;
+        .page-title {
+            font-size: 24px;
+        }
     }
 </style>
 {% endblock css %}
@@ -212,8 +256,16 @@
             <!-- Category and Priority -->
             <div class="form-row">
                 <div class="form-group">
-                    <label for="{{ form.category.id_for_label }}">{{ form.category.label }}</label>
-                    {{ form.category }}
+                    <label for="id_category">Category</label>
+                    <select name="category" id="id_category" required>
+                        <option value="">-- Select Category --</option>
+                        <option value="academic" {% if update.category == 'academic' %}selected{% endif %}>Academic</option>
+                        <option value="event" {% if update.category == 'event' %}selected{% endif %}>Event</option>
+                        <option value="maintenance" {% if update.category == 'maintenance' %}selected{% endif %}>Maintenance</option>
+                        <option value="holiday" {% if update.category == 'holiday' %}selected{% endif %}>Holiday</option>
+                        <option value="announcement" {% if update.category == 'announcement' %}selected{% endif %}>Announcement</option>
+                        <option value="other" {% if update.category == 'other' %}selected{% endif %}>Other</option>
+                    </select>
                     {% if form.category.errors %}
                         <div class="error-message" style="margin-top: 8px;">
                             {{ form.category.errors }}
@@ -222,8 +274,14 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="{{ form.priority.id_for_label }}">{{ form.priority.label }}</label>
-                    {{ form.priority }}
+                    <label for="id_priority">Priority Level</label>
+                    <select name="priority" id="id_priority" required>
+                        <option value="">-- Select Priority --</option>
+                        <option value="low" {% if update.priority == 'low' %}selected{% endif %}>Low</option>
+                        <option value="medium" {% if update.priority == 'medium' %}selected{% endif %}>Medium</option>
+                        <option value="high" {% if update.priority == 'high' %}selected{% endif %}>High</option>
+                        <option value="urgent" {% if update.priority == 'urgent' %}selected{% endif %}>Urgent</option>
+                    </select>
                     {% if form.priority.errors %}
                         <div class="error-message" style="margin-top: 8px;">
                             {{ form.priority.errors }}
@@ -262,10 +320,14 @@
             </div>
 
             <!-- Publish Checkbox -->
-            <div class="form-group">
-                <label class="checkbox-label">
-                    {{ form.is_published }}
-                    {{ form.is_published.label }}
+            <div class="form-check-group">
+                <input type="checkbox" 
+                       name="is_published" 
+                       id="id_is_published" 
+                       class="form-check-input"
+                       {% if update.is_published %}checked{% endif %}>
+                <label for="id_is_published" class="form-check-label">
+                    Publish this Notice
                 </label>
             </div>
 
