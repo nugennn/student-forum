@@ -37,31 +37,31 @@
     color: #999 !important;
 }
 
-/* Image preview styling for home page */
-.question-summary.narrow > a > div[style*="max-height: 400px"] {
+/* Image preview styling for home page - target only the image container */
+div[style*="max-height: 400px"][style*="border-radius: 8px"] {
     width: 100%;
     max-width: 100%;
     box-sizing: border-box;
-    font-size: 0;
-    line-height: 0;
+    font-size: 0 !important;
+    line-height: 0 !important;
 }
 
-.question-summary.narrow > a > div[style*="max-height: 400px"] img {
+div[style*="max-height: 400px"][style*="border-radius: 8px"] img {
     max-width: 100%;
     height: auto;
     display: block;
     max-height: 400px;
     object-fit: contain;
-    font-size: 14px;
-    line-height: 1.5;
+    font-size: 14px !important;
+    line-height: 1.5 !important;
 }
 
-.question-summary.narrow > a > div[style*="max-height: 400px"] * {
-    font-size: 0;
+div[style*="max-height: 400px"][style*="border-radius: 8px"] * {
+    font-size: 0 !important;
 }
 
-.question-summary.narrow > a > div[style*="max-height: 400px"] img {
-    font-size: 14px;
+div[style*="max-height: 400px"][style*="border-radius: 8px"] img {
+    font-size: 14px !important;
 }
 
 /* Question card styling - Modern, spacious design */
@@ -173,31 +173,32 @@
             {% endfor %}
         </div>
 
-        <!-- Description - First 2 lines -->
+        <!-- Description - First 1 line (only if NO images) -->
         {% if question.body %}
         {% with body_html=question.body|safe_markdown|fix_markdown_images|ensure_image_urls %}
-            <div style="color: #64748b; 
-                      font-size: 14px; 
-                      line-height: 1.5; 
-                      margin-top: 8px;
-                      display: -webkit-box;
-                      -webkit-line-clamp: 2;
-                      -webkit-box-orient: vertical;
-                      overflow: hidden;
-                      text-overflow: ellipsis;
-                      max-height: 3em;
-                      white-space: pre-line;
-                      word-break: break-word;">
-                {{ body_html|striptags|truncatechars:150 }}
-            </div>
-
-            <!-- Image Preview Section - Only show if there are valid images -->
             {% if "<img" in body_html and "src=" in body_html and "/media/" in body_html %}
-            <div style="max-height: 400px; overflow: hidden; border-radius: 8px; margin-top: 12px; background: #f8f9fa; display: flex; align-items: center; justify-content: center; width: 100%;">
-                <div style="width: 100%; display: flex; align-items: center; justify-content: center;">
-                    {{ body_html|safe }}
+                <!-- Image Preview Section - Only show if there are valid images -->
+                <div style="max-height: 400px; overflow: hidden; border-radius: 8px; margin-top: 12px; background: #f8f9fa; display: flex; align-items: center; justify-content: center; width: 100%;">
+                    <div style="width: 100%; display: flex; align-items: center; justify-content: center;">
+                        {{ body_html|safe }}
+                    </div>
                 </div>
-            </div>
+            {% else %}
+                <!-- Show description only if NO images -->
+                <div style="color: #64748b; 
+                          font-size: 14px; 
+                          line-height: 1.5; 
+                          margin-top: 8px;
+                          display: -webkit-box;
+                          -webkit-line-clamp: 3;
+                          -webkit-box-orient: vertical;
+                          overflow: hidden;
+                          text-overflow: ellipsis;
+                          max-height: 4.5em;
+                          white-space: pre-line;
+                          word-break: break-word;">
+                    {{ body_html|striptags|truncatechars:400 }}
+                </div>
             {% endif %}
         {% endwith %}
         {% endif %}
