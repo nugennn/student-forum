@@ -37,6 +37,32 @@
     color: #999 !important;
 }
 
+/* Image preview styling for home page */
+.question-summary.narrow > a > div[style*="max-height: 400px"] {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    font-size: 0;
+    line-height: 0;
+}
+
+.question-summary.narrow > a > div[style*="max-height: 400px"] img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    max-height: 400px;
+    object-fit: contain;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.question-summary.narrow > a > div[style*="max-height: 400px"] * {
+    font-size: 0;
+}
+
+.question-summary.narrow > a > div[style*="max-height: 400px"] img {
+    font-size: 14px;
+}
 
 /* Question card styling - Modern, spacious design */
 .question-summary.narrow {
@@ -149,7 +175,7 @@
 
         <!-- Description - First 2 lines -->
         {% if question.body %}
-        {% with body_html=question.body|safe_markdown|fix_markdown_images %}
+        {% with body_html=question.body|safe_markdown|fix_markdown_images|ensure_image_urls %}
             <div style="color: #64748b; 
                       font-size: 14px; 
                       line-height: 1.5; 
@@ -165,10 +191,10 @@
                 {{ body_html|striptags|truncatechars:150 }}
             </div>
 
-            <!-- Image Preview Section - Only show if there are images -->
-            {% if "<img" in body_html %}
-            <div style="max-height: 200px; overflow: hidden; border-radius: 8px; margin-top: 12px; background: #f8f9fa; display: flex; align-items: center; justify-content: center;">
-                <div style="width: 100%; font-size: 0; line-height: 0;">
+            <!-- Image Preview Section - Only show if there are valid images -->
+            {% if "<img" in body_html and "src=" in body_html and "/media/" in body_html %}
+            <div style="max-height: 400px; overflow: hidden; border-radius: 8px; margin-top: 12px; background: #f8f9fa; display: flex; align-items: center; justify-content: center; width: 100%;">
+                <div style="width: 100%; display: flex; align-items: center; justify-content: center;">
                     {{ body_html|safe }}
                 </div>
             </div>
