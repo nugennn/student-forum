@@ -105,6 +105,43 @@
         padding-top: 20px;
         border-top: 1px solid #e1e4e8;
     }
+    
+    .checkbox-wrapper {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 20px;
+    }
+
+    .checkbox-wrapper input[type="checkbox"] {
+        width: 20px;
+        height: 20px;
+        min-width: 20px;
+        min-height: 20px;
+        cursor: pointer;
+        accent-color: #2b6cb0;
+        margin: 0;
+        flex-shrink: 0;
+    }
+
+    .checkbox-wrapper label {
+        font-size: 14px;
+        font-weight: 600;
+        color: #24292e;
+        margin: 0;
+        cursor: pointer;
+        display: inline-block;
+    }
+
+    .checkbox-wrapper input[type="checkbox"]:hover {
+        opacity: 0.8;
+    }
+    
+    .help-text {
+        font-size: 12px;
+        color: #6a737d;
+        margin-top: 4px;
+    }
 </style>
 {% endblock %}
 
@@ -164,17 +201,12 @@
                 {% endif %}
             </div>
             
-            <div class="form-group">
-                <label>
-                    <input type="checkbox" name="{{ form.is_private.name }}" id="{{ form.is_private.id_for_label }}" 
-                           {% if form.is_private.value %}checked{% endif %}>
-                    Private Community
-                </label>
-                <p class="help-text">Private communities require approval for new members to join.</p>
-                {% if form.is_private.errors %}
-                    <div class="error">{{ form.is_private.errors }}</div>
-                {% endif %}
+            <div class="checkbox-wrapper">
+                <input type="checkbox" name="is_private" id="id_is_private" 
+                       {% if community.is_private %}checked{% endif %}>
+                <label for="id_is_private">Private Community</label>
             </div>
+            <p class="help-text">Private communities require approval for new members to join.</p>
             
             <div class="form-actions">
                 <a href="{% url 'community:community_detail' slug=community.slug %}" class="btn btn-outline">Cancel</a>
