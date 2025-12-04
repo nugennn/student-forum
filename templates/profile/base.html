@@ -428,11 +428,35 @@
                                         </div>
                                         <div class="item-location">
                                             {% if notification.type_of_noti == "community_join_request" %}
-                                                {{ notification.extra_data|safe }}
+                                                {% if notification.noti_sender %}
+                                                    <span style="font-weight: 500;">
+                                                        {% if notification.noti_sender.profile.full_name %}
+                                                            {{ notification.noti_sender.profile.full_name }}
+                                                        {% else %}
+                                                            {{ notification.noti_sender.username }}
+                                                        {% endif %}
+                                                    </span>
+                                                    - {{ notification.extra_data|safe }}
+                                                {% else %}
+                                                    {{ notification.extra_data|safe }}
+                                                {% endif %}
+                                            {% elif notification.noti_sender %}
+                                                <span style="font-weight: 500;">
+                                                    {% if notification.noti_sender.profile.full_name %}
+                                                        {{ notification.noti_sender.profile.full_name }}
+                                                    {% else %}
+                                                        {{ notification.noti_sender.username }}
+                                                    {% endif %}
+                                                </span>
+                                                {% if notification.question_noti %}
+                                                    - {{ notification.question_noti.title }}
+                                                {% elif notification.answer_noti %}
+                                                    - {{ notification.answer_noti|truncatewords:10 }}
+                                                {% endif %}
                                             {% elif notification.question_noti %}
-                                                {{notification.question_noti.title}}
+                                                {{ notification.question_noti.title }}
                                             {% else %}
-                                                {{notification.answer_noti}}
+                                                {{ notification.answer_noti|truncatewords:10 }}
                                             {% endif %}
                                         </div>
                                     </div>

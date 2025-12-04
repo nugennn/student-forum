@@ -149,22 +149,32 @@
 
         <!-- Description - First 2 lines -->
         {% if question.body %}
-        <div style="color: #64748b; 
-                   font-size: 14px; 
-                   line-height: 1.5; 
-                   margin-top: 8px;
-                   display: -webkit-box;
-                   -webkit-line-clamp: 2;
-                   -webkit-box-orient: vertical;
-                   overflow: hidden;
-                   text-overflow: ellipsis;
-                   max-height: 3em;
-                   white-space: pre-line;
-                   word-break: break-word;">
-            {{ question.body|safe_markdown|striptags|truncatechars:150 }}
-        </div>
-        {% endif %}
+        {% with body_html=question.body|safe_markdown|fix_markdown_images %}
+            <div style="color: #64748b; 
+                      font-size: 14px; 
+                      line-height: 1.5; 
+                      margin-top: 8px;
+                      display: -webkit-box;
+                      -webkit-line-clamp: 2;
+                      -webkit-box-orient: vertical;
+                      overflow: hidden;
+                      text-overflow: ellipsis;
+                      max-height: 3em;
+                      white-space: pre-line;
+                      word-break: break-word;">
+                {{ body_html|striptags|truncatechars:150 }}
+            </div>
 
+            <!-- Image Preview Section - Only show if there are images -->
+            {% if "<img" in body_html %}
+            <div style="max-height: 200px; overflow: hidden; border-radius: 8px; margin-top: 12px; background: #f8f9fa; display: flex; align-items: center; justify-content: center;">
+                <div style="width: 100%; font-size: 0; line-height: 0;">
+                    {{ body_html|safe }}
+                </div>
+            </div>
+            {% endif %}
+        {% endwith %}
+        {% endif %}
     </a>
 
     <!-- Stats and Actions Row -->
