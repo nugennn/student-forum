@@ -232,6 +232,8 @@ function loadChatRecipientsForModal() {
 // Create user item
 function createUserItem(user) {
     const item = document.createElement('div');
+    item.setAttribute('data-user-id', user.id);
+    item.setAttribute('data-recipient-name', user.name);
     item.style.cssText = 'display: flex; align-items: center; padding: 10px 12px; border: 1px solid #e8eaed; border-radius: 6px; cursor: pointer; transition: all 0.2s ease; background: #fff;';
     item.innerHTML = `
         <i class="fas fa-user" style="font-size: 16px; color: #0084ff; margin-right: 12px; width: 20px; text-align: center;"></i>
@@ -250,7 +252,10 @@ function createUserItem(user) {
         item.style.borderColor = '#e8eaed';
     };
     
-    item.onclick = () => goToChatWithLink(user.id, 'user');
+    item.onclick = () => {
+        console.log('User item clicked:', user.id, user.name);
+        goToChatWithLink(user.id, 'user', user.name);
+    };
     
     return item;
 }
@@ -258,6 +263,8 @@ function createUserItem(user) {
 // Create group item
 function createGroupItem(group) {
     const item = document.createElement('div');
+    item.setAttribute('data-group-id', group.id);
+    item.setAttribute('data-recipient-name', group.name);
     item.style.cssText = 'display: flex; align-items: center; padding: 10px 12px; border: 1px solid #e8eaed; border-radius: 6px; cursor: pointer; transition: all 0.2s ease; background: #fff;';
     item.innerHTML = `
         <i class="fas fa-users" style="font-size: 16px; color: #667eea; margin-right: 12px; width: 20px; text-align: center;"></i>
@@ -276,14 +283,17 @@ function createGroupItem(group) {
         item.style.borderColor = '#e8eaed';
     };
     
-    item.onclick = () => goToChatWithLink(group.id, 'group');
+    item.onclick = () => {
+        console.log('Group item clicked:', group.id, group.name);
+        goToChatWithLink(group.id, 'group', group.name);
+    };
     
     return item;
 }
 
 // Go to chat with link
-function goToChatWithLink(recipientId, type) {
-    // Send the link as a message immediately
+function goToChatWithLink(recipientId, type, recipientName) {
+    // Get post data for confirmation dialog
     const postUrl = currentShareData.postUrl;
     const postTitle = currentShareData.postTitle;
     
@@ -293,6 +303,17 @@ function goToChatWithLink(recipientId, type) {
     
     if (!postUrl || !postTitle) {
         showToast('Error: Post link not found. URL: ' + postUrl + ', Title: ' + postTitle, 'error');
+        return;
+    }
+    
+    // Use provided recipient name or fallback
+    if (!recipientName) {
+        recipientName = type === 'user' ? 'this user' : 'this group';
+    }
+    
+    // Show confirmation dialog
+    const confirmMessage = `Send this post to ${recipientName}?`;
+    if (!confirm(confirmMessage)) {
         return;
     }
     
@@ -387,3 +408,34 @@ style.textContent = `
     }
 `;
 document.head.appendChild(style);
+
+// Search functionality for chat selector
+document.addEventListener('DOMContentLoaded', function() {
+    const searchBox = document.getElementById('chatSearchBox');
+    if (searchBox) {
+        searchBox.addEventListener('input', function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            
+            // Filter recent chats
+            const recentItems = document.querySelectorAll('#recentChatsList > div');
+            recentItems.forEach(item => {
+                const name = item.getAttribute('data-recipient-name') || '';
+                item.style.display = name.toLowerCase().includes(searchTerm) ? 'flex' : 'none';
+            });
+            
+            // Filter users
+            const userItems = document.querySelectorAll('#usersList > div');
+            userItems.forEach(item => {
+                const name = item.getAttribute('data-recipient-name') || '';
+                item.style.display = name.toLowerCase().includes(searchTerm) ? 'flex' : 'none';
+            });
+            
+            // Filter groups
+            const groupItems = document.querySelectorAll('#groupsList > div');
+            groupItems.forEach(item => {
+                const name = item.getAttribute('data-recipient-name') || '';
+                item.style.display = name.toLowerCase().includes(searchTerm) ? 'flex' : 'none';
+            });
+        });
+    }
+});
