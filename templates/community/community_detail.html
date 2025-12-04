@@ -407,6 +407,30 @@
 
     <div class="row g-4">
         <!-- Main Content -->
+        {% if is_restricted %}
+        <div class="col-lg-8">
+            <!-- Restricted View Message -->
+            <div style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); padding: 80px 30px; text-align: center; border-radius: 12px; margin-top: 30px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                <div style="background: white; width: 100px; height: 100px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 30px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                    <i class="fas fa-lock" style="font-size: 48px; color: #f59e0b;"></i>
+                </div>
+                <h3 style="color: #92400e; margin-bottom: 15px; font-weight: 600; font-size: 24px;">Private Community</h3>
+                <p style="color: #78350f; font-size: 16px; margin-bottom: 20px; max-width: 600px; margin-left: auto; margin-right: auto; line-height: 1.6;">
+                    This community is private. You need to be a member to view questions and participate.
+                </p>
+                {% if has_pending_request %}
+                    <div style="background: rgba(255,255,255,0.7); padding: 15px 25px; border-radius: 8px; display: inline-block; margin-top: 10px;">
+                        <i class="fas fa-clock" style="color: #f59e0b; margin-right: 8px;"></i>
+                        <span style="color: #92400e; font-weight: 500;">Your join request is pending approval</span>
+                    </div>
+                {% else %}
+                    <p style="color: #78350f; margin-top: 15px; font-size: 14px;">
+                        Click the <strong>"Join Community"</strong> button above to request access
+                    </p>
+                {% endif %}
+            </div>
+        </div>
+        {% else %}
         <div class="col-lg-8">
             <!-- Community Description Card -->
             <div class="card mb-4">
@@ -420,27 +444,6 @@
 
             <!-- Questions Section -->
             <div class="community-questions">
-            {% if is_restricted %}
-                <div style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); padding: 50px 30px; text-align: center; border-radius: 12px; margin-top: 30px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-                    <div style="background: white; width: 80px; height: 80px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-                        <i class="fas fa-lock" style="font-size: 36px; color: #f59e0b;"></i>
-                    </div>
-                    <h3 style="color: #92400e; margin-bottom: 15px; font-weight: 600;">Private Community</h3>
-                    <p style="color: #78350f; font-size: 16px; margin-bottom: 20px; max-width: 500px; margin-left: auto; margin-right: auto;">
-                        This community is private. You need to be a member to view questions and participate.
-                    </p>
-                    {% if has_pending_request %}
-                        <div style="background: rgba(255,255,255,0.7); padding: 15px 25px; border-radius: 8px; display: inline-block; margin-top: 10px;">
-                            <i class="fas fa-clock" style="color: #f59e0b; margin-right: 8px;"></i>
-                            <span style="color: #92400e; font-weight: 500;">Your join request is pending approval</span>
-                        </div>
-                    {% else %}
-                        <p style="color: #78350f; margin-top: 15px; font-size: 14px;">
-                            Click the <strong>"Join Community"</strong> button above to request access
-                        </p>
-                    {% endif %}
-                </div>
-            {% else %}
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <h2 class="h5 mb-0">Questions</h2>
                     {% if is_member %}
@@ -572,8 +575,8 @@
                     </div>
                 {% endif %}
             </div> <!-- Close community-questions -->
-            {% endif %} <!-- Close is_restricted if -->
         </div> <!-- Close col-lg-8 -->
+        {% endif %} <!-- Close is_restricted if -->
 
         <!-- Sidebar -->
         <div class="col-lg-4">
