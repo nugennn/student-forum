@@ -410,7 +410,16 @@ def save_comment(request, question_id):
                         " in comment " +
                         createdComment.comment)
 
-            return JsonResponse({'bool': True})
+            return JsonResponse({
+                'bool': True,
+                'comment_id': createdComment.id,
+                'comment_text': createdComment.comment,
+                'username': commented_by.username,
+                'full_name': commented_by.get_full_name() or commented_by.username,
+                'user_id': commented_by.id,
+                'date': createdComment.date.isoformat(),
+                'upvote_count': 0
+            })
         else:
             return JsonResponse({'bool': False})
 
@@ -2353,7 +2362,16 @@ def save_comment_answer(request, answer_id):
                     description="Leave 10 comments"
                 )
 
-            return JsonResponse({'bool': True})
+            return JsonResponse({
+                'bool': True,
+                'comment_id': create.id,
+                'comment_text': create.comment,
+                'username': request.user.username,
+                'full_name': request.user.get_full_name() or request.user.username,
+                'user_id': request.user.id,
+                'date': create.date.isoformat(),
+                'upvote_count': 0
+            })
         else:
             return JsonResponse({'bool': False})
 

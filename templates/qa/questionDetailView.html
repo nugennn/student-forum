@@ -121,6 +121,9 @@
 <link href="{% static 'css/tailwind.css' %}" type="text/css" media="all" rel="stylesheet" />
 
     <div id="content" class="snippet-hidden" itemscope itemtype="https://schema.org/QAPage">
+        <!-- Toast Container for notifications -->
+        <div class="toast-container" style="position: fixed; top: 20px; right: 20px; z-index: 9999;"></div>
+        
         <div itemprop="mainEntity" itemscope itemtype="https://schema.org/Question">
         <link itemprop="image" href="#">
 
@@ -138,7 +141,7 @@
                 </div>
                 <div class="flex--item ws-nowrap mr16 mb8">
                     <span class="fc-light mr2">by</span>
-                    <a href="{% url 'profile:activityPageTabProfile' data.post_owner.id data.post_owner.username %}" class="s-link s-link__inherit">{{data.post_owner.username}}</a>
+                    <a href="{% url 'profile:activityPageTabProfile' data.post_owner.id data.post_owner.username %}" class="s-link s-link__inherit">{{data.post_owner.get_full_name|default:data.post_owner.username}}</a>
                 </div>
                 <div class="flex--item ws-nowrap mr16 mb8">
                     <span class="fc-light mr2">Active</span>
@@ -297,30 +300,20 @@
                         </div>
                         {% endif %}
 
+                        {% if request.user == data.post_owner %}
+                        <div class="flex--item">
+                            {% if canMakeAnotherEdit == True %}
+                            <a href="{% url 'qa:edit_question' data.id %}" class="s-btn s-btn__link" style="color: #0084ff; text-decoration: none; border: none; background: none; padding: 0; cursor: pointer; font-size: 13px;">Edit</a>
+                            {% else %}
+                            <a href="#" data-toggle="popover" title="Previous Edit Waiting for Review" data-content="Previous Edit is Waiting for Review. Come Back Later" onclick="return false;" class="s-btn s-btn__link" style="color: #0084ff; text-decoration: none; border: none; background: none; padding: 0; cursor: pointer; font-size: 13px;">Edit</a>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+
                     </div>
                     <div class="js-menu-popup-container"></div>
                 </div>
 
-            
-                    {% if show_new_contributer_message %}
-                    <div class="js-new-contributor-indicator ps-relative">
-
-                        <div class="new-contributor-indicator fc-medium py6 px8 bbr-sm">
-                            <span class="js-new-contributor-label">
-                                <svg aria-hidden="true" class="svg-icon iconWave" width="18" height="18" viewBox="0 0 18 18">
-                                    <path d="M10.7 17c-2.3 0-3.9-2.05-5.07-3.54l-.49-.6c-.67-.8-1.59-1.63-2.4-2.36A10.91 10.91 0 011.1 8.87a.79.79 0 01-.09-.56c.04-.19.14-.34.27-.4.14-.07.29-.1.45-.1.35 0 .67.18.87.34l3.5 2.75c.04.03.1.03.13 0a.09.09 0 00.02-.13l-.02-.02c-.57-.8-3.42-4.77-3.71-5.15-.21-.27-.3-.58-.24-.84.05-.2.2-.37.4-.48.18-.09.35-.13.52-.13.44 0 .76.28.96.51l3.6 4.42c.04.04.07.06.14.02.05-.02.06-.07.03-.12L4.41 2.96a.94.94 0 01-.1-.73.92.92 0 01.47-.57 1.06 1.06 0 011.4.39l3.8 6.14c.03.04.07.07.14.04.04-.03.06-.07.04-.13A153.8 153.8 0 008.1 2.54c-.31-.68-.2-1.14.36-1.42.52-.27 1.14-.07 1.47.48l3.69 8.3c.02.04.05.05.1.06a.1.1 0 00.09-.07l.66-2.28c.1-.3.31-.56.62-.72.3-.15.65-.18.98-.1.7.2 1.09.87.89 1.52-.1.37-.46 1.73-.99 3.43l-.1.33c-.58 1.86-1.03 3.33-3.11 4.4-.7.35-1.38.53-2.05.53Z" fill="#FFC166"/>
-                                    <path d="M14 .37a.5.5 0 00-.88.45l1.96 3.9a.5.5 0 00.9-.45L14 .37Zm-1.17 2.17a.5.5 0 00-.91.42l.84 1.87a.5.5 0 10.91-.41l-.84-1.88Zm-10.6 9.74a.5.5 0 01.7-.02l1.7 1.6a.5.5 0 01-.7.72l-1.68-1.6a.5.5 0 01-.02-.7Zm-1.39.98a.5.5 0 10-.68.73l3.03 2.84a.5.5 0 00.68-.73L.84 13.26Z" opacity=".4"/>
-                                </svg>
-                                New contributor
-                            </span>
-                        </div>
-
-                        <div class="js-new-contributor-popover s-popover fs-caption">
-                            <div class="s-popover--arrow s-popover--arrow__tc"></div>
-                            <a href="">{{data.post_owner}}</a> is a new contributor <a href="/conduct">Code of Conduct</a>
-                        </div>
-                    </div>
-                    {% endif %}
                 </div>
             </div>
         </div>    
@@ -328,83 +321,24 @@
 
     <span class="d-none" itemprop="commentCount">1</span>
 
-
-
-
-    <div class="post-layout--right js-post-comments-component">
-        <div id="comments-{{data.id}}" class="comments js-comments-container bt bc-black-075 mt12 " data-post-id="{{data.id}}" data-min-length="15">
-        <ul class="comments-list js-comments-list">
+    <div class="post-layout--right js-post-comments-component" style="margin-top: -8px; padding-top: 12px; padding-left: 16px; border-top: 1px solid #e5e7eb;">
+        <h3 style="font-size: 16px; font-weight: 700; margin: 0 0 12px 0; color: #1a1a1a;">{% if getAllTheComments|length == 0 %}0 Comments{% else %}Comments{% endif %}</h3>
+        <div id="comments-{{data.id}}" class="comments js-comments-container" data-post-id="{{data.id}}" data-min-length="15" style="padding: 0; padding-left: 0;">
+        <ul class="comments-list js-comments-list" style="list-style: none; padding: 0; margin: 0;">
             {% for comment in getAllTheComments %}
             {% if not comment.deleted %}
-            <li id="comment-{{comment.id}}" class="comment js-comment" data-comment-id="{{comment.id}}" data-comment-owner-id="{{comment.commented_by.id}}" data-comment-score="0">
-                <div class="js-comment-actions comment-actions">
-                    <div class="comment-score js-comment-edit-hide"></div>
-
-                        <form method="GET" class="commentVoteForm" action="{% url 'qa:upvote_comment' comment.id %}" data-pk="{{ comment.id }}">
-                            <span id="id_commentVote{{comment.id}}">
-                                <div class="move-to-left">{{comment.count_upvote}}</div>
-                                    {% if request.user in comment.com_upvote.all %}
-                                    <button name='submit' type='submit' value="upVoteCommentIt"><i class="fas upvote-comment-active fa-sort-up fa-2x"></i></button>
-                                    {% else %}
-                                    <button name='submit' type='submit' value="upVoteCommentIt"><i class="fas upvote-comment-inactive fa-sort-up fa-2x"></i></button>
-                                    {% endif %}
-                                </span>
-                        </form>
-
-                        <div class="comment-flagging js-comment-edit-hide">
-                            <button class="js-comment-flag s-btn s-btn__unset bg-transparent c-pointer fc-black-300 o40 h:fc-red-500 h:o100"
-                                    aria-label="Flag Comment"
-                                    aria-pressed="false"
-                                    title="Flag this comment for serious problems or moderator attention">
-                                <svg aria-hidden="true" class="svg-icon iconFlag" onclick="openCommentModel({{forloop.counter}})" width="18" height="18" viewBox="0 0 18 18">
-                                    <path d="M3 2v14h2v-6h3.6l.4 1h6V3H9.5L9 2H3Z"/>
-                                </svg>
-                            </button>
-
-                            <div id="FlagCommentModel-{{forloop.counter}}" class="flag-comment-model">
-                                <div class="modal-content-space">
-                                    <div class="modal-header">
-                                        <span id="closeId-{{forloop.counter}}" >&times;</span>
-                                    </div>
-                                    <div class="modal-flagQuestion">
-                                        <div class="container-fluid">
-                                            <form method="post" enctype="multipart/form-data" action="{% url 'qa:flagComment' commentq_id=comment.pk %}">
-                                                {% csrf_token %} 
-                                                    {{FlagCommentForm}}
-                                                    <input type="submit">
-                                            </form>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+            <li id="comment-{{comment.id}}" class="comment js-comment" data-comment-id="{{comment.id}}" data-comment-owner-id="{{comment.commented_by.id}}" data-comment-score="0" style="padding: 12px 0; border-bottom: 1px solid #f3f4f6; display: flex; gap: 12px; align-items: flex-start; transition: background-color 0.2s ease;">
+                <div class="comment-text js-comment-text-and-form" style="flex: 1; min-width: 0;">
+                    <div class="comment-body js-comment-edit-hide" style="font-size: 13px; line-height: 1.6;">
+                        <span class="comment-copy" style="display: block; margin-bottom: 8px; color: #2c3e50; word-wrap: break-word;">{{comment.comment}}</span>
+                        <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap; font-size: 12px; color: #718096;">
+                            <a href="{% url 'profile:activityPageTabProfile' comment.commented_by.id comment.commented_by.username %}" title="{{comment.commented_by|calculate_reputation}} reputation" class="comment-user" style="color: #0084ff; text-decoration: none; font-weight: 500;">{{comment.commented_by.get_full_name|default:comment.commented_by.username}}</a>
+                            <span class="comment-date" dir="ltr" title="{{comment.date|date:'Y-m-d H:i:s'}}" style="color: #a0aec0;">{{comment.date|naturaltime}}</span>
+                            {% if request.user == comment.commented_by %}
+                            <a href="#" class="js-edit-comment" data-comment-id="{{comment.id}}" style="color: #0084ff; text-decoration: none; font-size: 11px; font-weight: 500; transition: opacity 0.2s ease;" onmouseover="this.style.opacity='0.7'" onmouseout="this.style.opacity='1'">edit</a>
+                            <a href="#" class="js-delete-comment" data-comment-id="{{comment.id}}" style="color: #e53e3e; text-decoration: none; font-size: 11px; font-weight: 500; transition: opacity 0.2s ease;" onmouseover="this.style.opacity='0.7'" onmouseout="this.style.opacity='1'">delete</a>
+                            {% endif %}
                         </div>
-                </div>
-
-                <div class="comment-text  js-comment-text-and-form">
-                    <div class="comment-body js-comment-edit-hide">
-                        <span class="comment-copy">{{comment.comment}}</span>
-                        <div class="d-inline-flex ai-center">&ndash;&nbsp;
-                            <a href="{% url 'profile:activityPageTabProfile' comment.commented_by.id comment.commented_by.username %}" title="{{comment.commented_by|calculate_reputation}} reputation" class="comment-user">{{comment.commented_by.get_full_name|default:comment.commented_by.username}}</a>
-                        </div>
-                        <span class="comment-date" dir="ltr">
-                            <span title="{{comment.date|date:'Y-m-d H:i:s'}}" class="relativetime-clean">{{comment.date|naturaltime}}</span>
-                        </span>
-                        {% if request.user == comment.commented_by %}
-                        <span class="comment-edit" title="Edit comment">
-                            <a href="#" class="js-edit-comment" data-comment-id="{{comment.id}}">
-                                <svg aria-hidden="true" class="va-text-bottom o50 svg-icon iconPencilSm" width="14" height="14" viewBox="0 0 14 14">
-                                    <path d="m11.1 1.71 1.13 1.12c.2.2.2.51 0 .71L11.1 4.7 9.21 2.86l1.17-1.15c.2-.2.51-.2.71 0ZM2 10.12l6.37-6.43 1.88 1.88L3.88 12H2v-1.88Z"/>
-                                </svg>
-                            </a>
-                        </span>
-                        <span class="comment-delete" title="Delete comment">
-                            <a href="#" class="js-delete-comment" data-comment-id="{{comment.id}}">
-                                <svg aria-hidden="true" class="va-text-bottom o50 svg-icon iconTrash" width="14" height="14" viewBox="0 0 14 14">
-                                    <path d="M11 3h-1.5l-.5-1h-4l-.5 1H3v1h8V3ZM4 5v7a1 1 0 0 0 1 1h4a1 1 0 0 0 1-1V5H4Z"/>
-                                </svg>
-                            </a>
-                        </span>
-                        {% endif %}
                     </div>
                 </div>
             </li>
@@ -415,14 +349,20 @@
 
 
     <div class="comment-wrapper-{{data.id}}"></div>
-    <div id="myDIV">
+    <div id="myDIV" style="display: none;">
 
         <div class="card my-3">
-            <h6 class="card-header">Add Comment</h6>
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h6 class="mb-0">Add Comment</h6>
+                <button type="button" class="btn-close" onclick="myFunction()" title="Close"></button>
+            </div>
             <div class="card-body">
-                <textarea class="form-control comment-text-{{data.id}}"></textarea>
+                <textarea class="form-control comment-text-{{data.id}}" placeholder="Write your comment here..."></textarea>
                 <div class="contain"></div>
-                <button type="button" data-data="{{data.id}}" class="btn btn-dark my-3 save-comment">Submit</button>
+                <div class="d-flex gap-2">
+                    <button type="button" data-data="{{data.id}}" class="btn btn-dark my-3 save-comment">Submit</button>
+                    <button type="button" class="btn btn-secondary my-3" onclick="myFunction()">Cancel</button>
+                </div>
             </div>
         </div>
 
@@ -477,7 +417,7 @@
 
 {% for answer in answers %}
 <a name="{{answer.id}}"></a>
-<div id="answer-{{answer.id}}" class="answer js-answer {% if answer.is_deleted %}deleted-answer{% endif %}" data-answerid="{{answer.id}}">
+<div id="answer-{{answer.id}}" class="answer js-answer {% if answer.is_deleted %}deleted-answer{% endif %}" data-answerid="{{answer.id}}" style="background: #ffffff; border: 1px solid #e5e7eb; border-radius: 10px; padding: 24px; margin: 16px 0; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08); transition: all 0.3s ease; overflow: hidden;">
     <div class="post-layout" style="overflow: visible;">
 
         <div class="answercell post-layout--right" style="overflow: visible;">
@@ -541,168 +481,144 @@
         </div>
     </div>
 
-                    <div class="post-signature flex--item fl0" style="width: 100%; margin-top: 12px; padding-top: 12px; border-top: 1px solid #e5e7eb;">
-                        <div class="user-action-time">
-                            answered <span title="2021-12-08 09:53:01Z" class="relativetime">{{answer.date|naturaltime}}</span>
-                            by <a href="{% url 'profile:activityPageTabProfile' answer.answer_owner.id answer.answer_owner.username %}">{{answer.answer_owner.get_full_name|default:answer.answer_owner.username}}</a>
+                    <div class="post-signature flex--item fl0" style="width: 100%; margin-top: 16px; padding-top: 16px; border-top: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center;">
+                        <div class="user-action-time" style="font-size: 13px; color: #666;">
+                            <span style="color: #999;">answered</span> <span title="2021-12-08 09:53:01Z" class="relativetime" style="color: #666;">{{answer.date|naturaltime}}</span>
+                            <span style="color: #999;">by</span> <a href="{% url 'profile:activityPageTabProfile' answer.answer_owner.id answer.answer_owner.username %}" style="color: #0084ff; text-decoration: none; font-weight: 500;">{{answer.answer_owner.get_full_name|default:answer.answer_owner.username}}</a>
                         </div>
                     </div>
 
                     <!-- Answer Action Buttons - START -->
-                    <div class="mt16 d-flex gs8 gsy fw-wrap jc-end ai-start pt4 mb16" style="margin-right: 20px; overflow: visible;">
-                        <div class="js-post-menu pt2" data-post-id="{{answer.id}}">
-                            <div class="d-flex gs8 s-anchors s-anchors__muted fw-wrap">
+                    <div class="mt16 d-flex gs8 gsy fw-wrap ai-center" style="margin-top: 16px; gap: 16px; font-size: 13px;">
+                        <div class="js-post-menu" data-post-id="{{answer.id}}">
+                            <div class="d-flex s-anchors s-anchors__muted fw-wrap" style="gap: 16px; align-items: center;">
 
-                                <!-- Upvote Form -->
-                                <form method="GET" class="answerUpvoteForm d-inline" action="{% url 'qa:answer_upvote_downvote' answer.id %}" data-pk="{{ answer.id }}" style="display: inline;">
-                                    <button name='submit' type='submit' value='like' class="s-btn s-btn__link" style="display: flex; align-items: center; gap: 4px; padding: 0; border: none; background: none; cursor: pointer; font-size: 13px;">
-                                        {% if request.user in answer.a_vote_ups.all %}
-                                        <i class="fas active fa-arrow-up" style="color: #2ecc71;"></i>
-                                        {% else %}
-                                        <i class="fas inactive fa-arrow-up" style="color: #999;"></i>
-                                        {% endif %}
-                                        <span class="vote-count">{{answer.a_vote_ups.all.count}}</span>
-                                    </button>
-                                </form>
-                                
-                                <!-- Downvote Form -->
-                                <form method="GET" class="answerDownvoteForm d-inline" action="{% url 'qa:answer_upvote_downvote' answer.id %}" data-pk="{{ answer.id }}" style="display: inline;">
-                                    <button name='submit' type='submit' value='ansDownVote' class="s-btn s-btn__link" style="display: flex; align-items: center; gap: 4px; padding: 0; border: none; background: none; cursor: pointer; font-size: 13px;">
-                                        {% if request.user in answer.a_vote_downs.all %}
-                                        <i class="fas active fa-arrow-down" style="color: #e74c3c;"></i>
-                                        {% else %}
-                                        <i class="fas inactive fa-arrow-down" style="color: #999;"></i>
-                                        {% endif %}
-                                        <span class="vote-count">{{answer.a_vote_downs.all.count}}</span>
-                                    </button>
-                                </form>
-                                
-                                <!-- Share Button -->
-                                <div class="flex--item">
-                                    <button type="button" class="s-btn s-btn__link" onclick="openShareModal('answer', {{answer.id}})" title="Share this answer">Share</button>
+                                <!-- Upvote/Downvote Compact -->
+                                <div style="display: flex; gap: 8px; align-items: center;">
+                                    <!-- Upvote Form -->
+                                    <form method="GET" class="answerUpvoteForm d-inline" action="{% url 'qa:answer_upvote_downvote' answer.id %}" data-pk="{{ answer.id }}" style="display: inline;">
+                                        <button name='submit' type='submit' value='like' class="s-btn s-btn__link" style="display: flex; align-items: center; gap: 4px; padding: 0; border: none; background: none; cursor: pointer; font-size: 13px; color: #666; transition: color 0.2s ease;" onmouseover="this.style.color='#0084ff'" onmouseout="this.style.color='#666'">
+                                            {% if request.user in answer.a_vote_ups.all %}
+                                            <i class="fas fa-arrow-up" style="color: #2ecc71; font-size: 12px;"></i>
+                                            {% else %}
+                                            <i class="fas fa-arrow-up" style="color: #999; font-size: 12px;"></i>
+                                            {% endif %}
+                                            <span class="vote-count">{{answer.a_vote_ups.all.count}}</span>
+                                        </button>
+                                    </form>
+                                    
+                                    <!-- Downvote Form -->
+                                    <form method="GET" class="answerDownvoteForm d-inline" action="{% url 'qa:answer_upvote_downvote' answer.id %}" data-pk="{{ answer.id }}" style="display: inline;">
+                                        <button name='submit' type='submit' value='ansDownVote' class="s-btn s-btn__link" style="display: flex; align-items: center; gap: 4px; padding: 0; border: none; background: none; cursor: pointer; font-size: 13px; color: #666; transition: color 0.2s ease;" onmouseover="this.style.color='#0084ff'" onmouseout="this.style.color='#666'">
+                                            {% if request.user in answer.a_vote_downs.all %}
+                                            <i class="fas fa-arrow-down" style="color: #e74c3c; font-size: 12px;"></i>
+                                            {% else %}
+                                            <i class="fas fa-arrow-down" style="color: #999; font-size: 12px;"></i>
+                                            {% endif %}
+                                            <span class="vote-count">{{answer.a_vote_downs.all.count}}</span>
+                                        </button>
+                                    </form>
                                 </div>
 
-                                <!-- Report Button -->
-                                <div class="flex--item">
+                                <div style="width: 1px; height: 16px; background: #e5e7eb;"></div>
+
+                                <!-- Action Buttons -->
+                                <div style="display: flex; gap: 16px; align-items: center;">
+                                    <!-- Share Button -->
+                                    <button type="button" class="s-btn s-btn__link" onclick="openShareModal('answer', {{answer.id}})" title="Share this answer" style="color: #0084ff; text-decoration: none; font-size: 13px; border: none; background: none; cursor: pointer; padding: 0; transition: opacity 0.2s ease;" onmouseover="this.style.opacity='0.7'" onmouseout="this.style.opacity='1'">Share</button>
+
+                                    <!-- Report Button -->
                                     <button type="button"
                                             class="js-flag-post-link s-btn s-btn__link"
                                             onclick="answerFlagOpenModel({{forloop.counter}})"
-                                            title="Report this post for serious problems or moderator attention">
+                                            title="Report this post for serious problems or moderator attention"
+                                            style="color: #0084ff; text-decoration: none; font-size: 13px; border: none; background: none; cursor: pointer; padding: 0; transition: opacity 0.2s ease;" onmouseover="this.style.opacity='0.7'" onmouseout="this.style.opacity='1'">
                                         Report
                                     </button>
-                                </div>
 
-                                <!-- Add Comment Button -->
-                                {% if request.user.is_authenticated %}
-                                <div class="flex--item">
-                                    <button onclick="showTextBox({{forloop.counter}})" class="s-btn s-btn__link" style="border: none; background: none; padding: 0; cursor: pointer;">Add Comment</button>
-                                </div>
-                                {% endif %}
+                                    <!-- Add Comment Button -->
+                                    {% if request.user.is_authenticated %}
+                                    <button onclick="showTextBox({{forloop.counter}})" class="s-btn s-btn__link" style="color: #0084ff; text-decoration: none; font-size: 13px; border: none; background: none; cursor: pointer; padding: 0; transition: opacity 0.2s ease;" onmouseover="this.style.opacity='0.7'" onmouseout="this.style.opacity='1'">Add Comment</button>
+                                    {% endif %}
 
-                                <!-- Edit/Delete Buttons -->
-                                {% if request.user == answer.answer_owner %}
-                                <div class="flex--item">
-                                    <a href="{% url 'qa:edit_answer' answer.id %}" class="js-suggest-edit-post" title="Revise and improve this post">Edit</a>
-                                </div>
-                                <div class="flex--item">
+                                    <!-- Edit/Delete Buttons -->
+                                    {% if request.user == answer.answer_owner %}
+                                    <a href="{% url 'qa:edit_answer' answer.id %}" class="js-suggest-edit-post" title="Revise and improve this post" style="color: #0084ff; text-decoration: none; font-size: 13px; transition: opacity 0.2s ease;" onmouseover="this.style.opacity='0.7'" onmouseout="this.style.opacity='1'">Edit</a>
                                     {% if answer.is_deleted %}
-                                    <a href="{% url 'qa:undelete_answer' answer.id %}">Undelete</a>
+                                    <a href="{% url 'qa:undelete_answer' answer.id %}" style="color: #0084ff; text-decoration: none; font-size: 13px; transition: opacity 0.2s ease;" onmouseover="this.style.opacity='0.7'" onmouseout="this.style.opacity='1'">Undelete</a>
                                     {% else %}
-                                    <a onclick="return confirm('You really want to delete answer - {{answer.body|truncatechars:20}}')" href="{% url 'qa:delete_answer' answer.id %}">Delete</a>
+                                    <a onclick="return confirm('You really want to delete answer - {{answer.body|truncatechars:20}}')" href="{% url 'qa:delete_answer' answer.id %}" style="color: #e53e3e; text-decoration: none; font-size: 13px; transition: opacity 0.2s ease;" onmouseover="this.style.opacity='0.7'" onmouseout="this.style.opacity='1'">Delete</a>
+                                    {% endif %}
                                     {% endif %}
                                 </div>
-                                {% endif %}
-
                             </div>
                             <div class="js-menu-popup-container"></div>
-                        </div>
                         </div>
                     </div>
                     <!-- Answer Action Buttons - END -->
                 </div>
             </div>
         </div>
-        <span class="d-none" itemprop="commentCount">5</span> 
-    <div class="post-layout--right js-post-comments-component">
-        <div id="comments-12816528" class="comments js-comments-container bt bc-black-075 mt12 " data-post-id="12816528" data-min-length="15">
-            <ul class="comments-list js-comments-list">
+        <span class="d-none" itemprop="commentCount">5</span>
+        
+        <!-- Add Comment Form for Answer -->
+        <div id="answer-comment-div-{{forloop.counter}}" class="this-div" style="display: none; margin-top: 12px;">
+            <form method="GET" class="commentForm" action="{% url 'qa:save_comment_answer' answer.id  %}" data-pk="{{ answer.id }}">
+                <div class="card my-3">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0">Add Comment</h6>
+                        <button type="button" class="btn-close" onclick="showTextBox({{forloop.counter}}); return false;" title="Close" style="cursor: pointer;"></button>
+                    </div>
+                    <div class="card-body">
+                        <textarea class="form-control comment-answer-text-{{answer.id}}" placeholder="Write your comment here..."></textarea>
+                        <div class="contain"></div>
+                        <div class="d-flex gap-2">
+                            <button type="button" data-data="{{answer.id}}" class="btn btn-dark my-3 save-answer-comment">Submit</button>
+                            <button type="button" class="btn btn-secondary my-3" onclick="showTextBox({{forloop.counter}})">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+        
+    <div class="post-layout--right js-post-comments-component" style="margin-top: -8px; display: {% if answer.commentq_set.all %}block{% else %}none{% endif %}; padding-top: 12px; border-top: 1px solid #e5e7eb;">
+        <div id="comments-12816528" class="comments js-comments-container" data-post-id="12816528" data-min-length="15" style="padding: 0;">
+            <ul class="comments-list js-comments-list" style="list-style: none; padding: 0; margin: 0;">
             {% for comment in answer.commentq_set.all %}
             {% if not comment.deleted %}
-                <li id="comment-{{comment.id}}" class="comment js-comment" data-comment-id="{{comment.id}}" data-comment-owner-id="{{comment.commented_by.id}}" data-comment-score="1">
-                    <div class="js-comment-actions comment-actions">
-
-                        <form method="GET" class="commentAnswerVoteForm" action="{% url 'qa:upvote_comment' comment.id %}" data-pk="{{comment.id}}">
-                            <div id="id_AnswerCommentVote{{comment.id}}">
-                                <div class="move-to-left">{{comment.count_upvote}}</div>
-                                    {% if request.user in comment.com_upvote.all %}
-                                    <button name='submit' type='submit' value="upVoteCommentIt"><i class="fas upvote-comment-active fa-sort-up fa-2x"></i></button>
-                                    {% else %}
-                                    <button name='submit' type='submit' value="upVoteCommentIt"><i class="fas upvote-comment-inactive fa-sort-up fa-2x"></i></button>
-                                    {% endif %}
+                <li id="comment-{{comment.id}}" class="comment js-comment" data-comment-id="{{comment.id}}" data-comment-owner-id="{{comment.commented_by.id}}" data-comment-score="1" style="padding: 8px 0; border-bottom: 1px solid #f0f0f0; display: flex; gap: 8px; align-items: flex-start;">
+                    <div class="comment-text js-comment-text-and-form" style="flex: 1; min-width: 0;">
+                        <div class="comment-body js-comment-edit-hide" style="font-size: 13px; line-height: 1.5;">
+                            <span class="comment-copy" style="display: block; margin-bottom: 4px;">{{comment.comment}}</span>
+                            <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap; font-size: 12px; color: #666;">
+                                <a href="{% url 'profile:activityPageTabProfile' comment.commented_by.id comment.commented_by.username %}" title="{{comment.commented_by|calculate_reputation}} reputation" class="comment-user" style="color: #0084ff; text-decoration: none;">{{comment.commented_by.get_full_name|default:comment.commented_by.username}}</a>
+                                <span class="comment-date" dir="ltr" title="{{comment.date|date:'Y-m-d H:i:s'}}">{{comment.date|naturaltime}}</span>
+                                {% if request.user == comment.commented_by %}
+                                <a href="#" class="js-edit-comment" data-comment-id="{{comment.id}}" style="color: #0084ff; text-decoration: none; font-size: 11px;">edit</a>
+                                <a href="#" class="js-delete-comment" data-comment-id="{{comment.id}}" data-answer-id="{{answer.id}}" style="color: #d32f2f; text-decoration: none; font-size: 11px;">delete</a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="js-comment-actions comment-actions" style="display: flex; gap: 4px; align-items: center; flex-shrink: 0;">
+                        <form method="GET" class="commentAnswerVoteForm" action="{% url 'qa:upvote_comment' comment.id %}" data-pk="{{comment.id}}" style="display: flex; align-items: center; gap: 2px;">
+                            <div id="id_AnswerCommentVote{{comment.id}}" style="display: flex; align-items: center; gap: 2px; font-size: 11px;">
+                                <span style="min-width: 16px; text-align: center;">{{comment.count_upvote}}</span>
+                                {% if request.user in comment.com_upvote.all %}
+                                <button name='submit' type='submit' value="upVoteCommentIt" style="background: none; border: none; cursor: pointer; padding: 0; color: #2ecc71;"><i class="fas fa-sort-up" style="font-size: 12px;"></i></button>
+                                {% else %}
+                                <button name='submit' type='submit' value="upVoteCommentIt" style="background: none; border: none; cursor: pointer; padding: 0; color: #999;"><i class="fas fa-sort-up" style="font-size: 12px;"></i></button>
+                                {% endif %}
                             </div>
                         </form>
-
-                        <br><br>
-                        <div class="comment-flagging js-comment-edit-hide">
-                            <button class="js-comment-flag s-btn s-btn__unset bg-transparent c-pointer fc-black-300 o40 h:fc-red-500 h:o100"
-                                    aria-label="Flag Comment"
-                                    aria-pressed="false"
-                                    title="Flag this comment for serious problems or moderator attention">
-                                <svg aria-hidden="true" class="svg-icon iconFlag" width="18" height="18" viewBox="0 0 18 18"><path d="M3 2v14h2v-6h3.6l.4 1h6V3H9.5L9 2H3Z"/></svg>
-                            </button>
-                        </div>
                     </div>
-
-
-
-                    <div class="comment-text  js-comment-text-and-form">
-                        <div class="comment-body js-comment-edit-hide">
-                            
-                            <span class="comment-copy">{{comment.comment}}</span>
-                            <div class="d-inline-flex ai-center">&ndash;&nbsp;
-                                <a href="{% url 'profile:activityPageTabProfile' comment.commented_by.id comment.commented_by.username %}" title="{{comment.commented_by|calculate_reputation}} reputation" class="comment-user">{{comment.commented_by.get_full_name|default:comment.commented_by.username}}</a>
-                            </div>
-                            <span class="comment-date" dir="ltr">
-                                <span title="{{comment.date|date:'Y-m-d H:i:s'}}" class="relativetime-clean">{{comment.date|naturaltime}}</span>
-                            </span>
-                            {% if request.user == comment.commented_by %}
-                            <span class="comment-edit" title="Edit comment">
-                                <a href="#" class="js-edit-comment" data-comment-id="{{comment.id}}">
-                                    <svg aria-hidden="true" class="va-text-bottom o50 svg-icon iconPencilSm" width="14" height="14" viewBox="0 0 14 14">
-                                        <path d="m11.1 1.71 1.13 1.12c.2.2.2.51 0 .71L11.1 4.7 9.21 2.86l1.17-1.15c.2-.2.51-.2.71 0ZM2 10.12l6.37-6.43 1.88 1.88L3.88 12H2v-1.88Z"/>
-                                    </svg>
-                                </a>
-                            </span>
-                            <span class="comment-delete" title="Delete comment">
-                                <a href="#" class="js-delete-comment" data-comment-id="{{comment.id}}" data-answer-id="{{answer.id}}">
-                                    <svg aria-hidden="true" class="va-text-bottom o50 svg-icon iconTrash" width="14" height="14" viewBox="0 0 14 14">
-                                        <path d="M11 3h-1.5l-.5-1h-4l-.5 1H3v1h8V3ZM4 5v7a1 1 0 0 0 1 1h4a1 1 0 0 0 1-1V5H4Z"/>
-                                    </svg>
-                                </a>
-                            </span>
-                            {% endif %}
-                        </div>
-                    </div>
-
                 </li>
                 {% endif %}
                 {% endfor %}
             </ul>
         </div>
 
-<div class="answer-comment-wrapper-{{answer.id}}"></div>
-<div id="answer-comment-div-{{forloop.counter}}" class="this-div">
-    <form method="GET" class="commentForm" action="{% url 'qa:save_comment_answer' answer.id  %}" data-pk="{{ answer.id }}">
-        <div class="card my-3">
-            <h6 class="card-header">Add Comment</h6>
-            <div class="card-body">
-                <textarea class="form-control comment-answer-text-{{answer.id}}"></textarea>
-                <div class="contain"></div>
-                <button type="button" data-data="{{answer.id}}" class="btn btn-dark my-3 save-answer-comment">Submit</button>
-            </div>
-        </div>
-    </form>
-</div>
+<div class="answer-comment-wrapper-{{answer.id}}" style="display: none;"></div>
 
 <script>
 $(function() {
@@ -1225,18 +1141,6 @@ $(function() {
 
 
 
-{% if request.user == data.post_owner %}
-{% if canMakeAnotherEdit == True %}
-<a href="{% url 'qa:edit_question' data.id %}">Edit Question</a>
-{% else %}
-<script>
-    $(function () {
-  $('[data-toggle="popover"]').popover()
-})
-</script>
-<a href="#" data-toggle="popover" title="Previous Edit Waiting for Review" data-content="Previous Edit is Waiting for Review. Come Back Later" onclick="return false;">Edit Question</a>
-{% endif %}
-{% endif %}
 
 
 
@@ -1785,48 +1689,6 @@ $(document).ready(function() {
 <script>$(`#id_dislikes${s.attr("data-pk")}`).html("<button name='submit' type='submit' value=\"like\"><i class=\"fas voteDownInActive fa-sort-down fa-4x\"></i><button>"),$(`#id_likes${s.attr("data-pk")}`).html(`<button name='submit' type='submit' value="like"><i  class="fas active fa-sort-up fa-4x"></i></button><div class="flex--item d-flex fd-column ai-center color-black fs-title"><div class="showVoteCount">${i}</div></div>`)):"unlike"==t.action?(i-=1,$(`#id_likes${s.attr("data-pk")}`).html(`<button name='submit' type='submit' value="like"><i  class="fas inactive fa-sort-up fa-4x"></i></button><div class="flex--item d-flex fd-column ai-center color-black fs-title"><div class="showVoteCount">${i}</div></div>`)):"voteError"==t.action?($(".toast-container").html('<div data-delay="5000" class="s-toast js-toast fade" aria-hidden="false" style="top: 60px;">\n    <aside class="s-notice s-notice__info">\n        <div class="d-flex gs16 gsx ai-center jc-space-between">\n            <div class="flex--item">\n                <div class="m0 js-toast-body" id="js-notice-toast-message" role="status" tabindex="0">\n                    <strong>Alert ! </strong>Your vote is now locked, and will - unless the Question Edit.\n                </div>\n            </div>\n            <div class="flex--item mr0 js-notice-actions">\n                <div class="d-flex">\n                    <button class="p8 s-btn d-flex flex__center fc-dark js-dismiss" tabindex="0" role="button" aria-label="Dismiss">\n                        <svg class="m0 svg-icon iconClearSm" width="14" height="14" viewBox="0 0 14 14">\n                            <path d="M12 3.41 10.59 2 7 5.59 3.41 2 2 3.41 5.59 7 2 10.59 3.41 12 7 8.41 10.59 12 12 10.59 8.41 7 12 3.41Z"></path>\n                        </svg>\n                    </button>\n                </div>\n            </div>\n        </div>\n    </aside>\n</div>'),$(".toast").toast("show",{autohide:!0}),$(".js-toast").fadeOut(8e3)):"lackOfPrivelege"==t.action?($(".toast-container").html('<div data-delay="5000" class="s-toast js-toast fade" id="closeId" aria-hidden="false" style="top: 60px;">\n    <aside class="s-notice s-notice__info">\n        <div class="d-flex gs16 gsx ai-center jc-space-between">\n            <div class="flex--item">\n                <div class="m0 js-toast-body" id="js-notice-toast-message" role="status" tabindex="0">\n                    You need atleast 15 Reputation to Up upvote\n                </div>\n            </div>\n            <div class="flex--item mr0 js-notice-actions">\n                <div class="d-flex">\n                    <button class="p8 s-btn d-flex flex__center fc-dark js-dismiss" tabindex="0" role="button" aria-label="Dismiss">\n                        <svg class="m0 svg-icon iconClearSm" width="14" height="14" viewBox="0 0 14 14">\n                            <path d="M12 3.41 10.59 2 7 5.59 3.41 2 2 3.41 5.59 7 2 10.59 3.41 12 7 8.41 10.59 12 12 10.59 8.41 7 12 3.41Z"></path>\n                        </svg>\n                    </button>\n                </div>\n            </div>\n        </div>\n    </aside>\n</div>'),$(".toast").toast("show",{autohide:!0}),$(".js-toast").fadeOut(8e3)):"cannotLikeOwnPost"==t.action?($(".toast-container").html('<div data-delay="5000" class="s-toast js-toast fade" aria-hidden="false" style="top: 60px;">\n    <aside class="s-notice s-notice__info">\n        <div class="d-flex gs16 gsx ai-center jc-space-between">\n            <div class="flex--item">\n                <div class="m0 js-toast-body" id="js-notice-toast-message" role="status" tabindex="0">\n <strong>Alert !</strong> You cannot vote for your own post\n                </div>\n            </div>\n            <div class="flex--item mr0 js-notice-actions">\n                <div class="d-flex">\n                    <button class="p8 s-btn d-flex flex__center fc-dark js-dismiss" tabindex="0" role="button" aria-label="Dismiss">\n                        <svg class="m0 svg-icon iconClearSm" width="14" height="14" viewBox="0 0 14 14">\n                            <path d="M12 3.41 10.59 2 7 5.59 3.41 2 2 3.41 5.59 7 2 10.59 3.41 12 7 8.41 10.59 12 12 10.59 8.41 7 12 3.41Z"></path>\n                        </svg>\n                    </button>\n                </div>\n            </div>\n        </div>\n    </aside>\n</div>'),$(".toast").toast("show",{autohide:!0}),$(".js-toast").fadeOut(8e3)):(i++,$(`#id_likes${s.attr("data-pk")}`).html(`<button name='submit' type='submit' value="like"><i  class="fas active fa-sort-up fa-4x"></i></button><div class="flex--item d-flex fd-column ai-center color-black fs-title"><div class="showVoteCount">${i}</div></div>`))}})}),$(".dislikeForm").submit(function(t){t.preventDefault();let s=$(this);$.ajax({url:s.attr("action"),data:{submit:"downVote"},dataType:"json",method:"get",async:!1,success:function(t){let i=$(`#id_likes${s.attr("data-pk")}`).find(".showVoteCount").html();"unlike_and_dislike"==t.action?(i-=2,$(`#id_dislikes${s.attr("data-pk")}`).html("<button name='submit' type='submit' value=\"dislike\"><i class=\"fas voteDownActive fa-sort-down fa-4x\"></i></button>"),$(`#id_likes${s.attr("data-pk")}`).html(`<button name='submit' type='submit' value="dislike"><i  class="fas inactive fa-sort-up fa-4x"></i></button><div class="flex--item d-flex fd-column ai-center color-black fs-title"><div class="showVoteCount">${i}</div></div>`)):"undislike"===t.action?(i++,$(`#id_dislikes${s.attr("data-pk")}`).html("<button name='submit' type='submit' value=\"dislike\"><i class=\"fas voteDownInActive fa-sort-down fa-4x\"></i></button>"),$(`#id_likes${s.attr("data-pk")}`).html(`<button name='submit' type='submit' value="like"><i  class="fas inactive fa-sort-up fa-4x"></i></button><div class="flex--item d-flex fd-column ai-center color-black fs-title"><div class="showVoteCount">${i}</div></div>`)):"voteError"==t.action?($(".toast-container").html('<div data-delay="5000" class="s-toast js-toast fade" aria-hidden="false" style="top: 60px;">\n    <aside class="s-notice s-notice__info">\n        <div class="d-flex gs16 gsx ai-center jc-space-between">\n            <div class="flex--item">\n                <div class="m0 js-toast-body" id="js-notice-toast-message" role="status" tabindex="0">\n                    <strong>Alert ! </strong>Your vote is now locked, and will - unless the Question Edit.\n                </div>\n            </div>\n            <div class="flex--item mr0 js-notice-actions">\n                <div class="d-flex">\n                    <button class="p8 s-btn d-flex flex__center fc-dark js-dismiss" onclick="clickToClose();" tabindex="0" role="button" aria-label="Dismiss">\n                        <svg class="m0 svg-icon iconClearSm" width="14" height="14" viewBox="0 0 14 14">\n                            <path d="M12 3.41 10.59 2 7 5.59 3.41 2 2 3.41 5.59 7 2 10.59 3.41 12 7 8.41 10.59 12 12 10.59 8.41 7 12 3.41Z"></path>\n                        </svg>\n                    </button>\n                </div>\n            </div>\n        </div>\n    </aside>\n</div>'),$(".toast").toast("show",{autohide:!0}),$(".js-toast").fadeOut(8e3)):"lackOfPrivelege"==t.action?($(".toast-container").html('<div data-delay="5000" class="s-toast js-toast fade" aria-hidden="false" style="top: 60px;">\n    <aside class="s-notice s-notice__info">\n        <div class="d-flex gs16 gsx ai-center jc-space-between">\n            <div class="flex--item">\n                <div class="m0 js-toast-body" id="js-notice-toast-message" role="status" tabindex="0">\n                    <strong>Alert ! </strong>You need alteast 125 Reputation to Down Vote\n                </div>\n            </div>\n            <div class="flex--item mr0 js-notice-actions">\n                <div class="d-flex">\n                    <button class="p8 s-btn d-flex flex__center fc-dark js-dismiss" tabindex="0" role="button" aria-label="Dismiss">\n                        <svg class="m0 svg-icon iconClearSm" width="14" height="14" viewBox="0 0 14 14">\n                            <path d="M12 3.41 10.59 2 7 5.59 3.41 2 2 3.41 5.59 7 2 10.59 3.41 12 7 8.41 10.59 12 12 10.59 8.41 7 12 3.41Z"></path>\n                        </svg>\n                    </button>\n                </div>\n            </div>\n        </div>\n    </aside>\n</div>'),$(".toast").toast("show",{autohide:!0}),$(".js-toast").fadeOut(8e3)):"cannotLikeOwnPost"==t.action?($(".toast-container").html('<div data-delay="5000" class="s-toast js-toast fade" aria-hidden="false" style="top: 60px;">\n    <aside class="s-notice s-notice__info">\n        <div class="d-flex gs16 gsx ai-center jc-space-between">\n            <div class="flex--item">\n                <div class="m0 js-toast-body" id="js-notice-toast-message" role="status" tabindex="0">\n                    <strong>Alert ! </strong>You cannot vote for your own post.\n                </div>\n            </div>\n            <div class="flex--item mr0 js-notice-actions">\n                <div class="d-flex">\n                    <button class="p8 s-btn d-flex flex__center fc-dark js-dismiss" onclick="clickToClose();" tabindex="0" role="button" aria-label="Dismiss">\n                        <svg class="m0 svg-icon iconClearSm" width="14" height="14" viewBox="0 0 14 14">\n                            <path d="M12 3.41 10.59 2 7 5.59 3.41 2 2 3.41 5.59 7 2 10.59 3.41 12 7 8.41 10.59 12 12 10.59 8.41 7 12 3.41Z"></path>\n                        </svg>\n                    </button>\n                </div>\n            </div>\n        </div>\n    </aside>\n</div>'),$(".toast").toast("show",{autohide:!0}),$(".js-toast").fadeOut(8e3)):(i-=1,$(`#id_dislikes${s.attr("data-pk")}`).html("<button name='submit' type='submit' value=\"dislike\"><i class=\"fas voteDownActive fa-sort-down fa-4x\"></i></button>"),$(`#id_likes${s.attr("data-pk")}`).html(`<button name='submit' type='submit' value="like"><i  class="fas inactive fa-sort-up fa-4x"></i></button><div class="flex--item d-flex fd-column ai-center color-black fs-title"><div class="showVoteCount">${i}</div></div>`))}})})})};
 </script>
 
-/* About substring - https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/substr */
-/* About lastIndexOf - https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/lastIndexOf */
-
-TIME_TO_HIDE_HIGHLIGHT = 4500
-
-  $(document).ready(function() {
-    if (window.location.href.indexOf("#") > -1) {
-        x = TIME_TO_HIDE_HIGHLIGHT;
-        var getTheUrlId = window.location.href.substring(window.location.href.lastIndexOf('#') + 1)
-        
-        $(`#comment-${getTheUrlId}`).css('background-color', 'rgb(255, 255, 204)');
-        setTimeout(function() {
-            $(`#comment-${getTheUrlId}`).css('background-color', '');
-        }, x)
-    }
-  });
-
-
-</script>
-
-
-
-<script type="text/javascript">
-
-
-/* About substring - https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/substr */
-/* About lastIndexOf - https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/lastIndexOf */
-
-TIME_TO_HIDE_HIGHLIGHT = 4500
-
-  $(document).ready(function() {
-    if (window.location.href.indexOf("#") > -1) {
-        x = TIME_TO_HIDE_HIGHLIGHT;
-        var getTheUrlId = window.location.href.substring(window.location.href.lastIndexOf('#') + 1)
-        
-        $(`#answer-${getTheUrlId}`).css('background-color', 'rgb(255, 255, 204)');
-        setTimeout(function() {
-            $(`#answer-${getTheUrlId}`).css('background-color', '');
-        }, x)
-    }
-  });
-</script>
 
 
 
@@ -1877,11 +1739,56 @@ function flagAnswerComment(id) {
                 success:function(res){
                     if(res.bool==true){
                         $(".comment-answer-text-"+_questionid).val('');
-                        // Append Element
-                        var _html=`<ul class="comments-list js-comments-list">\n            <li id="comment-{{comment.id}}" class="comment js-comment " data-comment-id="{{comment.id}}" data-comment-owner-id="{{comment.commented_by.id}}" data-comment-score="0">\n\n                <div class="js-comment-actions comment-actions">\n                    <div class="comment-score js-comment-edit-hide">\n                    </div>\n                        \n                                    {% if request.user in comment.com_upvote.all %}\n                                    <button name='submit' type='submit' value="upVoteCommentIt"><i class="fas upvote-comment-active fa-sort-up fa-2x"></i></button>\n                                    {% else %}\n                                    <button name='submit' type='submit' value="upVoteCommentIt"><i class="fas upvote-comment-inactive fa-sort-up fa-2x"></i></button>\n                                    {% endif %}\n                                </span>\n                       \n                        <div class="comment-flagging js-comment-edit-hide">\n                            <button class="js-comment-flag s-btn s-btn__unset bg-transparent c-pointer fc-black-300 o40 h:fc-red-500 h:o100"\n                                    aria-label="Flag Comment"\n                                    aria-pressed="false"\n                                    title="Flag this comment for serious problems or moderator attention">\n                                <svg aria-hidden="true" class="svg-icon iconFlag" width="18" height="18" viewBox="0 0 18 18"><path d="M3 2v14h2v-6h3.6l.4 1h6V3H9.5L9 2H3Z"/></svg>\n                            </button>\n                        </div>\n                </div>\n\n                <div class="comment-text  js-comment-text-and-form">\n                    <div class="comment-body js-comment-edit-hide">\n                        \n                        <span class="comment-copy">${commented}</span>\n                        \n                      <div class="d-inline-flex ai-center">\n        &ndash;&nbsp;<a href="{% url 'profile:activityPageTabProfile' data.post_owner.id data.post_owner.username %}"\n                                    title="16,021 reputation"\n                                    class="comment-user">{{request.user}}</a>\n                        </div>\n                        <span class="comment-date" dir="ltr"><span title="2021-12-08 10:40:00Z, License: CC BY-SA 4.0" class="relativetime-clean">{{comment.date|naturaltime}}</span></span>\n                                <span title="this comment was edited 2 times">\n                                    <svg aria-hidden="true" class="va-text-bottom o50 svg-icon iconPencilSm" width="14" height="14" viewBox="0 0 14 14"><path d="m11.1 1.71 1.13 1.12c.2.2.2.51 0 .71L11.1 4.7 9.21 2.86l1.17-1.15c.2-.2.51-.2.71 0ZM2 10.12l6.37-6.43 1.88 1.88L3.88 12H2v-1.88Z"/></svg>\n                                </span>\n                    </div>\n                </div>\n    </li>\n\n            </ul>`;
-                    $(".answer-comment-wrapper-"+_questionid).append(_html);
-                    var prevCount=$(".comment-count-"+_questionid).text();
-                    $(".comment-count-"+_questionid).text(parseInt(prevCount)+1);
+                        
+                        // Create new comment HTML with delete button and full name
+                        var newCommentHtml = `
+                            <li id="comment-${res.comment_id}" class="comment js-comment" data-comment-id="${res.comment_id}" data-comment-owner-id="${res.user_id}" data-comment-score="0">
+                                <div class="js-comment-actions comment-actions">
+                                    <div class="comment-score js-comment-edit-hide"></div>
+                                    <form method="GET" class="commentAnswerVoteForm" action="{% url 'qa:upvote_comment' 0 %}".replace('0', res.comment_id) data-pk="${res.comment_id}">
+                                        <div id="id_AnswerCommentVote${res.comment_id}">
+                                            <div class="move-to-left">${res.upvote_count}</div>
+                                            <button name='submit' type='submit' value="upVoteCommentIt"><i class="fas upvote-comment-inactive fa-sort-up fa-2x"></i></button>
+                                        </div>
+                                    </form>
+                                    <br><br>
+                                    <div class="comment-flagging js-comment-edit-hide">
+                                        <button class="js-comment-flag s-btn s-btn__unset bg-transparent c-pointer fc-black-300 o40 h:fc-red-500 h:o100" aria-label="Flag Comment" aria-pressed="false" title="Flag this comment for serious problems or moderator attention">
+                                            <svg aria-hidden="true" class="svg-icon iconFlag" width="18" height="18" viewBox="0 0 18 18"><path d="M3 2v14h2v-6h3.6l.4 1h6V3H9.5L9 2H3Z"/></svg>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="comment-text js-comment-text-and-form">
+                                    <div class="comment-body js-comment-edit-hide">
+                                        <span class="comment-copy">${res.comment_text}</span>
+                                        <div class="d-inline-flex ai-center">&ndash;&nbsp;
+                                            <a href="/profile/${res.user_id}/${res.username}/" class="comment-user">${res.full_name}</a>
+                                        </div>
+                                        <span class="comment-date" dir="ltr">
+                                            <span class="relativetime-clean">just now</span>
+                                        </span>
+                                        <span class="comment-edit" title="Edit comment">
+                                            <a href="#" class="js-edit-comment" data-comment-id="${res.comment_id}">
+                                                <svg aria-hidden="true" class="va-text-bottom o50 svg-icon iconPencilSm" width="14" height="14" viewBox="0 0 14 14">
+                                                    <path d="m11.1 1.71 1.13 1.12c.2.2.2.51 0 .71L11.1 4.7 9.21 2.86l1.17-1.15c.2-.2.51-.2.71 0ZM2 10.12l6.37-6.43 1.88 1.88L3.88 12H2v-1.88Z"/>
+                                                </svg>
+                                            </a>
+                                        </span>
+                                        <span class="comment-delete" title="Delete comment">
+                                            <a href="#" class="js-delete-comment" data-comment-id="${res.comment_id}" data-answer-id="${_questionid}">
+                                                <svg aria-hidden="true" class="va-text-bottom o50 svg-icon iconTrash" width="14" height="14" viewBox="0 0 14 14">
+                                                    <path d="M11 3h-1.5l-.5-1h-4l-.5 1H3v1h8V3ZM4 5v7a1 1 0 0 0 1 1h4a1 1 0 0 0 1-1V5H4Z"/>
+                                                </svg>
+                                            </a>
+                                        </span>
+                                    </div>
+                                </div>
+                            </li>
+                        `;
+                        
+                        // Append to comments list
+                        $(`#answer-${_questionid} .js-comments-list`).append(newCommentHtml);
+                        showToast('Comment added successfully');
                     } else if (res.bool == false) {
                         $(`.contain`).html(`Write Something`);
                         $(`.contain`).fadeOut(2000);
@@ -2311,7 +2218,87 @@ function submitQuote() {
 </script>
 
         <script>
-        $(document).ready(function(){$(".save-comment").on("click",function(){var t=$(this).data("data"),e=$(".comment-text-"+t).val();$(".user-username").val();$.ajax({url:"{% url 'qa:save_comment' data.id %}",type:"post",data:{comment:e,answerid:t,csrfmiddlewaretoken:"{{csrf_token}}"},dataType:"json",beforeSend:function(){$(".save-comment").addClass("disabled").text("saving...")},success:function(n){if(1==n.bool){$(".comment-text-"+t).val("");var a=`<ul class="comments-list js-comments-list">\n            <li id="comment-{{comment.id}}" class="comment js-comment " data-comment-id="{{comment.id}}" data-comment-owner-id="{{comment.commented_by.id}}" data-comment-score="0">\n\n                <div class="js-comment-actions comment-actions">\n                    <div class="comment-score js-comment-edit-hide">\n                    </div>\n                        \n                                    {% if request.user in comment.com_upvote.all %}\n                                    <button name='submit' type='submit' value="upVoteCommentIt"><i class="fas upvote-comment-active fa-sort-up fa-2x"></i></button>\n                                    {% else %}\n                                    <button name='submit' type='submit' value="upVoteCommentIt"><i class="fas upvote-comment-inactive fa-sort-up fa-2x"></i></button>\n                                    {% endif %}\n                                </span>\n                       \n                        <div class="comment-flagging js-comment-edit-hide">\n                            <button class="js-comment-flag s-btn s-btn__unset bg-transparent c-pointer fc-black-300 o40 h:fc-red-500 h:o100"\n                                    aria-label="Flag Comment"\n                                    aria-pressed="false"\n                                    title="Flag this comment for serious problems or moderator attention">\n                                <svg aria-hidden="true" class="svg-icon iconFlag" width="18" height="18" viewBox="0 0 18 18"><path d="M3 2v14h2v-6h3.6l.4 1h6V3H9.5L9 2H3Z"/></svg>\n                            </button>\n                        </div>\n                </div>\n\n                <div class="comment-text  js-comment-text-and-form">\n                    <div class="comment-body js-comment-edit-hide">\n                        \n                        <span class="comment-copy">${e}</span>\n                        \n                      <div class="d-inline-flex ai-center">\n        &ndash;&nbsp;<a href="{% url 'profile:activityPageTabProfile' data.post_owner.id data.post_owner.username %}"\n                                    title="16,021 reputation"\n                                    class="comment-user">{{request.user}}</a>\n                        </div>\n                        <span class="comment-date" dir="ltr"><span title="2021-12-08 10:40:00Z, License: CC BY-SA 4.0" class="relativetime-clean">{{comment.date|naturaltime}}</span></span>\n                                <span title="this comment was edited 2 times">\n                                    <svg aria-hidden="true" class="va-text-bottom o50 svg-icon iconPencilSm" width="14" height="14" viewBox="0 0 14 14"><path d="m11.1 1.71 1.13 1.12c.2.2.2.51 0 .71L11.1 4.7 9.21 2.86l1.17-1.15c.2-.2.51-.2.71 0ZM2 10.12l6.37-6.43 1.88 1.88L3.88 12H2v-1.88Z"/></svg>\n                                </span>\n                    </div>\n                </div>\n    </li>\n\n            </ul>`;$(".comment-wrapper-"+t).append(a);var s=$(".comment-count-"+t).text();$(".comment-count-"+t).text(parseInt(s)+1)}else 0==n.bool&&($(".contain").html("Write Something"),$(".contain").hide(2e3));$(".save-comment").removeClass("disabled").text("Submit")}})})});
+        $(document).ready(function(){
+            $(".save-comment").on("click", function(){
+                var questionId = $(this).data("data");
+                var commentText = $(".comment-text-" + questionId).val();
+                
+                $.ajax({
+                    url: "{% url 'qa:save_comment' data.id %}",
+                    type: "post",
+                    data: {
+                        comment: commentText,
+                        answerid: questionId,
+                        csrfmiddlewaretoken: "{{csrf_token}}"
+                    },
+                    dataType: "json",
+                    beforeSend: function(){
+                        $(".save-comment").addClass("disabled").text("saving...");
+                    },
+                    success: function(response){
+                        if(response.bool){
+                            $(".comment-text-" + questionId).val("");
+                            
+                            // Create new comment HTML with delete button and full name
+                            var newCommentHtml = `
+                                <li id="comment-${response.comment_id}" class="comment js-comment" data-comment-id="${response.comment_id}" data-comment-owner-id="${response.user_id}" data-comment-score="0">
+                                    <div class="js-comment-actions comment-actions">
+                                        <div class="comment-score js-comment-edit-hide"></div>
+                                        <form method="GET" class="commentVoteForm" action="{% url 'qa:upvote_comment' 0 %}".replace('0', response.comment_id) data-pk="${response.comment_id}">
+                                            <span id="id_commentVote${response.comment_id}">
+                                                <div class="move-to-left">${response.upvote_count}</div>
+                                                <button name='submit' type='submit' value="upVoteCommentIt"><i class="fas upvote-comment-inactive fa-sort-up fa-2x"></i></button>
+                                            </span>
+                                        </form>
+                                        <div class="comment-flagging js-comment-edit-hide">
+                                            <button class="js-comment-flag s-btn s-btn__unset bg-transparent c-pointer fc-black-300 o40 h:fc-red-500 h:o100" aria-label="Flag Comment" aria-pressed="false" title="Flag this comment for serious problems or moderator attention">
+                                                <svg aria-hidden="true" class="svg-icon iconFlag" width="18" height="18" viewBox="0 0 18 18"><path d="M3 2v14h2v-6h3.6l.4 1h6V3H9.5L9 2H3Z"/></svg>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="comment-text js-comment-text-and-form">
+                                        <div class="comment-body js-comment-edit-hide">
+                                            <span class="comment-copy">${response.comment_text}</span>
+                                            <div class="d-inline-flex ai-center">&ndash;&nbsp;
+                                                <a href="/profile/${response.user_id}/${response.username}/" class="comment-user">${response.full_name}</a>
+                                            </div>
+                                            <span class="comment-date" dir="ltr">
+                                                <span class="relativetime-clean">just now</span>
+                                            </span>
+                                            <span class="comment-edit" title="Edit comment">
+                                                <a href="#" class="js-edit-comment" data-comment-id="${response.comment_id}">
+                                                    <svg aria-hidden="true" class="va-text-bottom o50 svg-icon iconPencilSm" width="14" height="14" viewBox="0 0 14 14">
+                                                        <path d="m11.1 1.71 1.13 1.12c.2.2.2.51 0 .71L11.1 4.7 9.21 2.86l1.17-1.15c.2-.2.51-.2.71 0ZM2 10.12l6.37-6.43 1.88 1.88L3.88 12H2v-1.88Z"/>
+                                                    </svg>
+                                                </a>
+                                            </span>
+                                            <span class="comment-delete" title="Delete comment">
+                                                <a href="#" class="js-delete-comment" data-comment-id="${response.comment_id}">
+                                                    <svg aria-hidden="true" class="va-text-bottom o50 svg-icon iconTrash" width="14" height="14" viewBox="0 0 14 14">
+                                                        <path d="M11 3h-1.5l-.5-1h-4l-.5 1H3v1h8V3ZM4 5v7a1 1 0 0 0 1 1h4a1 1 0 0 0 1-1V5H4Z"/>
+                                                    </svg>
+                                                </a>
+                                            </span>
+                                        </div>
+                                    </div>
+                                </li>
+                            `;
+                            
+                            // Append to question comments list only
+                            $("#comments-{{data.id}} .js-comments-list").append(newCommentHtml);
+                            
+                            // Show success message
+                            showToast('Comment added successfully');
+                        }
+                        $(".save-comment").removeClass("disabled").text("Submit");
+                    },
+                    error: function(){
+                        showToast('Error adding comment', 'error');
+                        $(".save-comment").removeClass("disabled").text("Submit");
+                    }
+                });
+            });
+        });
         </script>
 
         <script>
@@ -2481,41 +2468,87 @@ function submitQuote() {
 // Show toast notification
 function showToast(message, type = 'success') {
     const toastId = 'toast-' + Date.now();
+    const bgColor = type === 'success' ? '#d4edda' : '#f8d7da';
+    const borderColor = type === 'success' ? '#c3e6cb' : '#f5c6cb';
+    const textColor = type === 'success' ? '#155724' : '#721c24';
+    
     const toastHtml = `
-        <div id="${toastId}" class="s-toast js-toast fade show" aria-hidden="false" style="top: 60px;">
-            <aside class="s-notice s-notice__${type === 'success' ? 'success' : 'danger'}">
-                <div class="d-flex gs16 gsx ai-center jc-space-between">
-                    <div class="flex--item">
-                        <div class="m0 js-toast-body" role="status" tabindex="0">
-                            ${message}
-                        </div>
-                    </div>
-                    <div class="flex--item mr0 js-notice-actions">
-                        <div class="d-flex">
-                            <button class="p8 s-btn d-flex flex__center fc-dark js-dismiss" tabindex="0" role="button" aria-label="Dismiss">
-                                <svg class="m0 svg-icon iconClearSm" width="14" height="14" viewBox="0 0 14 14">
-                                    <path d="M12 3.41 10.59 2 7 5.59 3.41 2 2 3.41 5.59 7 2 10.59 3.41 12 7 8.41 10.59 12 12 10.59 8.41 7 12 3.41Z"></path>
-                                </svg>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </aside>
+        <div id="${toastId}" class="toast-notification" style="
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: ${bgColor};
+            border: 1px solid ${borderColor};
+            border-radius: 6px;
+            padding: 14px 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            z-index: 9999;
+            animation: slideInRight 0.3s ease;
+            max-width: 400px;
+        ">
+            <span style="color: ${textColor}; font-size: 14px; flex: 1;">${message}</span>
+            <button onclick="document.getElementById('${toastId}').remove();" style="
+                background: none;
+                border: none;
+                color: ${textColor};
+                cursor: pointer;
+                font-size: 20px;
+                padding: 0;
+                width: 24px;
+                height: 24px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                transition: opacity 0.2s ease;
+            " onmouseover="this.style.opacity='0.7'" onmouseout="this.style.opacity='1'">
+                ×
+            </button>
         </div>
     `;
     
-    // Remove any existing toasts
-    $('.js-toast').remove();
-    
-    // Add new toast
-    $('.toast-container').html(toastHtml);
+    // Add to body
+    document.body.insertAdjacentHTML('beforeend', toastHtml);
     
     // Auto-remove after 5 seconds
     setTimeout(() => {
-        $(`#${toastId}`).fadeOut(400, function() {
-            $(this).remove();
-        });
+        const toast = document.getElementById(toastId);
+        if (toast) {
+            toast.style.animation = 'slideOutRight 0.3s ease';
+            setTimeout(() => toast.remove(), 300);
+        }
     }, 5000);
+}
+
+// Add CSS animations for toast
+if (!document.querySelector('style[data-toast-animation]')) {
+    const style = document.createElement('style');
+    style.setAttribute('data-toast-animation', 'true');
+    style.textContent = `
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(400px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        @keyframes slideOutRight {
+            from {
+                opacity: 1;
+                transform: translateX(0);
+            }
+            to {
+                opacity: 0;
+                transform: translateX(400px);
+            }
+        }
+    `;
+    document.head.appendChild(style);
 }
 
 // Handle comment deletion
@@ -2571,9 +2604,9 @@ $(document).on('click', '.js-delete-comment', function(e) {
                         countElement.text(currentCount - 1);
                     }
                     
-                    // If no more comments, show message
+                    // If no more comments, hide the comments section
                     if (commentsContainer.children().length === 0) {
-                        commentsContainer.html('<p class="fs-caption fc-light">No comments yet.</p>');
+                        commentsContainer.closest('.js-post-comments-component').style.display = 'none';
                     }
                 });
                 
