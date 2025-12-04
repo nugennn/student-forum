@@ -2,6 +2,18 @@
 {% load static %}
 
 {% block content %}
+<style>
+    .highlight-field {
+        border: 2px solid #4f46e5 !important;
+        background-color: #f8f9ff !important;
+        transition: all 0.3s ease;
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    }
+    .highlight-field:focus {
+        border-color: #4f46e5 !important;
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25) !important;
+    }
+</style>
 <div class="container mt-5" style="max-width: 600px;">
     <div class="card shadow-sm">
         <div class="card-header bg-primary text-white">
@@ -12,8 +24,8 @@
                 <!-- Group Name -->
                 <div class="mb-4">
                     <label for="groupName" class="form-label fw-bold">Group Name</label>
-                    <input type="text" class="form-control form-control-lg" id="groupName" 
-                           placeholder="Enter group name" required>
+                    <input type="text" class="form-control form-control-lg highlight-field" id="groupName" 
+                           placeholder="Enter group name" required autofocus>
                     <small class="text-muted">Give your group a descriptive name</small>
                 </div>
 
