@@ -1045,42 +1045,40 @@ function deleteAllNotifications(event) {
         </div>
         <nav class="site-footer--nav">
             <div class="site-footer--col site-footer--col__visible js-footer-col">
-                <h5 class="-title"><a href="">Campus Forum</a></h5>
+                <h5 class="-title">KhEC Forum</h5>
                 <ul class="-list js-primary-footer-links">
-                    <li class="-item"><a href="/questions" class="-link">Questions</a></li>
-                    <li class="-item"><a href="" class="-link">Study Groups</a></li>
-                    <li class="-item"><a href="" class="-link">Events</a></li>
-                    <li class="-item"><a href="" class="-link">Help</a></li>
+                    <li class="-item"><a href="{% url 'qa:questions' %}" class="-link">Questions</a></li>
+                    <li class="-item"><a href="{% url 'community:community_list' %}" class="-link">Communities</a></li>
+                    <li class="-item"><a href="{% url 'profile:tagsPage' %}" class="-link">Tags</a></li>
+                    <li class="-item"><a href="{% url 'profile:usersPage' %}" class="-link">Members</a></li>
                 </ul>
             </div>
             <div class="site-footer--col site-footer--col__visible js-footer-col">
-                <h5 class="-title"><a href="">Services</a></h5>
+                <h5 class="-title">Navigation</h5>
                 <ul class="-list">
-                    <li class="-item"><a href="" class="-link">Tutoring</a></li>
-                    <li class="-item"><a href="" class="-link">Career Guidance</a></li>
-                    <li class="-item"><a href="" class="-link">Mentorship</a></li>
-                    <li class="-item"><a href="" class="-link">Clubs</a></li>
+                    <li class="-item"><a href="{% url 'profile:home' %}" class="-link">Home</a></li>
+                    <li class="-item"><a href="{% url 'qa:questions' %}" class="-link">All Questions</a></li>
+                    <li class="-item"><a href="{% url 'community:community_list' %}" class="-link">Browse Communities</a></li>
+                    <li class="-item"><a href="{% url 'qa:new_question' %}" class="-link">Ask Question</a></li>
                 </ul>
             </div>
             <div class="site-footer--col site-footer--col__visible js-footer-col">
-                <h5 class="-title"><a href="">About</a></h5>
+                <h5 class="-title">Account</h5>
                 <ul class="-list">
-                    <li class="-item"><a class="-link" href="">About Us</a></li>
-                    <li class="-item"><a class="-link" href="">Contact</a></li>
-                    <li class="-item"><a class="-link" href="">Guidelines</a></li>
-                    <li class="-item"><a class="-link" href="">Privacy</a></li>
+                    {% if request.user.is_authenticated %}
+                        <li class="-item"><a class="-link" href="{% url 'profile:ActivityTabSummary' request.user.id request.user.username %}">My Profile</a></li>
+                        <li class="-item"><a class="-link" href="{% url 'chat:chat_list' %}">Messages</a></li>
+                        <li class="-item"><a class="-link" href="#" onclick="confirmLogout(); return false;">Logout</a></li>
+                    {% else %}
+                        <li class="-item"><a class="-link" href="{% url 'users:login_request' %}">Login</a></li>
+                        <li class="-item"><a class="-link" href="{% url 'users:signup_request' %}">Sign Up</a></li>
+                    {% endif %}
                 </ul>
             </div>
         </nav>
         <div class="site-footer--copyright fs-fine">
-            <ul class="-list">
-                <li class="-item"><a class="-link" href="">Blog</a></li>
-                <li class="-item"><a href="" class="-link">Twitter</a></li>
-                <li class="-item"><a href="" class="-link">LinkedIn</a></li>
-            </ul>
-
-            <p class="mt-auto mb24">
-                2025 Campus Forum · Made by members, for members
+            <p class="mt-auto mb24" style="text-align: center; color: #64748b; font-size: 13px;">
+                &copy; 2025 KhEC Forum &middot; All rights reserved
             </p>
         </div>
     </div>
