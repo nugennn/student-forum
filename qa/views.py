@@ -3661,7 +3661,7 @@ def answer_upvote_downvote(request, answer_id):
                     answer_priv_noti=post,
                 )
             rewardPrivielege(request, post.answer_owner)
-            return JsonResponse({'action': 'unDownVoteAndLike'})
+            return JsonResponse({'action': 'unDownVoteAndLike', 'upvotes': post.a_vote_ups.all().count(), 'downvotes': post.a_vote_downs.all().count()})
 
         elif request.user in post.a_vote_ups.all():
             # REMOVE UPVOTE
@@ -3693,7 +3693,7 @@ def answer_upvote_downvote(request, answer_id):
                     type_of_PrivNotify="ANSWER_ACCEPT_REP_P",
                     missingReputation=10)
             rewardPrivielege(request, post.answer_owner)
-            return JsonResponse({'action': 'unlikeAnswer'})
+            return JsonResponse({'action': 'unlikeAnswer', 'upvotes': post.a_vote_ups.all().count(), 'downvotes': post.a_vote_downs.all().count()})
         elif request.user == post.answer_owner:
             return JsonResponse({'action': 'cannotLikeOwnPost'})
         else:
@@ -3796,7 +3796,7 @@ def answer_upvote_downvote(request, answer_id):
                 )
 
             rewardPrivielege(request, post.answer_owner)
-            return JsonResponse({'action': 'upv'})
+            return JsonResponse({'action': 'upv', 'upvotes': post.a_vote_ups.all().count(), 'downvotes': post.a_vote_downs.all().count()})
 
     elif request.GET.get('submit') == 'ansDownVote':
         # Remove Upvote and Downvote
@@ -3819,7 +3819,7 @@ def answer_upvote_downvote(request, answer_id):
                     answer_rep_C=-2,
                     reputation_on_what="DOWN_VOTE_ANSWER_REP_M")
             rewardPrivielege(request, post.answer_owner)
-            return JsonResponse({'action': 'unUpvoteAndDownVote'})
+            return JsonResponse({'action': 'unUpvoteAndDownVote', 'upvotes': post.a_vote_ups.all().count(), 'downvotes': post.a_vote_downs.all().count()})
 
         elif request.user in post.a_vote_downs.all():
             # Remove DownVote
@@ -3835,7 +3835,7 @@ def answer_upvote_downvote(request, answer_id):
                     answer_rep_C=-2,
                     reputation_on_what="DOWN_VOTE_ANSWER_REP_M").delete()
             rewardPrivielege(request, post.answer_owner)
-            return JsonResponse({'action': 'undislike'})
+            return JsonResponse({'action': 'undislike', 'upvotes': post.a_vote_ups.all().count(), 'downvotes': post.a_vote_downs.all().count()})
         elif request.user == post.answer_owner:
             return JsonResponse({'action': 'cannotLikeOwnPost'})
         else:
@@ -3850,7 +3850,7 @@ def answer_upvote_downvote(request, answer_id):
                 answer_rep_C=-2,
                 reputation_on_what="DOWN_VOTE_ANSWER_REP_M")
             rewardPrivielege(request, post.answer_owner)
-            return JsonResponse({'action': 'downVoteOnly'})
+            return JsonResponse({'action': 'downVoteOnly', 'upvotes': post.a_vote_ups.all().count(), 'downvotes': post.a_vote_downs.all().count()})
     else:
         messages.error(request, 'Something went wrong')
         return redirect('profile:posts')

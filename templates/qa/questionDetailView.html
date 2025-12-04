@@ -599,9 +599,9 @@
                 <form action="{% url 'qa:answer_upvote_downvote' answer.id  %}" method="GET" class="ansDislikeForm" data-pk="{{ answer.id }}">
                     <div id="id_Ans_DownVote{{answer.id}}">
                         {% if user in answer.a_vote_downs.all %}
-                        <button name='submit' type='submit' value="dislike"><i class="fas voteDownActive fa-sort-down fa-4x"></i></button> 
+                        <button name='submit' type='submit' value="ansDownVote"><i class="fas voteDownActive fa-sort-down fa-4x"></i></button> 
                         {% else %}
-                        <button name='submit' type='submit' value="dislike"><i class="fas voteDownInActive fa-sort-down fa-4x"></i></button> 
+                        <button name='submit' type='submit' value="ansDownVote"><i class="fas voteDownInActive fa-sort-down fa-4x"></i></button> 
                         {% endif %}
                         {% if request.user.profile.established_user_Priv == False %}
                         <div class="flex--item d-flex fd-column ai-center color-black fs-title">

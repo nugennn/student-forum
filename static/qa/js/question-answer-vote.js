@@ -241,125 +241,73 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 // Answer - Upvote - Downvote
-    document.addEventListener('DOMContentLoaded', function() {
-        window.addEventListener('load', function() {
-            // Like
-            $('.ansLikeForm').submit(function(e) {
-                    e.preventDefault();
-                    let form = $(this);
-                    let postId = form.attr('data-pk');
-                    
-                    $.ajax({
-                        url: form.attr('action'),
-                        data: { submit: 'like' },
-                        dataType: 'json',
-                        method: 'get',
-                        async: false,
-                        success: function(response) {
-                            // Get actual counts from backend - NO manual calculations
-                            let upvotes = parseInt(response.upvotes) || 0;
-                            let downvotes = parseInt(response.downvotes) || 0;
-                            
-                            if (response.action == 'unDownVoteAndLike' || response.action == 'upv') {
-                                // Update upvote button and count with ACTIVE state
-                                $(`#id_Ans_UpVote${postId}`).html(`<button name='submit' type='submit' value="like"><i class="fas active fa-sort-up fa-4x"></i></button><div class="flex--item d-flex fd-column ai-center color-black fs-title"><div class="showVoteCount-answer">+${upvotes}</div></div>`);
-                            } else if (response.action == 'unlikeAnswer') {
-                                // Update upvote button and count with INACTIVE state
-                                $(`#id_Ans_UpVote${postId}`).html(`<button name='submit' type='submit' value="like"><i class="fas inactive fa-sort-up fa-4x"></i></button><div class="flex--item d-flex fd-column ai-center color-black fs-title"><div class="showVoteCount-answer">+${upvotes}</div></div>`);
-                            }
-                            
-                            // If switching from downvote to upvote, also update downvote display
-                            if (response.action == 'unDownVoteAndLike') {
-                                $(`#id_Ans_DownVote${postId}`).html(`<button name='submit' type='submit' value="dislike"><i class="fas voteDownInActive fa-sort-down fa-4x"></i></button><div class="flex--item d-flex fd-column ai-center color-black fs-title"><div class="showDownVoteCount-answer">-${downvotes}</div></div>`);
-                            } else if (response.action == 'cannotLikeOwnPost') {
-                                $('.toast-container').html(
-                                    `<div data-delay="5000" class="s-toast js-toast fade" aria-hidden="false" style="top: 60px;">
-    <aside class="s-notice s-notice__info">
-        <div class="d-flex gs16 gsx ai-center jc-space-between">
-            <div class="flex--item">
-                <div class="m0 js-toast-body" id="js-notice-toast-message" role="status" tabindex="0">
-                    <strong>Alert ! </strong>You cannot vote for your Own Post
-                </div>
-            </div>
-            <div class="flex--item mr0 js-notice-actions">
-                <div class="d-flex">
-                    <button class="p8 s-btn d-flex flex__center fc-dark js-dismiss" tabindex="0" role="button" aria-label="Dismiss">
-                        <svg class="m0 svg-icon iconClearSm" width="14" height="14" viewBox="0 0 14 14">
-                            <path d="M12 3.41 10.59 2 7 5.59 3.41 2 2 3.41 5.59 7 2 10.59 3.41 12 7 8.41 10.59 12 12 10.59 8.41 7 12 3.41Z"></path>
-                        </svg>
-                    </button>
-                </div>
-            </div>
-        </div>
-    </aside>
-</div>`
-                                );
-                                $(".toast").toast('show', {
-                                    autohide: true,
-                                });
-                                $('.js-toast').fadeOut(8000);
-                            }
-                        }
-                    })
-                })
-                // Dislike
-            $('.ansDislikeForm').submit(function(e) {
-                e.preventDefault();
-                let form = $(this);
-                let postId = form.attr('data-pk');
-                
-                $.ajax({
-                    url: form.attr('action'),
-                    data: { submit: 'dislike' },
-                    dataType: 'json',
-                    method: 'get',
-                    async: false,
-                    success: function(response) {
-                        // Get actual counts from backend - NO manual calculations
-                        let upvotes = parseInt(response.upvotes) || 0;
-                        let downvotes = parseInt(response.downvotes) || 0;
-                        
-                        if (response.action == 'unUpvoteAndDownVote' || response.action == 'downVoteOnly') {
-                            // Update downvote button and count with ACTIVE state
-                            $(`#id_Ans_DownVote${postId}`).html(`<button name='submit' type='submit' value="dislike"><i class="fas voteDownActive fa-sort-down fa-4x"></i></button><div class="flex--item d-flex fd-column ai-center color-black fs-title"><div class="showDownVoteCount-answer">-${downvotes}</div></div>`);
-                        } else if (response.action == 'undislike') {
-                            // Update downvote button and count with INACTIVE state
-                            $(`#id_Ans_DownVote${postId}`).html(`<button name='submit' type='submit' value="dislike"><i class="fas voteDownInActive fa-sort-down fa-4x"></i></button><div class="flex--item d-flex fd-column ai-center color-black fs-title"><div class="showDownVoteCount-answer">-${downvotes}</div></div>`);
-                        }
-                        
-                        // If switching from upvote to downvote, also update upvote display
-                        if (response.action == 'unUpvoteAndDownVote') {
-                            $(`#id_Ans_UpVote${postId}`).html(`<button name='submit' type='submit' value="like"><i class="fas inactive fa-sort-up fa-4x"></i></button><div class="flex--item d-flex fd-column ai-center color-black fs-title"><div class="showVoteCount-answer">+${upvotes}</div></div>`);
-                        } else if (response.action == 'cannotLikeOwnPost') {
-                                $('.toast-container').html(
-                                    `<div data-delay="5000" class="s-toast js-toast fade" aria-hidden="false" style="top: 60px;">
-    <aside class="s-notice s-notice__info">
-        <div class="d-flex gs16 gsx ai-center jc-space-between">
-            <div class="flex--item">
-                <div class="m0 js-toast-body" id="js-notice-toast-message" role="status" tabindex="0">
-                    <strong>Alert ! </strong>You cannot vote for your Own Post
-                </div>
-            </div>
-            <div class="flex--item mr0 js-notice-actions">
-                <div class="d-flex">
-                    <button class="p8 s-btn d-flex flex__center fc-dark js-dismiss" tabindex="0" role="button" aria-label="Dismiss">
-                        <svg class="m0 svg-icon iconClearSm" width="14" height="14" viewBox="0 0 14 14">
-                            <path d="M12 3.41 10.59 2 7 5.59 3.41 2 2 3.41 5.59 7 2 10.59 3.41 12 7 8.41 10.59 12 12 10.59 8.41 7 12 3.41Z"></path>
-                        </svg>
-                    </button>
-                </div>
-            </div>
-        </div>
-    </aside>
-</div>`
-                                );
-                                $(".toast").toast('show', {
-                                    autohide: true,
-                                });
-                                $('.js-toast').fadeOut(8000);
-                        }
-                    }
-                })
-            })
-        })
+document.addEventListener('DOMContentLoaded', function() {
+    window.addEventListener('load', function() {
+        // Initialize answer vote handlers on page load
+        attachAnswerVoteHandlers();
     })
+})
+
+// Function to re-attach event handlers to answer vote forms
+function attachAnswerVoteHandlers() {
+    // Like
+    $('.ansLikeForm').off('submit').on('submit', function(e) {
+        e.preventDefault();
+        let form = $(this);
+        let postId = form.attr('data-pk');
+        
+        $.ajax({
+            url: form.attr('action'),
+            data: { submit: 'like' },
+            dataType: 'json',
+            method: 'get',
+            async: false,
+            success: function(response) {
+                let upvotes = parseInt(response.upvotes) || 0;
+                let downvotes = parseInt(response.downvotes) || 0;
+                
+                if (response.action == 'unDownVoteAndLike' || response.action == 'upv') {
+                    $(`#id_Ans_UpVote${postId}`).html(`<button name='submit' type='submit' value="like"><i class="fas active fa-sort-up fa-4x"></i></button><div class="flex--item d-flex fd-column ai-center color-black fs-title"><div class="showVoteCount-answer">+${upvotes}</div></div>`);
+                } else if (response.action == 'unlikeAnswer') {
+                    $(`#id_Ans_UpVote${postId}`).html(`<button name='submit' type='submit' value="like"><i class="fas inactive fa-sort-up fa-4x"></i></button><div class="flex--item d-flex fd-column ai-center color-black fs-title"><div class="showVoteCount-answer">+${upvotes}</div></div>`);
+                }
+                
+                // Always update downvote display to show correct count
+                $(`#id_Ans_DownVote${postId}`).html(`<button name='submit' type='submit' value="ansDownVote"><i class="fas ${response.action == 'unDownVoteAndLike' ? 'voteDownInActive' : 'voteDownInActive'} fa-sort-down fa-4x"></i></button><div class="flex--item d-flex fd-column ai-center color-black fs-title"><div class="showDownVoteCount-answer">-${downvotes}</div></div>`);
+                
+                // Re-attach event handlers to the updated forms
+                attachAnswerVoteHandlers();
+            }
+        })
+    });
+    
+    // Dislike
+    $('.ansDislikeForm').off('submit').on('submit', function(e) {
+        e.preventDefault();
+        let form = $(this);
+        let postId = form.attr('data-pk');
+        
+        $.ajax({
+            url: form.attr('action'),
+            data: { submit: 'ansDownVote' },
+            dataType: 'json',
+            method: 'get',
+            async: false,
+            success: function(response) {
+                let upvotes = parseInt(response.upvotes) || 0;
+                let downvotes = parseInt(response.downvotes) || 0;
+                
+                if (response.action == 'unUpvoteAndDownVote' || response.action == 'downVoteOnly') {
+                    $(`#id_Ans_DownVote${postId}`).html(`<button name='submit' type='submit' value="ansDownVote"><i class="fas voteDownActive fa-sort-down fa-4x"></i></button><div class="flex--item d-flex fd-column ai-center color-black fs-title"><div class="showDownVoteCount-answer">-${downvotes}</div></div>`);
+                } else if (response.action == 'undislike') {
+                    $(`#id_Ans_DownVote${postId}`).html(`<button name='submit' type='submit' value="ansDownVote"><i class="fas voteDownInActive fa-sort-down fa-4x"></i></button><div class="flex--item d-flex fd-column ai-center color-black fs-title"><div class="showDownVoteCount-answer">-${downvotes}</div></div>`);
+                }
+                
+                // Always update upvote display to show correct count
+                $(`#id_Ans_UpVote${postId}`).html(`<button name='submit' type='submit' value="like"><i class="fas ${response.action == 'unUpvoteAndDownVote' ? 'inactive' : 'inactive'} fa-sort-up fa-4x"></i></button><div class="flex--item d-flex fd-column ai-center color-black fs-title"><div class="showVoteCount-answer">+${upvotes}</div></div>`);
+                
+                attachAnswerVoteHandlers();
+            }
+        })
+    });
+}
