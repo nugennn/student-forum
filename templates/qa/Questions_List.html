@@ -6,6 +6,37 @@
 
 {% block css %}
 <style>
+    /* --- Fade out effect for excerpt --- */
+    .fade-out {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 2em;
+        background: linear-gradient(to bottom, rgba(255,255,255,0) 0%, rgba(255,255,255,0.9) 100%);
+        pointer-events: none;
+    }
+
+    .excerpt img,
+    .excerpt pre,
+    .excerpt code {
+        display: none; /* Hide images and code blocks in excerpt */
+    }
+    
+    /* --- Excerpt styling --- */
+    .excerpt {
+        margin: 8px 0 12px 0;
+        line-height: 1.5;
+        color: #4b5563;
+        font-size: 14px;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-height: 3em;
+    }
+
     /* --- Global Overflow Prevention --- */
     * {
         box-sizing: border-box;
@@ -281,17 +312,16 @@
     }
 
     .summary .excerpt {
+        margin: 8px 0 12px 0;
+        line-height: 1.5;
+        color: #4b5563;
         font-size: 14px;
-        color: var(--text-secondary);
-        line-height: 1.6;
-        margin-bottom: 12px;
-        overflow: hidden;
         display: -webkit-box;
         -webkit-line-clamp: 2;
-        line-clamp: 2;
         -webkit-box-orient: vertical;
-        word-break: break-word;
-        overflow-wrap: break-word;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-height: 3em;
     }
     
     /* --- Image Container Responsive Styles --- */
@@ -557,22 +587,9 @@
                         <h3><a href="{{question.get_absolute_url}}" class="question-hyperlink">{{question.title}}</a></h3>
                         <div class="excerpt">
                             {% with text=question.body|safe_markdown|striptags %}
-                                {{text|truncatechars:200}}
+                                {{ text }}
                             {% endwith %}
                         </div>
-                        
-                        <!-- Small Image Display -->
-                        {% if question.body %}
-                            {% with body_html=question.body|safe_markdown|fix_markdown_images %}
-                                {% if "img" in body_html %}
-                                    <div style="max-height: 150px; overflow: hidden; border-radius: 10px; background: #f5f5f5; display: flex; align-items: center; justify-content: center; margin-top: 12px;">
-                                        <div style="width: 100%; display: flex; align-items: center; justify-content: center;">
-                                            {{ body_html|safe }}
-                                        </div>
-                                    </div>
-                                {% endif %}
-                            {% endwith %}
-                        {% endif %}
 
                         <div class="d-flex ai-start fw-wrap">
                             <div class="flex--item">

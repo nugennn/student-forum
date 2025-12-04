@@ -52,7 +52,7 @@ sqlparse
 text-unidecode
 toml
 tomli
-typed-ast
+# typed-ast
 typing-extensions
 tzlocal
 urllib3
@@ -62,3 +62,7 @@ xlwt
 yapf
 zipp
 mysqlclient
+python-dotenv
+django-bootstrap4
+django-crispy-forms
+crispy-bootstrap4
