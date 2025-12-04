@@ -202,22 +202,22 @@ def ensure_image_urls(html_content):
         
         # Check if img tag has src attribute
         if 'src=' not in img_tag:
-            return img_tag
+            return ''  # Remove img tags without src
         
         # Extract src value
         src_match = re.search(r'src=["\']([^"\']+)["\']', img_tag)
         if not src_match:
-            return img_tag
+            return ''  # Remove img tags without valid src
         
         src = src_match.group(1)
         
-        # If src is empty or just whitespace, try to find alt text or data attributes
+        # If src is empty or just whitespace, remove the img tag
         if not src or src.isspace():
-            # Try to extract from data-src
-            data_src_match = re.search(r'data-src=["\']([^"\']+)["\']', img_tag)
-            if data_src_match:
-                data_src = data_src_match.group(1)
-                img_tag = img_tag.replace(f'src="{src}"', f'src="{data_src}"')
+            return ''
+        
+        # If src doesn't contain /media/, it's likely a broken/invalid image
+        if '/media/' not in src:
+            return ''
         
         # Add loading="lazy" for better performance
         if 'loading=' not in img_tag:

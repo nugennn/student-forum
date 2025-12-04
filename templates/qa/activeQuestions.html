@@ -281,6 +281,7 @@
         max-width: 100%;
         box-sizing: border-box;
         font-size: 0; /* Hide all text */
+        line-height: 0; /* Collapse text height */
     }
     
     .summary > div[style*="max-height: 200px"] img {
@@ -289,14 +290,17 @@
         display: block;
         max-height: 200px;
         object-fit: contain;
+        font-size: 14px; /* Reset font size for image */
+        line-height: 1.5; /* Reset line height for image */
     }
     
-    /* Hide all text nodes and non-image elements */
-    .summary > div[style*="max-height: 200px"] p,
-    .summary > div[style*="max-height: 200px"] span,
-    .summary > div[style*="max-height: 200px"] div,
-    .summary > div[style*="max-height: 200px"] a {
-        display: none !important;
+    /* Hide all text and non-image elements but keep images visible */
+    .summary > div[style*="max-height: 200px"] * {
+        font-size: 0;
+    }
+    
+    .summary > div[style*="max-height: 200px"] img {
+        font-size: 14px;
     }
 
     .summary .tags { 
@@ -566,8 +570,8 @@
                             
                             <!-- Image Preview - Only if image exists -->
                             {% if question.body %}
-                                {% with body_html=question.body|safe_markdown|fix_markdown_images %}
-                                    {% if 'src=' in body_html and "<img" in body_html %}
+                                {% with body_html=question.body|safe_markdown|fix_markdown_images|ensure_image_urls %}
+                                    {% if "<img" in body_html and "src=" in body_html and "/media/" in body_html %}
                                         <div style="max-height: 200px; overflow: hidden; border-radius: 8px; background: #f5f5f5; display: flex; align-items: center; justify-content: center; margin-top: 12px;">
                                             {{ body_html|safe }}
                                         </div>

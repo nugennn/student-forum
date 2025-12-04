@@ -325,16 +325,35 @@
     }
     
     /* --- Image Container Responsive Styles --- */
+    .summary > div[style*="max-height: 200px"],
     .summary > div[style*="max-height: 150px"] {
         width: 100%;
         max-width: 100%;
         box-sizing: border-box;
+        font-size: 0; /* Hide all text */
+        line-height: 0; /* Collapse text height */
     }
     
+    .summary > div[style*="max-height: 200px"] img,
     .summary > div[style*="max-height: 150px"] img {
         max-width: 100%;
         height: auto;
         display: block;
+        max-height: 200px;
+        object-fit: contain;
+        font-size: 14px; /* Reset font size for image */
+        line-height: 1.5; /* Reset line height for image */
+    }
+    
+    /* Hide all text and non-image elements but keep images visible */
+    .summary > div[style*="max-height: 200px"] *,
+    .summary > div[style*="max-height: 150px"] * {
+        font-size: 0;
+    }
+    
+    .summary > div[style*="max-height: 200px"] img,
+    .summary > div[style*="max-height: 150px"] img {
+        font-size: 14px;
     }
 
     .summary .tags { 
@@ -590,6 +609,17 @@
                                 {{ text }}
                             {% endwith %}
                         </div>
+                        
+                        <!-- Image Preview -->
+                        {% if question.body %}
+                            {% with body_html=question.body|safe_markdown|fix_markdown_images|ensure_image_urls %}
+                                {% if "<img" in body_html and "src=" in body_html and "/media/" in body_html %}
+                                    <div style="max-height: 200px; overflow: hidden; border-radius: 8px; background: #f5f5f5; display: flex; align-items: center; justify-content: center; margin-top: 12px;">
+                                        {{ body_html|safe }}
+                                    </div>
+                                {% endif %}
+                            {% endwith %}
+                        {% endif %}
 
                         <div class="d-flex ai-start fw-wrap">
                             <div class="flex--item">
